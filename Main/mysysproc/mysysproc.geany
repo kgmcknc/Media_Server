@@ -1,0 +1,39 @@
+[file_prefs]
+final_new_line=true
+ensure_convert_new_lines=false
+strip_trailing_spaces=false
+replace_tabs=false
+
+[indentation]
+indent_width=4
+indent_type=1
+indent_hard_tab_width=8
+detect_indent=false
+detect_indent_width=false
+indent_mode=2
+
+[project]
+name=mysysproc
+base_path=/usr/share/myfolder/mysysproc
+description=
+file_patterns=
+
+[long line marker]
+long_line_behaviour=1
+long_line_column=72
+
+[files]
+current_page=0
+FILE_NAME_0=955;C;0;EUTF-8;1;1;0;%2Fusr%2Fshare%2Fmyfolder%2Fmysysproc%2Fmysys.c;0;4
+
+[VTE]
+last_dir=/home/pi
+
+[build-menu]
+CFT_00_LB=_Compile
+CFT_00_CM=gcc -Wall -c "%f"
+CFT_00_WD=
+filetypes=C;
+CFT_01_LB=_Build
+CFT_01_CM=gcc -Wall -o "%e" "%f" -lwiringPi
+CFT_01_WD=

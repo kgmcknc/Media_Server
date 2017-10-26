@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="../system.css">
+	</head>
+	<body onload="search_movies()">
+	<div id="navbar" class="navbar">
+		<span><a href="/index.html">Home</a></span>
+		<span><a href="/control/control.html">Control</a></span>
+		<span><a href="/control/status.html">Status</a></span>
+		<span><a href="/control/movies.html">Movies</a></span>
+		<span><a href="/control/music.html">Music</a></span>
+	</div>
+	control page:
+	<div class="controlbox">
+		<span id="stopvideo" onclick="write_function('stopvideo')">Stop Movie</span>
+		<span id="pausevideo" onclick="write_function('pausevideo')">Pause Movie</span>
+		<span id="resumevideo" onclick="write_function('resumevideo')">Resume Movie</span>
+		<span id="rrvideo" onclick="write_function('rrvideo')">Rewind Movie</span>
+		<span id="ffvideo" onclick="write_function('ffvideo')">FastForward Movie</span>
+	</div>
+	<div id="movielist">
+		
+	</div>
+	<script src="control.js"></script>
+	<script src="movies.js"></script>
+	</body>
+</html>

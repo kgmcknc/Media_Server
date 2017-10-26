@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="../system.css">
+	</head>
+	<body onload="search_music()">
+	<div id="navbar" class="navbar">
+		<span><a href="/index.html">Home</a></span>
+		<span><a href="/control/control.html">Control</a></span>
+		<span><a href="/control/status.html">Status</a></span>
+		<span><a href="/control/movies.html">Movies</a></span>
+		<span><a href="/control/music.html">Music</a></span>
+	</div>
+	control page:
+	<div class="controlbox">
+		<span id="stopmusic" onclick="write_function('stopaudio')">Stop Music</span>
+		<span id="pausemusic" onclick="write_function('pauseaudio')">Pause Music</span>
+		<span id="resumemusic" onclick="write_function('resumeaudio')">Resume Music</span>
+		<span id="rrmusic" onclick="write_function('rraudio')">Rewind Music</span>
+		<span id="ffmusic" onclick="write_function('ffaudio')">FastForward Music</span>
+	</div>
+	<div id="musiclist">
+		
+	</div>
+	<script src="control.js"></script>
+	<script src="music.js"></script>
+	</body>
+</html>

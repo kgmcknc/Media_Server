@@ -8,13 +8,13 @@ if [ "$#" -eq 0 ]; then
 else
 	if [ "$1" = "Main" ] ; then
 		echo "Arg was Main!"
-		deploy_main = 1;
-		deploy_pi = 0;
+		deploy_main=1;
+		deploy_pi=0;
 	else
 		if [ "$1" = "Pi" ] ; then
 			echo "arg was pi!"
-			deploy_main = 0;
-			deploy_pi = 1;
+			deploy_main=0;
+			deploy_pi=1;
 		else
 			echo "Error! Not valid command line argument"
 			echo "Specify Main or Pi for which side to deploy"
@@ -24,7 +24,7 @@ else
 fi
 
 
-sys_deploy_dir="/usr/share/media_server"
+sys_deploy_dir="/usr/share/media_server/"
 www_deploy_dir="/var/www/html/media_server/"
 
 
@@ -53,12 +53,12 @@ echo "Copying All Files to $sys_deploy_dir"
 
 if [ "$deploy_main" -eq 1 ] ; then
 	for file_name in ./Main/sys/*; do
-		cp -r ./Main/sys/"$file_name" "$sys_deploy_dir"
+		cp -r "$file_name" "$sys_deploy_dir"
 	done
 fi
 if [ "$deploy_pi" -eq 1 ] ; then
 	for file_name in ./Pi/sys/*; do
-		cp -r ./Pi/sys/"$file_name" "$sys_deploy_dir"
+		cp -r "$file_name" "$sys_deploy_dir"
 	done
 fi
 
@@ -89,12 +89,12 @@ echo "Copying All Files to $www_deploy_dir"
 
 if [ "$deploy_main" -eq 1 ] ; then
 	for file_name in ./Main/www/*; do
-		cp -r ./Main/www/"$file_name" "$www_deploy_dir"
+		cp -r "$file_name" "$www_deploy_dir"
 	done
 fi
 if [ "$deploy_pi" -eq 1 ] ; then
 	for file_name in ./Pi/www/*; do
-		cp -r ./Pi/www/"$file_name" "$www_deploy_dir"
+		cp -r "$file_name" "$www_deploy_dir"
 	done
 fi
 

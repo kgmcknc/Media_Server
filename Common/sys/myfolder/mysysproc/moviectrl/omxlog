@@ -1,0 +1,6 @@
+Video codec omx-h264 width 1280 height 544 profile 100 fps 23.976025
+Audio codec aac channels 6 samplerate 48000 bitspersample 16
+Subtitle count: 0, state: off, index: 1, delay: 0
+V:PortSettingsChanged: 1280x544@23.98 interlace:0 deinterlace:0 anaglyph:0 par:1.00 display:0 layer:0 alpha:255 aspectMode:0
+Stopped at: 01:28:17
+have a nice day ;)

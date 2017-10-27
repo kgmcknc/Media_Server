@@ -10,15 +10,24 @@ else
 		echo "Arg was Main!"
 		deploy_main=1;
 		deploy_pi=0;
+		deploy_common=0;
 	else
 		if [ "$1" = "Pi" ] ; then
-			echo "arg was pi!"
+			echo "Arg was Pi!"
 			deploy_main=0;
 			deploy_pi=1;
+			deploy_common=0;
 		else
-			echo "Error! Not valid command line argument"
-			echo "Specify Main or Pi for which side to deploy"
-			exit
+			if [ "$1" = "Common" ] ; then
+				echo "Arg was Common!"
+				deploy_main=0;
+				deploy_pi=0;
+				deploy_common=1;
+			else
+				echo "Error! Not valid command line argument"
+				echo "Specify Main or Pi for which side to deploy"
+				exit
+			fi
 		fi
 	fi
 fi
@@ -34,7 +43,9 @@ fi
 if [ "$deploy_pi" -eq 1 ] ; then
 	echo "Deploying Client Side System Code to $sys_deploy_dir"
 fi
-
+if [ "$deploy_common" -eq 1 ] ; then
+	echo "Deploying Common System Code to $sys_deploy_dir"
+fi
 
 if [ -d "$sys_deploy_dir" ] ; then
 	if [ -L "$sys_deploy_dir" ] ; then
@@ -61,16 +72,24 @@ if [ "$deploy_pi" -eq 1 ] ; then
 		cp -r "$file_name" "$sys_deploy_dir"
 	done
 fi
-
+if [ "$deploy_common" -eq 1 ] ; then
+	for file_name in ./Common/sys/*; do
+		cp -r "$file_name" "$sys_deploy_dir"
+	done
+fi
 
 if [ "$deploy_main" -eq 1 ] ; then
 	echo "Deployed Server Side System Files"
 	echo "Deploying Server Side Web Code to $www_deploy_dir"
 fi
 if [ "$deploy_pi" -eq 1 ] ; then
+	echo "Deployed Client Side System Files"
 	echo "Deploying Client Side Web Code to $www_deploy_dir"
 fi
-
+if [ "$deploy_common" -eq 1 ] ; then
+	echo "Deployed Common Side System Files"
+	echo "Deploying Common Side Web Code to $www_deploy_dir"
+fi
 
 if [ -d "$www_deploy_dir" ] ; then
 	if [ -L "$www_deploy_dir" ] ; then
@@ -97,6 +116,11 @@ if [ "$deploy_pi" -eq 1 ] ; then
 		cp -r "$file_name" "$www_deploy_dir"
 	done
 fi
+if [ "$deploy_common" -eq 1 ] ; then
+	for file_name in ./Common/www/*; do
+		cp -r "$file_name" "$www_deploy_dir"
+	done
+fi
 
 
 if [ "$deploy_main" -eq 1 ] ; then
@@ -104,5 +128,8 @@ if [ "$deploy_main" -eq 1 ] ; then
 fi
 if [ "$deploy_pi" -eq 1 ] ; then
 	echo "Deployed Client Side WWW Files"
+fi
+if [ "$deploy_common" -eq 1 ] ; then
+	echo "Deployed Common Side WWW Files"
 fi
 

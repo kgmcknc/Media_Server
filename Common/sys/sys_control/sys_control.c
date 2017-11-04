@@ -42,7 +42,7 @@
 #define MAX_STRING 400
 #define MAX_FUNCTION_STRING 400
 
-#define FUNCTION_PATH "/var/www/html/media_server/control/websysproc/rxwebpipe"
+#define FUNCTION_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
 #define WEB_PATH "/var/www/html/media_server/control/websysproc/webstate.kmf"
 
 // function name to match web call string
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 {
     //FILE* functionfile;
     //int functionfile = 0;
-    FILE* webfile = 0;
+    //FILE* webfile = 0;
     
     //if(USE_WPI) if(wiringPiSetup() == -1) return 1;
     
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
 //  }
     
     printf("----- Resetting Web State -----\n");
-    init_webstate(webfile);
+    //init_webstate(webfile);
     
     printf("----- Starting Main Loop -----\n");
     while(PI_IS_ON){
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
         process_function();
         
         //update web page file
-        updatewebstate(webfile); // use hash to make sure states are stable
+        //updatewebstate(webfile); // use hash to make sure states are stable
     }
     return 0;
 }

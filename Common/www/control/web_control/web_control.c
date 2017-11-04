@@ -39,8 +39,8 @@
 #define MAX_FUNCTION_STRING 200
 #define TIMEOUT 10
 
-#define RX_PIPE_PATH "/var/www/html/media_server/control/websysproc/rxwebpipe"
-#define TX_PIPE_PATH "/var/www/html/media_server/control/websysproc/txwebpipe"
+#define RX_PIPE_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
+#define TX_PIPE_PATH "/var/www/html/media_server/control/web_control/txwebpipe"
 
 char function_name[MAX_FUNCTION_STRING] = {0};
 

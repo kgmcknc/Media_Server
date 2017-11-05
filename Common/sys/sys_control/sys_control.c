@@ -1,5 +1,5 @@
 /*
- * mysys.c
+ * sys_control.c
  * 
  * Copyright 2017  <pi@raspberrypi>
  * 
@@ -32,7 +32,6 @@
 #include <unistd.h>
 //#include <wiringPi.h>
 
-
 #define PI_IS_ON 1
 #define ERROR_HALT 1
 #define FILE_DEBUG 1
@@ -41,9 +40,12 @@
 #define FUNCTION_COUNT 6
 #define MAX_STRING 400
 #define MAX_FUNCTION_STRING 400
+#define MAX_CONFIG_FILE 4096
+#define TMP_DATA_SIZE 40
 
-#define FUNCTION_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
-#define WEB_PATH "/var/www/html/media_server/control/websysproc/webstate.kmf"
+#define CONFIG_PATH "/usr/share/media_server/sys_control/sys_config.kmf"
+#define RX_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
+#define WEB_PATH "/var/www/html/media_server/control/web_control/txwebpipe"
 
 // function name to match web call string
 char function_name[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
@@ -112,6 +114,11 @@ char option_name[OPTION_COUNT][MAX_STRING] = {
     {10} // length of command constant
     };
 
+void configure_system(void);
+void print_config_menu(void);
+char check_config(FILE* config_file);
+char read_config_data(FILE* config_file, char* config_data, int offset, int size);
+char write_config_data(FILE* config_file, char* config_data, int offset, int size);
 void piusleep(int sleeptime);
 void checkfunctionfile(void);
 void updatewebstate(FILE* out_file);
@@ -123,37 +130,45 @@ char funcstring[MAX_STRING] = {0};
 char fvalid = 0;
 int flength = 0;
 
+FILE* config_file;
+
 int main(int argc, char **argv)
 {
-    //FILE* functionfile;
-    //int functionfile = 0;
-    //FILE* webfile = 0;
-    
-    //if(USE_WPI) if(wiringPiSetup() == -1) return 1;
     
     printf("\n\n----- Starting Kyle's System -----\n\n");
     
-    //functionfile = fopen(FUNCTION_PATH, "r+b");
-    //functionfile = open(FUNCTION_PATH, O_RDONLY, 0x0);
-    //if(functionfile != 0x0){
-//      printf("----- Successfully Opened Function File -----\n");
-//  } else {
-//      printf("...Failed to open function file...\n");
-//      return EXIT_FAILURE;
-//  }
+    printf("\n\n----- Opening Config File -----\n\n");
+    config_file = fopen(CONFIG_PATH, "a+b");
+    if(config_file != NULL){
+        printf("\n\n----- Successfully Opened Config File -----\n\n");
+    } else {
+        printf("\n\n----- Failed To Open Config File -----\n\n");
+        exit(EXIT_FAILURE);
+    }
     
-    //webfile = fopen(WEB_PATH, "r+b");
-    //if(webfile != NULL){
-    //  printf("----- Successfully Opened Web File -----\n");
-    //} else {
-//      printf("...Failed to open web file...\n");
-//      return EXIT_FAILURE;
-//  }
+    if(argc > 1){
+        printf("\n\n----- Checking Input Argument -----\n\n");
+        if(strcmp(argv[1], "Config") || strcmp(argv[1], "config")){
+            printf("\n\n----- Running System Config -----\n\n");
+            configure_system();
+        } else {
+            printf("\n\n----- Unknown Argument... Exiting -----\n\n");
+            exit(EXIT_FAILURE);
+        }
+    }
     
-    printf("----- Resetting Web State -----\n");
+    printf("\n\n----- Checking Configuration Settings -----\n\n");
+    if(check_config(config_file)){
+        printf("\n\n----- Configuration Failure -----\n\n");
+        exit(EXIT_FAILURE);
+    } else {
+        printf("\n\n----- Valid Configuration -----\n\n");
+    }
+    
+    printf("\n\n----- Resetting Web State -----\n\n");
     //init_webstate(webfile);
     
-    printf("----- Starting Main Loop -----\n");
+    printf("\n\n----- Starting Main Loop -----\n\n");
     while(PI_IS_ON){
         // wait, so pi only checks function file every second or so...
         //if(USE_WPI) delay(2500);
@@ -170,6 +185,121 @@ int main(int argc, char **argv)
         //update web page file
         //updatewebstate(webfile); // use hash to make sure states are stable
     }
+    fclose(config_file);
+    return 0;
+}
+
+void configure_system(void){
+    int file_size = 0;
+    char user_option = 0;
+    char cfg_data[TMP_DATA_SIZE] = {0};
+    
+    // user configuration of system
+    // read file and post data to user to use or change
+    // fix config file it broken
+    strncpy(&cfg_data[0], "kmf", 3);
+    write_config_data(config_file, &cfg_data[0], 0, 3);
+    cfg_data[0] = 0;
+    cfg_data[1] = 0;
+    cfg_data[2] = 1;
+    write_config_data(config_file, &cfg_data[0], 3, 3);
+    
+    while(user_option != 'q'){
+        print_config_menu();
+        scanf("%c", &user_option);
+    }
+    cfg_data[0] = 0;
+    cfg_data[1] = 2;
+    write_config_data(config_file, &cfg_data[0], 10, 2);
+    cfg_data[0] = 0x00;
+    cfg_data[1] = 0xB8;
+    write_config_data(config_file, &cfg_data[0], 12, 2);
+    cfg_data[0] = 0;
+    cfg_data[1] = 4;
+    write_config_data(config_file, &cfg_data[0], 14, 2);
+    cfg_data[0] = 192;
+    cfg_data[1] = 168;
+    cfg_data[2] = 1;
+    cfg_data[3] = 149;
+    write_config_data(config_file, &cfg_data[0], 16, 4);
+    cfg_data[0] = 0;
+    cfg_data[1] = 0;
+    cfg_data[2] = 0;
+    cfg_data[3] = 20;
+    write_config_data(config_file, &cfg_data[0], 6, 4);
+}
+
+void print_config_menu(void){
+    printf("\n------------------------------\n");
+    printf("\n---Choose An Option To View---\n");
+    printf("\n------------------------------\n");
+    printf("\nq  Exit System Configuration  \n");
+    printf("\np  Communication Port:        \n");
+    printf("\ns  Server IP Address:         \n");
+    printf("\nc  View Attached Clients      \n");
+    printf("\na  Add New Client IPs         \n");
+    printf("\nr  Remove Attached Clients    \n");
+    printf("\n------------------------------\n");
+    printf("\nType Input Selection: ");
+}
+
+char check_config(FILE* config_file){
+    //int cfg_cnt = 0;
+    char cfg_data[TMP_DATA_SIZE] = {0}; // max temp data - 40 bytes
+    
+    // Parsing config file (kmf file)
+    //while(cfg_cnt < MAX_CONFIG_FILE){
+        if(read_config_data(config_file, &cfg_data[0], 0, 3)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(read_config_data(config_file, &cfg_data[0], 3, 3)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(read_config_data(config_file, &cfg_data[0], 6, 4)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(read_config_data(config_file, &cfg_data[0], 10, 2)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(read_config_data(config_file, &cfg_data[0], 14, 2)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(read_config_data(config_file, &cfg_data[0], 18, 2)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(read_config_data(config_file, &cfg_data[0], 22, 4)) return 1;
+        printf("config data: %s\n", cfg_data);
+        
+        //cfg_cnt = cfg_cnt + 1;
+    //}
+    
+    return 0;
+}
+
+char read_config_data(FILE* config_file, char* config_data, int offset, int size){
+    char data[TMP_DATA_SIZE] = {0};
+    int tmp_cnt = 0;
+    char tmp_data = 0;
+    
+    fseek(config_file, offset, SEEK_SET);
+    
+    while((tmp_cnt < size) && (tmp_cnt < TMP_DATA_SIZE)){
+        tmp_data = getc(config_file);
+        if(tmp_data == EOF) return 1;
+        data[tmp_cnt] = tmp_data;
+        tmp_cnt = tmp_cnt + 1;
+    }
+    
+    strncpy(config_data, &data[0], size);
+    return 0;
+}
+
+char write_config_data(FILE* config_file, char* config_data, int offset, int size){
+    int tmp_cnt = 0;
+    char tmp_data = 0;
+    
+    fseek(config_file, offset, SEEK_SET);
+    
+    while((tmp_cnt < size) && (tmp_cnt < TMP_DATA_SIZE)){
+        tmp_data = config_data[tmp_cnt];
+        fputc(tmp_data, config_file);
+        tmp_cnt = tmp_cnt + 1;
+    }
+    
     return 0;
 }
 
@@ -189,12 +319,12 @@ void checkfunctionfile(void){
         // child id -- timeout catch
         printf("called fork!\n");
         sleep(10);
-        in_file = open(FUNCTION_PATH, O_WRONLY, 0x0);
+        in_file = open(RX_PATH, O_WRONLY, 0x0);
         write(in_file, "T", 1);
         exit(EXIT_SUCCESS);
     } else {
         // Parent id -- read and handle timeout
-        in_file = open(FUNCTION_PATH, O_RDONLY, 0x0);
+        in_file = open(RX_PATH, O_RDONLY, 0x0);
         //newfunction = fscanf(in_file, "%400[^\n]", filestring);
         newfunction = read(in_file, filestring, 400);
         

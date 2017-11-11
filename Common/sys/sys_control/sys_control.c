@@ -41,7 +41,9 @@
 #define MAX_STRING 400
 #define MAX_FUNCTION_STRING 400
 #define MAX_CONFIG_FILE 4096
+#define MIN_CONFIG_SIZE 20
 #define TMP_DATA_SIZE 40
+#define MAX_PORT 5000
 
 #define CONFIG_PATH "/usr/share/media_server/sys_control/sys_config.kmf"
 #define RX_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
@@ -54,7 +56,7 @@ char function_name[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
         "startvideo",
         "stopvideo",
         "startaudio",
-        "stopaudio",
+        "stopaudio"
     };
 // function call for system
 char function_call[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
@@ -117,8 +119,15 @@ char option_name[OPTION_COUNT][MAX_STRING] = {
 void configure_system(void);
 void print_config_menu(void);
 char check_config(FILE* config_file);
-char read_config_data(FILE* config_file, char* config_data, int offset, int size);
-char write_config_data(FILE* config_file, char* config_data, int offset, int size);
+char read_file_size(FILE* config_file, long int* config_data, long int offset);
+char write_file_size(FILE* config_file, long int* config_data, long int offset);
+char read_port(FILE* config_file, unsigned int* config_data, long int offset);
+char write_port(FILE* config_file, unsigned int* config_data, long int offset);
+char read_ip_address(FILE* config_file, unsigned int* config_data, long int offset);
+char write_ip_address(FILE* config_file, unsigned int* config_data, long int offset);
+char read_config_data(FILE* config_file, char* config_data, long int offset, int size);
+char write_config_data(FILE* config_file, char* config_data, long int offset, int size);
+
 void piusleep(int sleeptime);
 void checkfunctionfile(void);
 void updatewebstate(FILE* out_file);
@@ -138,13 +147,28 @@ int main(int argc, char **argv)
     printf("\n\n----- Starting Kyle's System -----\n\n");
     
     printf("\n\n----- Opening Config File -----\n\n");
-    config_file = fopen(CONFIG_PATH, "a+b");
+    config_file = fopen(CONFIG_PATH, "r+b");
     if(config_file != NULL){
         printf("\n\n----- Successfully Opened Config File -----\n\n");
     } else {
-        printf("\n\n----- Failed To Open Config File -----\n\n");
-        exit(EXIT_FAILURE);
+        printf("\n\n----- Failed To Open Config File Trying to Create-----\n\n");
+        config_file = fopen(CONFIG_PATH, "a+b");
+        if(config_file != NULL){
+            printf("\n\n----- Successfully Created Config File -----\n\n");
+            fclose(config_file);
+            config_file = fopen(CONFIG_PATH, "r+b");
+            if(config_file != NULL){
+                printf("\n\n----- Successfully Re-Opened Config File -----\n\n");
+            } else {
+                printf("\n\n----- Failed To Open Config File, Exiting -----\n\n");
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            printf("\n\n----- Failed To Open Config File, Exiting -----\n\n");
+            exit(EXIT_FAILURE);
+        }
     }
+    rewind(config_file);
     
     if(argc > 1){
         printf("\n\n----- Checking Input Argument -----\n\n");
@@ -157,13 +181,13 @@ int main(int argc, char **argv)
         }
     }
     
-    printf("\n\n----- Checking Configuration Settings -----\n\n");
+    /*printf("\n\n----- Checking Configuration Settings -----\n\n");
     if(check_config(config_file)){
         printf("\n\n----- Configuration Failure -----\n\n");
         exit(EXIT_FAILURE);
     } else {
         printf("\n\n----- Valid Configuration -----\n\n");
-    }
+    }*/
     
     printf("\n\n----- Resetting Web State -----\n\n");
     //init_webstate(webfile);
@@ -190,43 +214,129 @@ int main(int argc, char **argv)
 }
 
 void configure_system(void){
-    int file_size = 0;
+    long int file_size = 0;
+    int cfg_cnt = 0;
+    char file_end = 0;
     char user_option = 0;
+    unsigned int tmp_ip[4] = {0};
     char cfg_data[TMP_DATA_SIZE] = {0};
+    //char tmp_data[TMP_DATA_SIZE] = {0};
+    unsigned int tmp_port = 0;
+    char handled = 0;
+    char data = 0;
+    char empty;
     
     // user configuration of system
     // read file and post data to user to use or change
     // fix config file it broken
+    rewind(config_file);
+    cfg_cnt = 0;
+    while(!file_end && (cfg_cnt < MAX_CONFIG_FILE)){
+        fgetc(config_file);
+        file_end = feof(config_file);
+        if(!file_end) cfg_cnt = cfg_cnt + 1;
+    }
+    printf("\nConfig File Was %d Bytes Long\n", cfg_cnt);
+    
+    if(cfg_cnt < MIN_CONFIG_SIZE){
+        printf("\nConfig File Was Too Short! Adding Length!\n");
+        fseek(config_file, cfg_cnt, SEEK_SET);
+        data = 0;
+        while(cfg_cnt < MIN_CONFIG_SIZE){
+            fputc(data, config_file);
+            cfg_cnt = cfg_cnt + 1;
+        }
+        printf("\nSet Config File to Minimum Length\n");
+    }
+    rewind(config_file);
+    
+    printf("\nConfig File Is Now %d Bytes Long\n", cfg_cnt);
+    file_size = cfg_cnt;
+    write_file_size(config_file, &file_size, 6);
+    
     strncpy(&cfg_data[0], "kmf", 3);
     write_config_data(config_file, &cfg_data[0], 0, 3);
+    
     cfg_data[0] = 0;
     cfg_data[1] = 0;
     cfg_data[2] = 1;
     write_config_data(config_file, &cfg_data[0], 3, 3);
     
     while(user_option != 'q'){
+        handled = 0;
+        user_option = 0;
         print_config_menu();
         scanf("%c", &user_option);
+        if(user_option == 'q'){
+            handled = 1;
+            printf("\nExiting Configuration\n");
+            break;
+        }
+        if(user_option == 'p'){
+            handled = 1;
+            printf("\nDefault Port Is 3000\n");
+            if(read_port(config_file, &tmp_port, 10)){
+                printf("port read: %d\n", tmp_port);
+                if(tmp_port > 0){
+                    printf("Current Port Is Set To: %d", tmp_port);
+                } else {
+                    printf("\nPort Is Not Currently Set\n");
+                }
+            } else {
+                printf("\nCouldn't Read Port Information\n");
+            }
+            printf("\nSet Port or enter 0 to Go Back\n");
+            printf("\nNew Port: "); scanf("%d%c", &tmp_port, &empty);
+            if(tmp_port == 0){
+                printf("\nGot 0, Going Back to Menu\n");
+            }else{
+                printf("\nGot %d for new port\n", tmp_port);
+                if((tmp_port > 0) && (tmp_port < MAX_PORT)){
+                    write_port(config_file, &tmp_port, 10);
+                } else {
+                    printf("\nPort Was Out of Range, Try Setting Again\n");
+                }
+            }
+        }
+        if(user_option == 's'){
+            handled = 1;
+            printf("\nServer IP Should Be Static\n");
+            if(read_ip_address(config_file, &tmp_ip[0], 12)){
+                printf("Current Server IP Is Set To: %d.%d.%d.%d", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
+            } else {
+                printf("\nServer IP Is Not Currently Set\n");
+            }
+            printf("\nSet New Server IP with \"XXX.XXX.XXX.XXX\" or enter 0 to Go Back\n");
+            printf("New IP: ");
+            scanf("%u.%u.%u.%u%c", &tmp_ip[0], &tmp_ip[1], &tmp_ip[2], &tmp_ip[3], &empty);
+            if((tmp_ip[0] == 0) || (tmp_ip[1] == 0) || (tmp_ip[2] == 0) || (tmp_ip[3] == 0)){
+                printf("\nGot 0, Going Back to Menu\n");
+            }else{
+                printf("\nGot %d.%d.%d.%d for new port\n", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
+                if((tmp_ip[0] > 0) && (tmp_ip[1] > 0) && (tmp_ip[2] > 0) && (tmp_ip[3] > 0)){
+                    write_ip_address(config_file, &tmp_ip[0], 12);
+                } else {
+                    printf("\nPort Was Out of Range, Try Setting Again\n");
+                }
+            }
+        }
+        if(user_option == 'c'){
+            handled = 1;
+            printf("\nServer IP Should Be Static\n");
+            
+        }
+        if(user_option == 'a'){
+            handled = 1;
+            
+        }
+        if(user_option == 'r'){
+            handled = 1;
+            
+        }
+        if(handled == 0){
+            printf("\nUnknown Value!\n");
+        }
     }
-    cfg_data[0] = 0;
-    cfg_data[1] = 2;
-    write_config_data(config_file, &cfg_data[0], 10, 2);
-    cfg_data[0] = 0x00;
-    cfg_data[1] = 0xB8;
-    write_config_data(config_file, &cfg_data[0], 12, 2);
-    cfg_data[0] = 0;
-    cfg_data[1] = 4;
-    write_config_data(config_file, &cfg_data[0], 14, 2);
-    cfg_data[0] = 192;
-    cfg_data[1] = 168;
-    cfg_data[2] = 1;
-    cfg_data[3] = 149;
-    write_config_data(config_file, &cfg_data[0], 16, 4);
-    cfg_data[0] = 0;
-    cfg_data[1] = 0;
-    cfg_data[2] = 0;
-    cfg_data[3] = 20;
-    write_config_data(config_file, &cfg_data[0], 6, 4);
 }
 
 void print_config_menu(void){
@@ -246,31 +356,41 @@ void print_config_menu(void){
 char check_config(FILE* config_file){
     //int cfg_cnt = 0;
     char cfg_data[TMP_DATA_SIZE] = {0}; // max temp data - 40 bytes
+    int cfg_cnt = 0;
+    char file_end = 0;
     
-    // Parsing config file (kmf file)
-    //while(cfg_cnt < MAX_CONFIG_FILE){
-        if(read_config_data(config_file, &cfg_data[0], 0, 3)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(read_config_data(config_file, &cfg_data[0], 3, 3)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(read_config_data(config_file, &cfg_data[0], 6, 4)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(read_config_data(config_file, &cfg_data[0], 10, 2)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(read_config_data(config_file, &cfg_data[0], 14, 2)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(read_config_data(config_file, &cfg_data[0], 18, 2)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(read_config_data(config_file, &cfg_data[0], 22, 4)) return 1;
-        printf("config data: %s\n", cfg_data);
-        
-        //cfg_cnt = cfg_cnt + 1;
-    //}
+    rewind(config_file);
+    while(!file_end && (cfg_cnt < MAX_CONFIG_FILE)){
+        fgetc(config_file);
+        file_end = feof(config_file);
+        cfg_cnt = cfg_cnt + 1;
+    }
+    rewind(config_file);
     
-    return 0;
+    if(cfg_cnt < MIN_CONFIG_SIZE){
+        printf("\nConfig File Was Too Short! Need to Re-Configure!\n");
+        return 1;
+    } else {
+        // Parsing config file (kmf file)
+        if(!read_config_data(config_file, &cfg_data[0], 0, 3)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(!read_config_data(config_file, &cfg_data[0], 3, 3)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(!read_config_data(config_file, &cfg_data[0], 6, 4)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(!read_config_data(config_file, &cfg_data[0], 10, 2)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(!read_config_data(config_file, &cfg_data[0], 14, 2)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(!read_config_data(config_file, &cfg_data[0], 18, 2)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(!read_config_data(config_file, &cfg_data[0], 22, 4)) return 1;
+        printf("config data: %s\n", cfg_data);
+        return 0;
+    }
 }
 
-char read_config_data(FILE* config_file, char* config_data, int offset, int size){
+char read_config_data(FILE* config_file, char* config_data, long int offset, int size){
     char data[TMP_DATA_SIZE] = {0};
     int tmp_cnt = 0;
     char tmp_data = 0;
@@ -279,17 +399,17 @@ char read_config_data(FILE* config_file, char* config_data, int offset, int size
     
     while((tmp_cnt < size) && (tmp_cnt < TMP_DATA_SIZE)){
         tmp_data = getc(config_file);
-        if(tmp_data == EOF) return 1;
+        if(tmp_data == EOF) return 0;
         data[tmp_cnt] = tmp_data;
         tmp_cnt = tmp_cnt + 1;
     }
     
     strncpy(config_data, &data[0], size);
-    return 0;
+    return 1;
 }
 
-char write_config_data(FILE* config_file, char* config_data, int offset, int size){
-    int tmp_cnt = 0;
+char write_config_data(FILE* config_file, char* config_data, long int offset, int size){
+    unsigned int tmp_cnt = 0;
     char tmp_data = 0;
     
     fseek(config_file, offset, SEEK_SET);
@@ -299,6 +419,107 @@ char write_config_data(FILE* config_file, char* config_data, int offset, int siz
         fputc(tmp_data, config_file);
         tmp_cnt = tmp_cnt + 1;
     }
+    
+    return 0;
+}
+
+char read_port(FILE* config_file, unsigned int* config_data, long int offset){
+    unsigned char tmp_data = 0;
+    unsigned int tmp_int = 0;
+    
+    fseek(config_file, offset, SEEK_SET);
+    
+    tmp_data = getc(config_file);
+    printf("read %d\n", tmp_data);
+    if(tmp_data == EOF) return 0;
+    tmp_int = tmp_data;
+    tmp_int = tmp_int << 8;
+    tmp_data = getc(config_file);
+    printf("read %d\n", tmp_data);
+    if(tmp_data == EOF) return 0;
+    tmp_int = tmp_int | tmp_data;
+    *config_data = tmp_int;
+    printf("full read %d\n", *config_data);
+    return 1;
+}
+
+char write_port(FILE* config_file, unsigned int* config_data, long int offset){
+    unsigned char tmp_data = 0;
+    int tmp_int = 0;
+    
+    tmp_int = *config_data;
+    printf("got write port: %d\n", tmp_int);
+    fseek(config_file, offset, SEEK_SET);
+    tmp_data = (tmp_int >> 8) & 0xFF;
+
+    fputc(tmp_data, config_file);
+    tmp_data = tmp_int & 0xFF;
+
+    fputc(tmp_data, config_file);
+    
+    return 0;
+}
+
+char read_ip_address(FILE* config_file, unsigned int* config_data, long int offset){
+    unsigned char tmp_data = 0;
+    unsigned char tmp_cnt = 0;
+    
+    fseek(config_file, offset, SEEK_SET);
+    
+    while(tmp_cnt < 4){
+        tmp_data = getc(config_file);
+        if(tmp_data == EOF) return 0;
+        config_data[tmp_cnt] = tmp_data;
+        tmp_cnt = tmp_cnt + 1;
+    }
+    
+    return 1;
+}
+
+char write_ip_address(FILE* config_file, unsigned int* config_data, long int offset){
+    unsigned char tmp_cnt = 0;
+    unsigned char tmp_data = 0;
+    
+    fseek(config_file, offset, SEEK_SET);
+    
+    while(tmp_cnt < 4){
+        tmp_data = config_data[tmp_cnt];
+        fputc(tmp_data, config_file);
+        tmp_cnt = tmp_cnt + 1;
+    }
+    
+    return 0;
+}
+
+char read_file_size(FILE* config_file, long int* config_data, long int offset){
+    int tmp_data = 0;
+    int tmp_cnt = 0;
+    
+    fseek(config_file, offset, SEEK_SET);
+    
+    while(tmp_cnt < 4){
+        tmp_data = getc(config_file);
+        if(tmp_data == EOF) return 0;
+        config_data[tmp_cnt] = tmp_data;
+        tmp_cnt = tmp_cnt + 1;
+    }
+    
+    return 1;
+}
+
+char write_file_size(FILE* config_file, long int* config_data, long int offset){
+    char tmp_cnt = 3;
+    char tmp_data = 0;
+    
+    fseek(config_file, offset, SEEK_SET);
+    
+    while(tmp_cnt){
+        tmp_data = ((*config_data >> (8*tmp_cnt)) & 0xFF);
+        fputc(tmp_data, config_file);
+        tmp_cnt = tmp_cnt - 1;
+    }
+    tmp_data = *config_data & 0xFF;
+    fputc(tmp_data, config_file);
     
     return 0;
 }
@@ -518,4 +739,13 @@ void piusleep(int sleeptime){
          }
          sleeptime = sleeptime - 1;
     }
+}
+
+void bin_to_char(){
+    
+}
+
+void char_to_dec(char* input_char, int* output_dec){
+    sscanf(input_char, "%d", output_dec);
+    printf("decimal is %d\n", *output_dec);
 }

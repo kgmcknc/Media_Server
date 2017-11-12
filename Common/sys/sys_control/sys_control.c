@@ -44,6 +44,7 @@
 #define MIN_CONFIG_SIZE 20
 #define TMP_DATA_SIZE 40
 #define MAX_PORT 5000
+#define MAX_CLIENTS 8
 
 #define CONFIG_PATH "/usr/share/media_server/sys_control/sys_config.kmf"
 #define RX_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
@@ -125,6 +126,10 @@ char read_port(FILE* config_file, unsigned int* config_data, long int offset);
 char write_port(FILE* config_file, unsigned int* config_data, long int offset);
 char read_ip_address(FILE* config_file, unsigned int* config_data, long int offset);
 char write_ip_address(FILE* config_file, unsigned int* config_data, long int offset);
+char add_client(FILE* config_file, unsigned int* config_data, long int offset);
+unsigned int read_clients(FILE* config_file, unsigned int config_data[][4], long int offset);
+char remove_client(FILE* config_file, unsigned int config_data, long int offset);
+char reorder_clients(FILE* config_file, unsigned int config_data, unsigned int config_data_n, long int offset);
 char read_config_data(FILE* config_file, char* config_data, long int offset, int size);
 char write_config_data(FILE* config_file, char* config_data, long int offset, int size);
 
@@ -220,11 +225,15 @@ void configure_system(void){
     char user_option = 0;
     unsigned int tmp_ip[4] = {0};
     char cfg_data[TMP_DATA_SIZE] = {0};
-    //char tmp_data[TMP_DATA_SIZE] = {0};
+    unsigned int tmp_data = 0;
+    unsigned int tmp_data_n = 0;
     unsigned int tmp_port = 0;
+    int tmp_count = 0;
     char handled = 0;
     char data = 0;
     char empty;
+    unsigned int num_clients;
+    unsigned int tmp_clients[MAX_CLIENTS][4];
     
     // user configuration of system
     // read file and post data to user to use or change
@@ -240,7 +249,7 @@ void configure_system(void){
     
     if(cfg_cnt < MIN_CONFIG_SIZE){
         printf("\nConfig File Was Too Short! Adding Length!\n");
-        fseek(config_file, cfg_cnt, SEEK_SET);
+        if(cfg_cnt < MAX_CONFIG_FILE) fseek(config_file, cfg_cnt, SEEK_SET);
         data = 0;
         while(cfg_cnt < MIN_CONFIG_SIZE){
             fputc(data, config_file);
@@ -266,7 +275,7 @@ void configure_system(void){
         handled = 0;
         user_option = 0;
         print_config_menu();
-        scanf("%c", &user_option);
+        scanf("%c%c", &user_option, &empty);
         if(user_option == 'q'){
             handled = 1;
             printf("\nExiting Configuration\n");
@@ -307,31 +316,99 @@ void configure_system(void){
                 printf("\nServer IP Is Not Currently Set\n");
             }
             printf("\nSet New Server IP with \"XXX.XXX.XXX.XXX\" or enter 0 to Go Back\n");
-            printf("New IP: ");
+            printf("New Server IP: ");
             scanf("%u.%u.%u.%u%c", &tmp_ip[0], &tmp_ip[1], &tmp_ip[2], &tmp_ip[3], &empty);
             if((tmp_ip[0] == 0) || (tmp_ip[1] == 0) || (tmp_ip[2] == 0) || (tmp_ip[3] == 0)){
                 printf("\nGot 0, Going Back to Menu\n");
             }else{
-                printf("\nGot %d.%d.%d.%d for new port\n", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
+                printf("\nGot %d.%d.%d.%d For New Server IP\n", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
                 if((tmp_ip[0] > 0) && (tmp_ip[1] > 0) && (tmp_ip[2] > 0) && (tmp_ip[3] > 0)){
                     write_ip_address(config_file, &tmp_ip[0], 12);
                 } else {
-                    printf("\nPort Was Out of Range, Try Setting Again\n");
+                    printf("\nIP Was Out of Range, Try Setting Again\n");
                 }
             }
         }
         if(user_option == 'c'){
             handled = 1;
-            printf("\nServer IP Should Be Static\n");
-            
+            printf("\nListing Attached Clients\n");
+            num_clients = read_clients(config_file, tmp_clients, 16);
+            if(num_clients){
+                printf("Number of Clients: %d\n", num_clients);
+                tmp_count = 0;
+                while(tmp_count < num_clients){
+                    printf("Client %d: %d.%d.%d.%d\n", tmp_count + 1, tmp_clients[tmp_count][0], tmp_clients[tmp_count][1], tmp_clients[tmp_count][2], tmp_clients[tmp_count][3]);
+                    tmp_count = tmp_count + 1;
+                }
+            } else {
+                printf("\nNo Clients Connected\n");
+            }
         }
         if(user_option == 'a'){
             handled = 1;
-            
+            printf("\nAdding Client To System\n");
+            num_clients = read_clients(config_file, tmp_clients, 16);
+            if(num_clients < MAX_CLIENTS){
+                printf("number of clients: %d\n", num_clients);
+                printf("\nSet New Client IP with \"XXX.XXX.XXX.XXX\" or enter 0 to Go Back\n");
+                printf("New Client IP: ");
+                scanf("%u.%u.%u.%u%c", &tmp_ip[0], &tmp_ip[1], &tmp_ip[2], &tmp_ip[3], &empty);
+                if((tmp_ip[0] == 0) || (tmp_ip[1] == 0) || (tmp_ip[2] == 0) || (tmp_ip[3] == 0)){
+                    printf("\nGot 0, Going Back to Menu\n");
+                }else{
+                    printf("\nGot %d.%d.%d.%d For New Client IP\n", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
+                    if((tmp_ip[0] > 0) && (tmp_ip[1] > 0) && (tmp_ip[2] > 0) && (tmp_ip[3] > 0)){
+                        add_client(config_file, &tmp_ip[0], 16);
+                    } else {
+                        printf("\nIP Was Out of Range, Try Setting Again\n");
+                    }
+                }
+            } else {
+                printf("\nToo Many Clients To Add Another\n");
+            }
         }
         if(user_option == 'r'){
             handled = 1;
-            
+            printf("\nRemoving Client From System\n");
+            num_clients = read_clients(config_file, tmp_clients, 16);
+            if(num_clients > 0){
+                printf("Number of Clients: %d\n", num_clients);
+                tmp_count = 0;
+                while(tmp_count < num_clients){
+                    printf("Client %d: %d.%d.%d.%d\n", tmp_count + 1, tmp_clients[tmp_count][0], tmp_clients[tmp_count][1], tmp_clients[tmp_count][2], tmp_clients[tmp_count][3]);
+                    tmp_count = tmp_count + 1;
+                }
+                printf("\nSelect Client To Remove: ");
+                scanf("%u%c", &tmp_data, &empty);
+                if((tmp_data == 0) || (tmp_data > num_clients)){
+                    printf("Cannot Remove Client %d\n", tmp_data);
+                } else {
+                    remove_client(config_file, tmp_data, 16);
+                }
+            } else {
+                printf("\nNo Clients To Remove\n");
+            }
+        }
+        if(user_option == 'o'){
+            handled = 1;
+            printf("\nRe-Order Clients On System\n");
+            num_clients = read_clients(config_file, tmp_clients, 16);
+            if(num_clients > 0){
+                printf("Number of Clients: %d\n", num_clients);
+                tmp_count = 0;
+                while(tmp_count < num_clients){
+                    printf("Client %d: %d.%d.%d.%d\n", tmp_count + 1, tmp_clients[tmp_count][0], tmp_clients[tmp_count][1], tmp_clients[tmp_count][2], tmp_clients[tmp_count][3]);
+                    tmp_count = tmp_count + 1;
+                }
+                printf("\nSelect 2 Clients To Re-Order (Switch)\n");
+                printf("\nInput Two Numbers Separated By A Single Space. x x: ");
+                scanf("%u %u%c", &tmp_data, &tmp_data_n, &empty);
+                if((tmp_data > 0) && (tmp_data_n > 0) && (tmp_data <= num_clients) && (tmp_data_n <= num_clients)){
+                    reorder_clients(config_file, tmp_data, tmp_data_n, 16);
+                }
+            } else {
+                printf("\nNo Clients To Re-Order\n");
+            }
         }
         if(handled == 0){
             printf("\nUnknown Value!\n");
@@ -349,6 +426,7 @@ void print_config_menu(void){
     printf("\nc  View Attached Clients      \n");
     printf("\na  Add New Client IPs         \n");
     printf("\nr  Remove Attached Clients    \n");
+    printf("\no  Re-Order Attached Clients  \n");
     printf("\n------------------------------\n");
     printf("\nType Input Selection: ");
 }
@@ -395,7 +473,7 @@ char read_config_data(FILE* config_file, char* config_data, long int offset, int
     int tmp_cnt = 0;
     char tmp_data = 0;
     
-    fseek(config_file, offset, SEEK_SET);
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     
     while((tmp_cnt < size) && (tmp_cnt < TMP_DATA_SIZE)){
         tmp_data = getc(config_file);
@@ -412,7 +490,7 @@ char write_config_data(FILE* config_file, char* config_data, long int offset, in
     unsigned int tmp_cnt = 0;
     char tmp_data = 0;
     
-    fseek(config_file, offset, SEEK_SET);
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     
     while((tmp_cnt < size) && (tmp_cnt < TMP_DATA_SIZE)){
         tmp_data = config_data[tmp_cnt];
@@ -427,19 +505,19 @@ char read_port(FILE* config_file, unsigned int* config_data, long int offset){
     unsigned char tmp_data = 0;
     unsigned int tmp_int = 0;
     
-    fseek(config_file, offset, SEEK_SET);
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     
     tmp_data = getc(config_file);
-    printf("read %d\n", tmp_data);
+
     if(tmp_data == EOF) return 0;
     tmp_int = tmp_data;
     tmp_int = tmp_int << 8;
     tmp_data = getc(config_file);
-    printf("read %d\n", tmp_data);
+
     if(tmp_data == EOF) return 0;
     tmp_int = tmp_int | tmp_data;
     *config_data = tmp_int;
-    printf("full read %d\n", *config_data);
+
     return 1;
 }
 
@@ -449,7 +527,7 @@ char write_port(FILE* config_file, unsigned int* config_data, long int offset){
     
     tmp_int = *config_data;
     printf("got write port: %d\n", tmp_int);
-    fseek(config_file, offset, SEEK_SET);
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     tmp_data = (tmp_int >> 8) & 0xFF;
 
     fputc(tmp_data, config_file);
@@ -464,7 +542,7 @@ char read_ip_address(FILE* config_file, unsigned int* config_data, long int offs
     unsigned char tmp_data = 0;
     unsigned char tmp_cnt = 0;
     
-    fseek(config_file, offset, SEEK_SET);
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     
     while(tmp_cnt < 4){
         tmp_data = getc(config_file);
@@ -480,7 +558,7 @@ char write_ip_address(FILE* config_file, unsigned int* config_data, long int off
     unsigned char tmp_cnt = 0;
     unsigned char tmp_data = 0;
     
-    fseek(config_file, offset, SEEK_SET);
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     
     while(tmp_cnt < 4){
         tmp_data = config_data[tmp_cnt];
@@ -491,11 +569,118 @@ char write_ip_address(FILE* config_file, unsigned int* config_data, long int off
     return 0;
 }
 
+char add_client(FILE* config_file, unsigned int* config_data, long int offset){
+    unsigned char tmp_data = 0;
+    unsigned char tmp_cnt = 0;
+    unsigned char client_count = 0;
+    long int new_offset;
+    
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    
+    tmp_data = getc(config_file);
+    if(tmp_data == EOF) return 0;
+    client_count = tmp_data;
+    client_count = (client_count << 8);
+    tmp_data = getc(config_file);
+    if(tmp_data == EOF) return 0;
+    client_count = client_count | tmp_data;
+    
+    new_offset = offset + 4 + (4*(client_count));
+    if(new_offset < MAX_CONFIG_FILE) fseek(config_file, new_offset, SEEK_SET);
+    
+    while(tmp_cnt < 4){
+        tmp_data = config_data[tmp_cnt];
+        fputc(tmp_data, config_file);
+        tmp_cnt = tmp_cnt + 1;
+    }
+    
+    client_count = client_count + 1;
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    tmp_data = (client_count >> 8) & 0xFF;
+    fputc(tmp_data, config_file);
+    tmp_data = client_count & 0xFF;
+    fputc(tmp_data, config_file);
+    
+    return 0;
+}
+
+char remove_client(FILE* config_file, unsigned int config_data, long int offset){
+    unsigned char tmp_data = 0;
+    unsigned char loop_count = 0;
+    unsigned char client_count = 0;
+    unsigned int tmp_ip[4];
+    long int new_offset;
+    
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    tmp_data = getc(config_file);
+    if(tmp_data == EOF) return 0;
+    client_count = tmp_data;
+    client_count = (client_count << 8);
+    tmp_data = getc(config_file);
+    if(tmp_data == EOF) return 0;
+    client_count = client_count | tmp_data;
+    
+    loop_count = (config_data - 1);
+    while(loop_count < client_count){
+        new_offset = offset + 4 + (4*(loop_count+1));
+        if(new_offset < MAX_CONFIG_FILE){
+            read_ip_address(config_file, &tmp_ip[0], new_offset);
+            write_ip_address(config_file, &tmp_ip[0], (new_offset - 4));
+        }
+        loop_count = loop_count + 1;
+    }
+    
+    client_count = client_count - 1;
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    tmp_data = (client_count >> 8) & 0xFF;
+    fputc(tmp_data, config_file);
+    tmp_data = client_count & 0xFF;
+    fputc(tmp_data, config_file);
+    
+    return 0;
+}
+
+char reorder_clients(FILE* config_file, unsigned int config_data, unsigned int config_data_n, long int offset){
+    unsigned char tmp_data = 0;
+    unsigned char client_count = 0;
+    unsigned int tmp_ip[4];
+    unsigned int tmp_ip_n[4];
+    long int new_offset;
+    
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    tmp_data = getc(config_file);
+    if(tmp_data == EOF) return 0;
+    client_count = tmp_data;
+    client_count = (client_count << 8);
+    tmp_data = getc(config_file);
+    if(tmp_data == EOF) return 0;
+    client_count = client_count | tmp_data;
+    
+    new_offset = offset + 4 + (4*(config_data - 1));
+    if(new_offset < MAX_CONFIG_FILE){
+        read_ip_address(config_file, &tmp_ip[0], new_offset);
+    }
+    new_offset = offset + 4 + (4*(config_data_n - 1));
+    if(new_offset < MAX_CONFIG_FILE){
+        read_ip_address(config_file, &tmp_ip_n[0], new_offset);
+    }
+    new_offset = offset + 4 + (4*(config_data - 1));
+    if(new_offset < MAX_CONFIG_FILE){
+        write_ip_address(config_file, &tmp_ip_n[0], new_offset);
+    }
+    new_offset = offset + 4 + (4*(config_data_n - 1));
+    if(new_offset < MAX_CONFIG_FILE){
+        write_ip_address(config_file, &tmp_ip[0], new_offset);
+    }
+    
+    return 0;
+}
+
 char read_file_size(FILE* config_file, long int* config_data, long int offset){
     int tmp_data = 0;
     int tmp_cnt = 0;
     
-    fseek(config_file, offset, SEEK_SET);
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     
     while(tmp_cnt < 4){
         tmp_data = getc(config_file);
@@ -507,11 +692,44 @@ char read_file_size(FILE* config_file, long int* config_data, long int offset){
     return 1;
 }
 
+unsigned int read_clients(FILE* config_file, unsigned int config_data[][4], long int offset){
+    unsigned char tmp_data = 0;
+    unsigned char tmp_cnt = 0;
+    unsigned char tmp_counter = 0;
+    unsigned char client_count = 0;
+    
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    
+    tmp_data = getc(config_file);
+    if(tmp_data == EOF) return 0;
+    client_count = tmp_data;
+    client_count = (client_count << 8);
+    tmp_data = getc(config_file);
+    if(tmp_data == EOF) return 0;
+    client_count = client_count | tmp_data;
+    
+    tmp_data = getc(config_file);
+    tmp_data = getc(config_file);
+    
+    while((tmp_cnt < client_count) && (tmp_cnt < MAX_CLIENTS)){
+        tmp_counter = 0;
+        while(tmp_counter < 4){
+            tmp_data = getc(config_file);
+            if(tmp_data == EOF) return 0;
+            config_data[tmp_cnt][tmp_counter] = tmp_data;
+            tmp_counter = tmp_counter + 1;
+        }
+        tmp_cnt = tmp_cnt + 1;
+    }
+    
+    return client_count;
+}
+
 char write_file_size(FILE* config_file, long int* config_data, long int offset){
     char tmp_cnt = 3;
     char tmp_data = 0;
     
-    fseek(config_file, offset, SEEK_SET);
+    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     
     while(tmp_cnt){
         tmp_data = ((*config_data >> (8*tmp_cnt)) & 0xFF);

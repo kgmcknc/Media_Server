@@ -574,6 +574,7 @@ char add_client(FILE* config_file, unsigned int* config_data, long int offset){
     unsigned char tmp_cnt = 0;
     unsigned char client_count = 0;
     long int new_offset;
+    long int file_size;
     
     if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     
@@ -601,6 +602,10 @@ char add_client(FILE* config_file, unsigned int* config_data, long int offset){
     tmp_data = client_count & 0xFF;
     fputc(tmp_data, config_file);
     
+    read_file_size(config_file, &file_size, 6);
+    file_size = file_size + 4;
+    write_file_size(config_file, &file_size, 6);
+    
     return 0;
 }
 
@@ -610,6 +615,7 @@ char remove_client(FILE* config_file, unsigned int config_data, long int offset)
     unsigned char client_count = 0;
     unsigned int tmp_ip[4];
     long int new_offset;
+    long int file_size;
     
     if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     tmp_data = getc(config_file);
@@ -636,6 +642,11 @@ char remove_client(FILE* config_file, unsigned int config_data, long int offset)
     fputc(tmp_data, config_file);
     tmp_data = client_count & 0xFF;
     fputc(tmp_data, config_file);
+    
+    read_file_size(config_file, &file_size, 6);
+    file_size = file_size - 4;
+    write_file_size(config_file, &file_size, 6);
+    ftruncate(fileno(config_file), file_size);
     
     return 0;
 }
@@ -678,17 +689,19 @@ char reorder_clients(FILE* config_file, unsigned int config_data, unsigned int c
 
 char read_file_size(FILE* config_file, long int* config_data, long int offset){
     int tmp_data = 0;
-    int tmp_cnt = 0;
+    int tmp_cnt = 4;
+    long int tmp_int= 0;
     
     if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
     
-    while(tmp_cnt < 4){
+    while(tmp_cnt){
+        tmp_cnt = tmp_cnt - 1;
         tmp_data = getc(config_file);
         if(tmp_data == EOF) return 0;
-        config_data[tmp_cnt] = tmp_data;
-        tmp_cnt = tmp_cnt + 1;
+        tmp_int = tmp_int | (tmp_data << (8*tmp_cnt));
     }
     
+    *config_data = tmp_int;
     return 1;
 }
 

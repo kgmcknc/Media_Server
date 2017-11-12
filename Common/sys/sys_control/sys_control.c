@@ -143,6 +143,7 @@ char filestring[MAX_STRING] = {0};
 char funcstring[MAX_STRING] = {0};
 char fvalid = 0;
 int flength = 0;
+long int file_length = 0;
 
 FILE* config_file;
 
@@ -249,18 +250,22 @@ void configure_system(void){
     
     if(cfg_cnt < MIN_CONFIG_SIZE){
         printf("\nConfig File Was Too Short! Adding Length!\n");
-        if(cfg_cnt < MAX_CONFIG_FILE) fseek(config_file, cfg_cnt, SEEK_SET);
-        data = 0;
-        while(cfg_cnt < MIN_CONFIG_SIZE){
-            fputc(data, config_file);
-            cfg_cnt = cfg_cnt + 1;
+        if(cfg_cnt < MAX_CONFIG_FILE){
+            if(!fseek(config_file, cfg_cnt, SEEK_SET)){
+                data = 0;
+                while(cfg_cnt < MIN_CONFIG_SIZE){
+                    fputc(data, config_file);
+                    cfg_cnt = cfg_cnt + 1;
+                }
+                printf("\nSet Config File to Minimum Length\n");
+            }
         }
-        printf("\nSet Config File to Minimum Length\n");
     }
     rewind(config_file);
     
     printf("\nConfig File Is Now %d Bytes Long\n", cfg_cnt);
     file_size = cfg_cnt;
+    file_length = cfg_cnt;
     write_file_size(config_file, &file_size, 6);
     
     strncpy(&cfg_data[0], "kmf", 3);
@@ -336,7 +341,7 @@ void configure_system(void){
             if(num_clients){
                 printf("Number of Clients: %d\n", num_clients);
                 tmp_count = 0;
-                while(tmp_count < num_clients){
+                while((tmp_count < num_clients) && (tmp_count < MAX_CLIENTS)){
                     printf("Client %d: %d.%d.%d.%d\n", tmp_count + 1, tmp_clients[tmp_count][0], tmp_clients[tmp_count][1], tmp_clients[tmp_count][2], tmp_clients[tmp_count][3]);
                     tmp_count = tmp_count + 1;
                 }
@@ -374,7 +379,7 @@ void configure_system(void){
             if(num_clients > 0){
                 printf("Number of Clients: %d\n", num_clients);
                 tmp_count = 0;
-                while(tmp_count < num_clients){
+                while((tmp_count < num_clients) && (tmp_count < MAX_CLIENTS)){
                     printf("Client %d: %d.%d.%d.%d\n", tmp_count + 1, tmp_clients[tmp_count][0], tmp_clients[tmp_count][1], tmp_clients[tmp_count][2], tmp_clients[tmp_count][3]);
                     tmp_count = tmp_count + 1;
                 }
@@ -396,7 +401,7 @@ void configure_system(void){
             if(num_clients > 0){
                 printf("Number of Clients: %d\n", num_clients);
                 tmp_count = 0;
-                while(tmp_count < num_clients){
+                while((tmp_count < num_clients) && (tmp_count < MAX_CLIENTS)){
                     printf("Client %d: %d.%d.%d.%d\n", tmp_count + 1, tmp_clients[tmp_count][0], tmp_clients[tmp_count][1], tmp_clients[tmp_count][2], tmp_clients[tmp_count][3]);
                     tmp_count = tmp_count + 1;
                 }
@@ -458,11 +463,9 @@ char check_config(FILE* config_file){
         printf("config data: %s\n", cfg_data);
         if(!read_config_data(config_file, &cfg_data[0], 10, 2)) return 1;
         printf("config data: %s\n", cfg_data);
-        if(!read_config_data(config_file, &cfg_data[0], 14, 2)) return 1;
+        if(!read_config_data(config_file, &cfg_data[0], 12, 4)) return 1;
         printf("config data: %s\n", cfg_data);
-        if(!read_config_data(config_file, &cfg_data[0], 18, 2)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(!read_config_data(config_file, &cfg_data[0], 22, 4)) return 1;
+        if(!read_config_data(config_file, &cfg_data[0], 16, 4)) return 1;
         printf("config data: %s\n", cfg_data);
         return 0;
     }
@@ -473,7 +476,11 @@ char read_config_data(FILE* config_file, char* config_data, long int offset, int
     int tmp_cnt = 0;
     char tmp_data = 0;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     
     while((tmp_cnt < size) && (tmp_cnt < TMP_DATA_SIZE)){
         tmp_data = getc(config_file);
@@ -490,7 +497,11 @@ char write_config_data(FILE* config_file, char* config_data, long int offset, in
     unsigned int tmp_cnt = 0;
     char tmp_data = 0;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     
     while((tmp_cnt < size) && (tmp_cnt < TMP_DATA_SIZE)){
         tmp_data = config_data[tmp_cnt];
@@ -505,7 +516,11 @@ char read_port(FILE* config_file, unsigned int* config_data, long int offset){
     unsigned char tmp_data = 0;
     unsigned int tmp_int = 0;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     
     tmp_data = getc(config_file);
 
@@ -527,7 +542,11 @@ char write_port(FILE* config_file, unsigned int* config_data, long int offset){
     
     tmp_int = *config_data;
     printf("got write port: %d\n", tmp_int);
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     tmp_data = (tmp_int >> 8) & 0xFF;
 
     fputc(tmp_data, config_file);
@@ -542,7 +561,11 @@ char read_ip_address(FILE* config_file, unsigned int* config_data, long int offs
     unsigned char tmp_data = 0;
     unsigned char tmp_cnt = 0;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     
     while(tmp_cnt < 4){
         tmp_data = getc(config_file);
@@ -558,7 +581,11 @@ char write_ip_address(FILE* config_file, unsigned int* config_data, long int off
     unsigned char tmp_cnt = 0;
     unsigned char tmp_data = 0;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     
     while(tmp_cnt < 4){
         tmp_data = config_data[tmp_cnt];
@@ -573,10 +600,16 @@ char add_client(FILE* config_file, unsigned int* config_data, long int offset){
     unsigned char tmp_data = 0;
     unsigned char tmp_cnt = 0;
     unsigned char client_count = 0;
+    unsigned char loop_count = 0;
     long int new_offset;
     long int file_size;
+    unsigned char match = 0;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     
     tmp_data = getc(config_file);
     if(tmp_data == EOF) return 0;
@@ -586,9 +619,36 @@ char add_client(FILE* config_file, unsigned int* config_data, long int offset){
     if(tmp_data == EOF) return 0;
     client_count = client_count | tmp_data;
     
-    new_offset = offset + 4 + (4*(client_count));
-    if(new_offset < MAX_CONFIG_FILE) fseek(config_file, new_offset, SEEK_SET);
+    while(loop_count < client_count){
+        new_offset = offset + 4 + (4*(loop_count));
+        if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
+            if(fseek(config_file, new_offset, SEEK_SET)) return 0;
+        } else {
+            return 0;
+        }
+        
+        tmp_cnt = 0;
+        match = 1;
+        while(tmp_cnt < 4){
+            tmp_data = fgetc(config_file);
+            if(tmp_data != config_data[tmp_cnt]){
+                match = 0;
+            }
+            tmp_cnt = tmp_cnt + 1;
+        }
+        if(match) return 0;
+        
+        loop_count = loop_count + 1;
+    }
     
+    new_offset = offset + 4 + (4*(client_count));
+    if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
+        if(fseek(config_file, new_offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
+    
+    tmp_cnt = 0;
     while(tmp_cnt < 4){
         tmp_data = config_data[tmp_cnt];
         fputc(tmp_data, config_file);
@@ -596,7 +656,11 @@ char add_client(FILE* config_file, unsigned int* config_data, long int offset){
     }
     
     client_count = client_count + 1;
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     tmp_data = (client_count >> 8) & 0xFF;
     fputc(tmp_data, config_file);
     tmp_data = client_count & 0xFF;
@@ -604,6 +668,7 @@ char add_client(FILE* config_file, unsigned int* config_data, long int offset){
     
     read_file_size(config_file, &file_size, 6);
     file_size = file_size + 4;
+    file_length = file_size;
     write_file_size(config_file, &file_size, 6);
     
     return 0;
@@ -617,7 +682,11 @@ char remove_client(FILE* config_file, unsigned int config_data, long int offset)
     long int new_offset;
     long int file_size;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     tmp_data = getc(config_file);
     if(tmp_data == EOF) return 0;
     client_count = tmp_data;
@@ -629,15 +698,21 @@ char remove_client(FILE* config_file, unsigned int config_data, long int offset)
     loop_count = (config_data - 1);
     while(loop_count < client_count){
         new_offset = offset + 4 + (4*(loop_count+1));
-        if(new_offset < MAX_CONFIG_FILE){
+        if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
             read_ip_address(config_file, &tmp_ip[0], new_offset);
             write_ip_address(config_file, &tmp_ip[0], (new_offset - 4));
+        } else {
+            return 0;
         }
         loop_count = loop_count + 1;
     }
     
     client_count = client_count - 1;
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     tmp_data = (client_count >> 8) & 0xFF;
     fputc(tmp_data, config_file);
     tmp_data = client_count & 0xFF;
@@ -645,6 +720,7 @@ char remove_client(FILE* config_file, unsigned int config_data, long int offset)
     
     read_file_size(config_file, &file_size, 6);
     file_size = file_size - 4;
+    file_length = file_size;
     write_file_size(config_file, &file_size, 6);
     ftruncate(fileno(config_file), file_size);
     
@@ -658,7 +734,11 @@ char reorder_clients(FILE* config_file, unsigned int config_data, unsigned int c
     unsigned int tmp_ip_n[4];
     long int new_offset;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     tmp_data = getc(config_file);
     if(tmp_data == EOF) return 0;
     client_count = tmp_data;
@@ -668,20 +748,28 @@ char reorder_clients(FILE* config_file, unsigned int config_data, unsigned int c
     client_count = client_count | tmp_data;
     
     new_offset = offset + 4 + (4*(config_data - 1));
-    if(new_offset < MAX_CONFIG_FILE){
+    if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
         read_ip_address(config_file, &tmp_ip[0], new_offset);
+    } else {
+        return 0;
     }
     new_offset = offset + 4 + (4*(config_data_n - 1));
-    if(new_offset < MAX_CONFIG_FILE){
+    if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
         read_ip_address(config_file, &tmp_ip_n[0], new_offset);
+    } else {
+        return 0;
     }
     new_offset = offset + 4 + (4*(config_data - 1));
-    if(new_offset < MAX_CONFIG_FILE){
+    if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
         write_ip_address(config_file, &tmp_ip_n[0], new_offset);
+    } else {
+        return 0;
     }
     new_offset = offset + 4 + (4*(config_data_n - 1));
-    if(new_offset < MAX_CONFIG_FILE){
+    if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
         write_ip_address(config_file, &tmp_ip[0], new_offset);
+    } else {
+        return 0;
     }
     
     return 0;
@@ -692,7 +780,11 @@ char read_file_size(FILE* config_file, long int* config_data, long int offset){
     int tmp_cnt = 4;
     long int tmp_int= 0;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     
     while(tmp_cnt){
         tmp_cnt = tmp_cnt - 1;
@@ -711,7 +803,11 @@ unsigned int read_clients(FILE* config_file, unsigned int config_data[][4], long
     unsigned char tmp_counter = 0;
     unsigned char client_count = 0;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     
     tmp_data = getc(config_file);
     if(tmp_data == EOF) return 0;
@@ -742,7 +838,11 @@ char write_file_size(FILE* config_file, long int* config_data, long int offset){
     char tmp_cnt = 3;
     char tmp_data = 0;
     
-    if(offset < MAX_CONFIG_FILE) fseek(config_file, offset, SEEK_SET);
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
     
     while(tmp_cnt){
         tmp_data = ((*config_data >> (8*tmp_cnt)) & 0xFF);

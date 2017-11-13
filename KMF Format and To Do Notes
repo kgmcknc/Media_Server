@@ -1,0 +1,16 @@
+Offset 0: kmf (3 bytes)
+Offset 3: version 001 (3 bytes)
+Offset 6: File_size (4 bytes)
+Offset 10: 1 bytes // server == 1 or client == 0
+Offset 11: //2 bytes for port (3000 since tested?)
+Offset 13: //4 bytes per ip 255.255.255.255, // 1 byte active (always 1 on server)
+Offset 18: 1 bytes // number of configured clients
+Offset 19: clients - 4 bytes ip, 1 byte active
+
+Add header file that deploys and has different contents from main or pi (server or client) and is read when sys_control starts and populates a byte (need to add) to the config file.
+Byte tells the process whether it is server or client.
+The server and client do different things if the byte/config file is set.
+Add server active to config too
+Add functions to write/read config data (rather than just having command line config interface). This allows web config and read.
+Then add polling/keep alive/active from functions and global broadcast across the system.
+

@@ -23,6 +23,7 @@
 
 #include "sys_control.h"
 #include "sys_config.h"
+#include "sys_functions.h"
 
 // function name to match web call string
 char function_name[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
@@ -31,7 +32,13 @@ char function_name[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
         "startvideo",
         "stopvideo",
         "startaudio",
-        "stopaudio"
+        "stopaudio",
+        "kmfac",
+        "kmfrc",
+        "kmfsid",
+        "kmfrid",
+        "pingsend",
+        "pingreply"
     };
 // function call for system
 char function_call[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
@@ -40,7 +47,13 @@ char function_call[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
         "omxplayer -o hdmi -b \"/home/pi/linux-main-share/MovieHD/\" </usr/share/myfolder/mysysproc/moviectrl/omxctrl >/usr/share/myfolder/mysysproc/moviectrl/omxlog & >/usr/share/myfolder/mysysproc/moviectrl/omxlog2 ; echo -n \"\" > /usr/share/myfolder/mysysproc/moviectrl/omxctrl",
         "echo -n \"q\" > /usr/share/myfolder/mysysproc/moviectrl/omxctrl",
         "omxplayer -o hdmi -b \"/home/pi/linux-main-share/MusicHD/\" </usr/share/myfolder/mysysproc/musicctrl/omxctrl >/usr/share/myfolder/mysysproc/musicctrl/omxlog & >/usr/share/myfolder/mysysproc/musicctrl/omxlog2 ; echo -n \"\" > /usr/share/myfolder/mysysproc/musicctrl/omxctrl",
-        "echo -n \"q\" > /usr/share/myfolder/mysysproc/musicctrl/omxctrl"
+        "echo -n \"q\" > /usr/share/myfolder/mysysproc/musicctrl/omxctrl",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
     };
 // length of the function call strings
 int function_length[FUNCTION_COUNT] = {
@@ -49,7 +62,13 @@ int function_length[FUNCTION_COUNT] = {
     271,
     34,
     271,
-    34
+    34,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
 };
 // type of call: 0 - no condition, 1 - start, 2 - stop, 3 - extra text
 int function_type[FUNCTION_COUNT] = {
@@ -63,7 +82,13 @@ int function_type[FUNCTION_COUNT] = {
     0xA, // starter with extra text
     0x4, // stopper
     0xA, // starter with extra text
-    0x4  // stopper
+    0x4, // stopper
+    0x8,
+    0x8,
+    0x8,
+    0x8,
+    0x0,
+    0x0
 };
 // option_status that "start" or "stop" is linked to
 int option_link[FUNCTION_COUNT] = {
@@ -72,7 +97,13 @@ int option_link[FUNCTION_COUNT] = {
     1, // option 1 - startvideo
     1, // option 1 - stopvideo
     2, // option 2 - startaudio
-    2 // option 2 - stopaudio
+    2, // option 2 - stopaudio
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
 };
 // extra_text_offset
 char extra_offset[FUNCTION_COUNT] = {
@@ -81,6 +112,12 @@ char extra_offset[FUNCTION_COUNT] = {
     56,
     0,
     56,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
     0
 };
 

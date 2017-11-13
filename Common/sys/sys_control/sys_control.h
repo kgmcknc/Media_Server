@@ -14,7 +14,7 @@
 #define FILE_DEBUG 1
 #define USE_WPI 1
 #define OPTION_COUNT 3
-#define FUNCTION_COUNT 6
+#define FUNCTION_COUNT 12
 #define MAX_STRING 400
 #define MAX_FUNCTION_STRING 400
 #define MAX_CONFIG_FILE 4096
@@ -30,11 +30,10 @@
 #define KMF_BASE 0
 #define KMF_VERSION 3
 #define KMF_FILE_SIZE 6
-#define KMF_COM_PORT 10
-#define KMF_S_IP 12
-#define KMF_S_STATUS 16
-#define KMF_CLIENT_COUNT 17
-#define KMF_CLIENT_STATUS 18
+#define KMF_SYS_ID 10
+#define KMF_COM_PORT 11
+#define KMF_S_IP 13
+#define KMF_CLIENT_COUNT 18
 
 extern char filestring[MAX_STRING];
 extern char funcstring[MAX_STRING];

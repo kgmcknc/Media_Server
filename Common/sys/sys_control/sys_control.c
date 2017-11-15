@@ -32,6 +32,7 @@ char filestring[MAX_STRING] = {0};
 char funcstring[MAX_STRING] = {0};
 char fvalid = 0;
 int flength = 0;
+char valid_config = 0;
 long int file_length = 0;
 
 unsigned int ms_port = 0;
@@ -83,12 +84,16 @@ int main(int argc, char **argv)
     }
     
     printf("\n\n----- Checking Configuration Settings -----\n\n");
-    if(check_config(config_file)){
-        printf("\n\n----- Configuration Failure -----\n\n");
-        configure_system();
-        exit(EXIT_FAILURE);
-    } else {
-        printf("\n\n----- Valid Configuration -----\n\n");
+    while(!valid_config){
+        if(check_config(config_file)){
+            valid_config = 0;
+            printf("\n\n----- Configuration Failure -----\n\n");
+            configure_system();
+            //exit(EXIT_FAILURE);
+        } else {
+            printf("\n\n----- Valid Configuration -----\n\n");
+            valid_config = 1;
+        }
     }
     
     printf("\n\n----- Resetting Web State -----\n\n");

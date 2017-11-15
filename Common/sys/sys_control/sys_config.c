@@ -121,6 +121,7 @@ void configure_system(void){
     // fix config file it broken
     rewind(config_file);
     cfg_cnt = 0;
+    user_option = 0;
     while(!file_end && (cfg_cnt < MAX_CONFIG_FILE)){
         fgetc(config_file);
         file_end = feof(config_file);

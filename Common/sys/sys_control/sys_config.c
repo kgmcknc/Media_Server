@@ -23,12 +23,84 @@
 
 #include "sys_control.h"
 #include "sys_config.h"
+#include "sys_functions.h"
+
+char check_config(FILE* config_file){
+    //int cfg_cnt = 0;
+    char cfg_data[TMP_DATA_SIZE] = {0}; // max temp data - 40 bytes
+    int cfg_cnt = 0;
+    char file_end = 0;
+    unsigned int port = 0;
+    unsigned int ip[4] = {0};
+    long int size = 0;
+    
+    rewind(config_file);
+    while(!file_end && (cfg_cnt < MAX_CONFIG_FILE)){
+        fgetc(config_file);
+        file_end = feof(config_file);
+        cfg_cnt = cfg_cnt + 1;
+    }
+    file_length = cfg_cnt;
+    rewind(config_file);
+    
+    if(cfg_cnt < MIN_CONFIG_SIZE){
+        printf("\nConfig File Was Too Short! Need to Re-Configure!\n");
+        return 1;
+    } else {
+        if(!read_file_size(config_file, &size, KMF_FILE_SIZE)){
+           printf("Failed File Size\n");
+        }
+        if(size){
+           file_length = size;
+        } else {
+           printf("File Size: %u\n", ((int) size));
+           return 1;
+        }        
+        if(!read_config_data(config_file, &cfg_data[0], KMF_BASE, 3)){
+           printf("config data: %s\n", cfg_data);
+           return 1;
+        }
+        if(strcmp(&cfg_data[0], "kmf")){
+           printf("failed on kmf\n");
+           return 1;//printf("config data: %s\n", cfg_data);
+        }
+        if(!read_port(config_file, &port, KMF_COM_PORT)){
+           printf("config port: %d\n", port);
+           return 1;
+        }
+        if(!port){
+           printf("failed on port\n");
+           return 1;
+        }
+        if(!read_ip_address(config_file, &ip[0], KMF_S_IP)){
+           printf("ip: %u.%u.%u.%u\n", ip[0], ip[1], ip[2], ip[3]);
+           return 1;
+        }
+        if(!ip[0] || !ip[1] || !ip[2] || !ip[3]){
+           printf("ip: %u.%u.%u.%u\n", ip[0], ip[1], ip[2], ip[3]);
+           printf("failed on ip\n");
+           return 1;
+        }
+        /*if(!read_config_data(config_file, &cfg_data[0], 3, 3)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(!read_config_data(config_file, &cfg_data[0], 6, 4)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(!read_config_data(config_file, &cfg_data[0], 10, 2)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(!read_config_data(config_file, &cfg_data[0], 12, 4)) return 1;
+        printf("config data: %s\n", cfg_data);
+        if(!read_config_data(config_file, &cfg_data[0], 16, 4)) return 1;
+        printf("config data: %s\n", cfg_data);*/
+        update_system(config_file);
+        return 0;
+    }
+}
 
 void configure_system(void){
     long int file_size = 0;
     int cfg_cnt = 0;
     char file_end = 0;
-    char user_option = 0;
+    char scan_input = 0;
     unsigned int tmp_ip[4] = {0};
     char cfg_data[TMP_DATA_SIZE] = {0};
     unsigned int tmp_data = 0;
@@ -40,6 +112,9 @@ void configure_system(void){
     char empty;
     unsigned int num_clients;
     unsigned int tmp_clients[MAX_CLIENTS][4];
+    char input_string[MAX_FUNCTION_STRING] = {0};
+    char rx_fpath[MAX_STRING] = RX_PATH;
+    pid_t scan_fork = 0;
     
     // user configuration of system
     // read file and post data to user to use or change
@@ -88,7 +163,16 @@ void configure_system(void){
         handled = 0;
         user_option = 0;
         print_config_menu();
-        scanf("%c%c", &user_option, &empty);
+        scan_fork = fork();
+        if(scan_fork == 0){
+           scanf("%c%c", &scan_input, &empty);
+           sprintf(&input_string[0], "echo 1%%kmfchar%c%% > %s", scan_input, &rx_fpath[0]);
+           system(&input_string[0]);
+           exit(EXIT_SUCCESS);
+        } else {
+           checkfunctionfile(NO_TIMEOUT);
+        }
+        kill(scan_fork, SIGKILL);
         if(user_option == 'q'){
             handled = 1;
             printf("\nExiting Configuration\n");
@@ -115,6 +199,8 @@ void configure_system(void){
                 printf("\nGot %d for new port\n", tmp_port);
                 if((tmp_port > 0) && (tmp_port < MAX_PORT)){
                     write_port(config_file, &tmp_port, KMF_COM_PORT);
+                    update_system(config_file);
+                    restart_listener = 1;
                 } else {
                     printf("\nPort Was Out of Range, Try Setting Again\n");
                 }
@@ -137,6 +223,7 @@ void configure_system(void){
                 printf("\nGot %d.%d.%d.%d For New Server IP\n", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
                 if((tmp_ip[0] > 0) && (tmp_ip[1] > 0) && (tmp_ip[2] > 0) && (tmp_ip[3] > 0)){
                     write_ip_address(config_file, &tmp_ip[0], KMF_S_IP);
+                    update_system(config_file);
                 } else {
                     printf("\nIP Was Out of Range, Try Setting Again\n");
                 }
@@ -224,7 +311,7 @@ void configure_system(void){
             }
         }
         if(handled == 0){
-            printf("\nUnknown Value!\n");
+            printf("\nUnknown Value! %c\n", user_option);
         }
     }
 }
@@ -242,41 +329,6 @@ void print_config_menu(void){
     printf("\no  Re-Order Attached Clients  \n");
     printf("\n------------------------------\n");
     printf("\nType Input Selection: ");
-}
-
-char check_config(FILE* config_file){
-    //int cfg_cnt = 0;
-    char cfg_data[TMP_DATA_SIZE] = {0}; // max temp data - 40 bytes
-    int cfg_cnt = 0;
-    char file_end = 0;
-    
-    rewind(config_file);
-    while(!file_end && (cfg_cnt < MAX_CONFIG_FILE)){
-        fgetc(config_file);
-        file_end = feof(config_file);
-        cfg_cnt = cfg_cnt + 1;
-    }
-    rewind(config_file);
-    
-    if(cfg_cnt < MIN_CONFIG_SIZE){
-        printf("\nConfig File Was Too Short! Need to Re-Configure!\n");
-        return 1;
-    } else {
-        // Parsing config file (kmf file)
-        if(!read_config_data(config_file, &cfg_data[0], 0, 3)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(!read_config_data(config_file, &cfg_data[0], 3, 3)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(!read_config_data(config_file, &cfg_data[0], 6, 4)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(!read_config_data(config_file, &cfg_data[0], 10, 2)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(!read_config_data(config_file, &cfg_data[0], 12, 4)) return 1;
-        printf("config data: %s\n", cfg_data);
-        if(!read_config_data(config_file, &cfg_data[0], 16, 4)) return 1;
-        printf("config data: %s\n", cfg_data);
-        return 0;
-    }
 }
 
 char read_config_data(FILE* config_file, char* config_data, long int offset, int size){
@@ -462,8 +514,9 @@ char add_client(FILE* config_file, unsigned int* config_data, long int offset){
         fputc(tmp_data, config_file);
         tmp_cnt = tmp_cnt + 1;
     }
-    
     client_count = client_count + 1;
+    tmp_data = (client_count << 1);
+    fputc(tmp_data, config_file);
     if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
         if(fseek(config_file, offset, SEEK_SET)) return 0;
     } else {
@@ -660,4 +713,12 @@ char write_file_size(FILE* config_file, long int* config_data, long int offset){
     
     return 0;
 }
+
+void update_system(FILE* config_file){
+   // populate global variables for port and ip from config file
+   read_port(config_file, &ms_port, KMF_COM_PORT);
+   //server_ip = 0; // server ip from config
+   
+}
+
 

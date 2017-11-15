@@ -28,13 +28,22 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=0
-FILE_NAME_0=3197;C;0;EUTF-8;1;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_control.c;0;4
-FILE_NAME_1=267;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_control.h;0;3
-FILE_NAME_2=11066;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_config.c;0;3
+current_page=1
+FILE_NAME_0=1129;C;0;EUTF-8;1;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_control.c;0;4
+FILE_NAME_1=806;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_control.h;0;3
+FILE_NAME_2=803;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_config.c;0;3
 FILE_NAME_3=1;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_config.h;0;3
-FILE_NAME_4=1;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_functions.c;0;3
-FILE_NAME_5=1;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_functions.h;0;3
+FILE_NAME_4=195;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_functions.c;0;3
+FILE_NAME_5=40;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_functions.h;0;3
 
 [VTE]
 last_dir=/home
+
+[build-menu]
+CFT_01_LB=_Build
+CFT_01_CM=gcc -Wall -o "sys_control" *.c
+CFT_01_WD=
+filetypes=C;
+CFT_00_LB=_Compile
+CFT_00_CM=gcc -Wall -c *.h *.c
+CFT_00_WD=

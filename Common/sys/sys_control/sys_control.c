@@ -36,6 +36,10 @@ char valid_config = 0;
 long int file_length = 0;
 
 unsigned int ms_port = 0;
+unsigned int ms_ip[4] = {0};
+char client_count = 0;
+unsigned int client_ips[MAX_CLIENTS][4] = {{0}};
+char client_state[MAX_CLIENTS] = {0};
 char user_option = 0;
 
 char restart_listener = 0;
@@ -84,17 +88,18 @@ int main(int argc, char **argv)
     }
     
     printf("\n\n----- Checking Configuration Settings -----\n\n");
-    while(!valid_config){
-        if(check_config(config_file)){
-            valid_config = 0;
-            printf("\n\n----- Configuration Failure -----\n\n");
-            configure_system();
+    //while(!valid_config){
+        check_config(config_file);
+        //if(check_config(config_file)){
+            //valid_config = 0;
+           //printf("\n\n----- Configuration Failure -----\n\n");
+            //iconfigure_system();
             //exit(EXIT_FAILURE);
-        } else {
-            printf("\n\n----- Valid Configuration -----\n\n");
-            valid_config = 1;
-        }
-    }
+        //} else {
+        //    printf("\n\n----- Valid Configuration -----\n\n");
+        //    valid_config = 1;
+        //}
+    //}
     
     printf("\n\n----- Resetting Web State -----\n\n");
     //init_webstate(webfile);

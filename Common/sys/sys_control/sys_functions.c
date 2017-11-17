@@ -5,8 +5,8 @@
 
 // function name to match web call string
 char function_name[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
-     "kmfchar",
-     "kmfsp",
+     "kmfsetport",
+     "kmfsetip",
      "kmfsi",
      "kmfac",
      "kmfrc",
@@ -67,7 +67,7 @@ int function_type[FUNCTION_COUNT] = {
     // 4 - config
     // 5 - function
     0x18, // config extra text
-    0x10,
+    0x18,
     0x8,
     0x8,
     0x8,
@@ -84,7 +84,7 @@ int function_type[FUNCTION_COUNT] = {
 // option_status that "start" or "stop" is linked to
 int option_link[FUNCTION_COUNT] = {
     0,
-    0,
+    1,
     0,
     0,
     0,
@@ -115,7 +115,8 @@ char extra_offset[FUNCTION_COUNT] = {
 
 int option_status[OPTION_COUNT] = {0};
 char option_name[OPTION_COUNT][MAX_STRING] = {
-    {7},
+    {10},
+    {8},
     "tightvncserver",
     {10}, // length of command constant
     {10} // length of command constant
@@ -268,8 +269,16 @@ void process_function(void){
             if(function_type[localcount] == 0x18){
                 if(option_link[localcount] < OPTION_COUNT){
                      extra_cnt = func_const;
-                     printf("Value: %d, String: %s\n", extra_cnt, funcstring);
-                     user_option = funcstring[extra_cnt];
+                     tmp_cnt = 0;
+                     for(cust_cnt=extra_cnt;cust_cnt<flength;cust_cnt++){
+                        cust_func[tmp_cnt] = funcstring[cust_cnt];
+                        tmp_cnt = tmp_cnt + 1;
+                     }
+                     printf("String: %s\n", cust_func);
+                     if(localcount == 0) web_port_update(&cust_func[0]);
+                     if(localcount == 1) web_server_ip_update(&cust_func[0]);
+                     if(localcount == 2) web_add_client(&cust_func[0]);
+                     if(localcount == 3) web_remove_client(&cust_func[0]);
                 } else {
                     printf("link is wrong\n");
                 }

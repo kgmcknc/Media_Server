@@ -14,7 +14,7 @@
 #define ERROR_HALT 1
 #define FILE_DEBUG 1
 #define USE_WPI 1
-#define OPTION_COUNT 5
+#define OPTION_COUNT 11
 #define FUNCTION_COUNT 18
 #define MAX_STRING 400
 #define MAX_FUNCTION_STRING 400

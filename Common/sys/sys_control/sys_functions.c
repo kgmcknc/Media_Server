@@ -6,15 +6,13 @@
 // function name to match web call string
 char function_name[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
      "kmfsetport",
-     "kmfsetip",
-     "kmfsi",
-     "kmfac",
-     "kmfrc",
-     "kmfoc",
-     "kmfsid",
-     "kmfrid",
-     "pingsend",
-     "pingreply",
+     "kmfsetserverip",
+     "kmfsetclientip",
+     "kmfaddclient",
+     "kmfremclient",
+     "kmfupdclient",
+     "hello",
+     "imhere",
      "starttightvnc",
      "stoptightvnc",
      "startvideo",
@@ -32,6 +30,7 @@ char function_call[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
      "",
      "",
      "",
+     "",
      "tightvncserver",
      "pkill Xtightvnc",
      "omxplayer -o hdmi -b \"/home/pi/linux-main-share/MovieHD/\" </usr/share/myfolder/mysysproc/moviectrl/omxctrl >/usr/share/myfolder/mysysproc/moviectrl/omxlog & >/usr/share/myfolder/mysysproc/moviectrl/omxlog2 ; echo -n \"\" > /usr/share/myfolder/mysysproc/moviectrl/omxctrl",
@@ -42,6 +41,7 @@ char function_call[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
  
 // length of the function call strings
 int function_length[FUNCTION_COUNT] = {
+    0,
     0,
     0,
     0,
@@ -67,12 +67,13 @@ int function_type[FUNCTION_COUNT] = {
     // 4 - config
     // 5 - function
     0x18, // config extra text
-    0x18,
-    0x8,
-    0x8,
-    0x8,
-    0x0,
-    0x0,
+    0x18, // config extra text
+    0x18, // config extra text
+    0x18, // config extra text
+    0x18, // config extra text
+    0x18, // config extra text
+    0x18, // config extra text
+    0x18, // config extra text
     0x2, // starter
     0x4, // stopper
     0xA, // starter with extra text
@@ -85,12 +86,14 @@ int function_type[FUNCTION_COUNT] = {
 int option_link[FUNCTION_COUNT] = {
     0,
     1,
-    0,
-    0,
-    0,
-    0,
-    0, // option 0 - tightvncserver
-    0, // option 0 - tightvncserver
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8, // option 0 - tightvncserver
+    8, // option 0 - tightvncserver
     1, // option 1 - startvideo
     1, // option 1 - stopvideo
     2, // option 2 - startaudio
@@ -116,7 +119,13 @@ char extra_offset[FUNCTION_COUNT] = {
 int option_status[OPTION_COUNT] = {0};
 char option_name[OPTION_COUNT][MAX_STRING] = {
     {10},
-    {8},
+    {14},
+    {14},
+    {12},
+    {12},
+    {12},
+    {5},
+    {6},
     "tightvncserver",
     {10}, // length of command constant
     {10} // length of command constant
@@ -277,8 +286,12 @@ void process_function(void){
                      printf("String: %s\n", cust_func);
                      if(localcount == 0) web_port_update(&cust_func[0]);
                      if(localcount == 1) web_server_ip_update(&cust_func[0]);
-                     if(localcount == 2) web_add_client(&cust_func[0]);
-                     if(localcount == 3) web_remove_client(&cust_func[0]);
+                     if(localcount == 2) web_set_client_ip(&cust_func[0]);
+                     if(localcount == 3) web_add_client(&cust_func[0]);
+                     if(localcount == 4) web_remove_client(&cust_func[0]);
+                     if(localcount == 5) web_update_client_ip(&cust_func[0]);
+                     if(localcount == 6) send_heartbeat_to_server();
+                     if(localcount == 7) receive_heartbeat_from_client(&cust_func[0]);
                 } else {
                     printf("link is wrong\n");
                 }

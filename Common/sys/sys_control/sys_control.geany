@@ -29,12 +29,13 @@ long_line_column=72
 
 [files]
 current_page=2
-FILE_NAME_0=2826;C;0;EUTF-8;1;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_control.c;0;4
+FILE_NAME_0=1196;C;0;EUTF-8;1;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_control.c;0;4
 FILE_NAME_1=353;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_control.h;0;3
-FILE_NAME_2=26124;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_config.c;0;3
-FILE_NAME_3=178;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_config.h;0;3
-FILE_NAME_4=2134;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_functions.c;0;3
+FILE_NAME_2=22542;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_config.c;0;3
+FILE_NAME_3=597;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_config.h;0;3
+FILE_NAME_4=196;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_functions.c;0;3
 FILE_NAME_5=128;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_functions.h;0;3
+FILE_NAME_6=10936;C;0;EUTF-8;0;1;0;%2Fusr%2Finclude%2Fstdio.h;0;3
 
 [VTE]
 last_dir=/home

@@ -17,6 +17,7 @@ char remove_client(FILE* config_file, unsigned int config_data, long int offset)
 char reorder_clients(FILE* config_file, unsigned int config_data, unsigned int config_data_n, long int offset);
 char read_config_data(FILE* config_file, char* config_data, long int offset, int size);
 char write_config_data(FILE* config_file, char* config_data, long int offset, int size);
+char change_client_ip(FILE* config_file, unsigned int* old_ip, unsigned int* new_ip, long int offset);
 void update_system(FILE* config_file);
 
 void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip);
@@ -24,11 +25,14 @@ void send_new_ip_to_clients(unsigned int* new_ip);
 void send_new_port_to_clients(unsigned int new_port);
 void send_heartbeat_to_clients(void);
 void send_heartbeat_to_server(void);
+void receive_heartbeat_from_client(char* config_data);
 
 void web_port_update(char* config_data);
 void web_server_ip_update(char* config_data);
 void web_add_client(char* config_data);
 void web_remove_client(char* config_data);
+void web_set_client_ip(char* config_data);
+void web_update_client_ip(char* config_data);
 
 #define KMF_BASE 0
 #define KMF_VERSION 3

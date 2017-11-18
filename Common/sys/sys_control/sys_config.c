@@ -169,6 +169,7 @@ void configure_system(void){
                 printf("\nGot %d for new port\n", tmp_port);
                 if((tmp_port > 0) && (tmp_port < MAX_PORT)){
                     write_port(config_file, &tmp_port, KMF_COM_PORT);
+                    send_new_port_to_clients(tmp_port);
                     check_config(config_file);
                 } else {
                     printf("\nPort Was Out of Range, Try Setting Again\n");
@@ -192,12 +193,14 @@ void configure_system(void){
                 printf("\nGot %d.%d.%d.%d For New Server IP\n", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
                 if((tmp_ip[0] > 0) && (tmp_ip[1] > 0) && (tmp_ip[2] > 0) && (tmp_ip[3] > 0)){
                     write_ip_address(config_file, &tmp_ip[0], KMF_S_IP);
+                    send_new_ip_to_clients(&tmp_ip[0]);
                     check_config(config_file);
                 } else {
                     printf("\nIP Was Out of Range, Try Setting Again\n");
                 }
             }
         }
+        #ifdef IS_SERVER
         if(user_option == 'c'){
             handled = 1;
             printf("\nListing Attached Clients\n");
@@ -279,6 +282,36 @@ void configure_system(void){
                 printf("\nNo Clients To Re-Order\n");
             }
         }
+        #endif
+        #ifdef IS_CLIENT
+        if(user_option == 'i'){
+            handled = 1;
+            printf("\nSetting Client IP\n");
+             printf("\nSet New Client IP with \"XXX.XXX.XXX.XXX\" or enter 0 to Go Back\n");
+             printf("New Client IP: ");
+             scanf("%u.%u.%u.%u%c", &tmp_ip[0], &tmp_ip[1], &tmp_ip[2], &tmp_ip[3], &empty);
+             if((tmp_ip[0] == 0) || (tmp_ip[1] == 0) || (tmp_ip[2] == 0) || (tmp_ip[3] == 0)){
+                 printf("\nGot 0, Going Back to Menu\n");
+             }else{
+                 printf("\nGot %d.%d.%d.%d For New Client IP\n", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
+                 if((tmp_ip[0] > 0) && (tmp_ip[1] > 0) && (tmp_ip[2] > 0) && (tmp_ip[3] > 0)){
+                     set_client_ip(config_file, &tmp_ip[0], KMF_CLIENT_COUNT);
+                 } else {
+                     printf("\nIP Was Out of Range, Try Setting Again\n");
+                 }
+             }
+        }
+        if(user_option == 'a'){
+            handled = 1;
+            printf("\nAdding Client To System\n");
+            num_clients = read_clients(config_file, tmp_clients, KMF_CLIENT_COUNT);
+            if(num_clients){
+               send_add_client_to_server(config_file, &tmp_clients[0], KMF_CLIENT_COUNT);
+            } else {
+                printf("\nNo IP Set - Can't Add To System\n");
+            }
+        }
+        #endif
         if(handled == 0){
             printf("\nUnknown Value! %c\n", user_option);
         }
@@ -292,10 +325,16 @@ void print_config_menu(void){
     printf("\nq  Exit System Configuration  \n");
     printf("\np  Communication Port:        \n");
     printf("\ns  Server IP Address:         \n");
+    #ifdef IS_SERVER
     printf("\nc  View Attached Clients      \n");
     printf("\na  Add New Client IPs         \n");
     printf("\nr  Remove Attached Clients    \n");
     printf("\no  Re-Order Attached Clients  \n");
+    #endif
+    #ifdef IS_CLIENT
+    printf("\ni  Set/Change IP Address:     \n");
+    printf("\na  Add Client To Server       \n");
+    #endif
     printf("\n------------------------------\n");
     printf("\nType Input Selection: ");
 }
@@ -422,6 +461,71 @@ char write_ip_address(FILE* config_file, unsigned int* config_data, long int off
         tmp_cnt = tmp_cnt + 1;
     }
     
+    return 0;
+}
+
+char set_client_ip(FILE* config_file, unsigned int* config_data, long int offset){
+    #ifdef IS_CLIENT
+    unsigned char tmp_data = 0;
+    unsigned char tmp_cnt = 0;
+    unsigned char client_count = 0;
+    unsigned int tmp_ip[4] = {0};
+    long int new_offset;
+    long int file_size;
+    
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
+    
+    tmp_data = getc(config_file);
+    if(tmp_data == EOF) return 0;
+    client_count = tmp_data;
+    
+     new_offset = offset + 1;
+     if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
+         if(fseek(config_file, new_offset, SEEK_SET)) return 0;
+     } else {
+         return 0;
+     }
+    
+    tmp_cnt = 0;
+    while(tmp_cnt < 4){
+        tmp_ip[tmp_cnt] = client_ips[0][tmp_cnt];
+        tmp_cnt = tmp_cnt + 1;
+    }
+    send_new_ip_to_server(&tmp_ip[0], config_data);
+    
+    tmp_cnt = 0;
+    while(tmp_cnt < 4){
+        tmp_data = config_data[tmp_cnt];
+        fputc(tmp_data, config_file);
+        tmp_cnt = tmp_cnt + 1;
+    }
+    
+    if(!client_count){
+       if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+           if(fseek(config_file, offset, SEEK_SET)) return 0;
+       } else {
+           return 0;
+       }
+       
+       client_count = 1;
+       tmp_data = client_count & 0xFF;
+       fputc(tmp_data, config_file);
+       
+       read_file_size(config_file, &file_size, KMF_FILE_SIZE);
+       file_size = file_size + 5;
+       file_length = file_size;
+       write_file_size(config_file, &file_size, KMF_FILE_SIZE);
+    }
+    
+    client_count = 1;
+    tmp_data = (client_count << 1);
+    fputc(tmp_data, config_file);
+    
+    #endif
     return 0;
 }
 
@@ -715,16 +819,6 @@ char write_file_size(FILE* config_file, long int* config_data, long int offset){
     return 0;
 }
 
-void web_port_update(char* config_data){
-    unsigned int web_port = 0;
-    sscanf(config_data, "%u", &web_port);
-     // put scanf in for port
-    if((web_port > 0) && (web_port < MAX_PORT)){
-       write_port(config_file, &web_port, KMF_COM_PORT);
-       check_config(config_file);
-    }
-}
-
 void web_server_ip_update(char* config_data){
    unsigned int web_ip[4] = {0};
    unsigned char tmp_cnt = 0;
@@ -737,6 +831,21 @@ void web_server_ip_update(char* config_data){
     }
     if(!bad_ip){
        write_ip_address(config_file, &web_ip[0], KMF_S_IP);
+       #ifdef IS_SERVER
+         send_new_ip_to_clients(&web_ip[0]);
+       #endif
+       check_config(config_file);
+    }
+}
+
+#ifdef IS_SERVER
+void web_port_update(char* config_data){
+    unsigned int web_port = 0;
+    sscanf(config_data, "%u", &web_port);
+     // put scanf in for port
+    if((web_port > 0) && (web_port < MAX_PORT)){
+       write_port(config_file, &web_port, KMF_COM_PORT);
+       send_new_port_to_clients(web_port);
        check_config(config_file);
     }
 }
@@ -778,12 +887,93 @@ void web_remove_client(char* config_data){
        check_config(config_file);
     }
 }
+#endif
 
 void update_system(FILE* config_file){
    // populate global variables for port and ip from config file
    read_port(config_file, &ms_port, KMF_COM_PORT);
    read_ip_address(config_file, &ms_ip[0], KMF_S_IP);
    client_count = read_clients(config_file, client_ips, KMF_CLIENT_COUNT);
+}
+
+void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip){
+   #ifdef IS_CLIENT
+   char function[MAX_FUNCTION_STRING] = {0};
+   unsigned int temp_cnt = 0;
+   
+   sprintf(&function[0], "echo \"1%%kmfcip%u.%u.%u.%u.%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
+      old_ip[0], old_ip[1], old_ip[2], old_ip[3],
+      new_ip[0], new_ip[1], new_ip[2], new_ip[3],
+      ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
+   temp_cnt = temp_cnt + 1;
+   #endif
+}
+
+void send_add_client_to_server(unsigned int* new_ip){
+   #ifdef IS_CLIENT
+   char function[MAX_FUNCTION_STRING] = {0};
+   unsigned int temp_cnt = 0;
+   
+   sprintf(&function[0], "echo \"1%%kmfac%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
+      new_ip[0], new_ip[1], new_ip[2], new_ip[3],
+      ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
+   temp_cnt = temp_cnt + 1;
+   #endif
+}
+
+void send_new_port_to_clients(unsigned int new_port){
+   #ifdef IS_SERVER
+   char function[MAX_FUNCTION_STRING] = {0};
+   unsigned int temp_cnt = 0;
+   
+   while(temp_cnt < client_count){
+      sprintf(&function[0], "echo \"1%%kmfspt%u%%\" | nc %u.%u.%u.%u %u",
+         new_port, client_ips[temp_cnt][0], client_ips[temp_cnt][1],
+         client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
+      temp_cnt = temp_cnt + 1;
+   }
+   #endif
+}
+
+void send_heartbeat_to_clients(void){
+   #ifdef IS_SERVER
+   char function[MAX_FUNCTION_STRING] = {0};
+   unsigned int temp_cnt = 0;
+   
+   while(temp_cnt < client_count){
+      sprintf(&function[0], "echo \"1%%hello%%\" | nc %u.%u.%u.%u %u",
+         client_ips[temp_cnt][0], client_ips[temp_cnt][1],
+         client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
+      temp_cnt = temp_cnt + 1;
+   }
+   #endif
+}
+
+void send_heartbeat_to_server(void){
+   #ifdef IS_CLIENT
+   char function[MAX_FUNCTION_STRING] = {0};
+   
+   sprintf(&function[0], "echo \"1%%here%u.%u.%u.%u %u%%\" | nc %u.%u.%u.%u %u",
+      client_ips[0][0], client_ips[0][1],
+      client_ips[0][2], client_ips[0][3],
+      ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
+      
+   #endif
+}
+
+void send_new_ip_to_clients(unsigned int* new_ip){
+   #ifdef IS_SERVER
+   char function[MAX_FUNCTION_STRING] = {0};
+   unsigned int temp_cnt = 0;
+   
+   while(temp_cnt < client_count){
+      sprintf(&function[0], "echo \"kmfsip%u.%u.%u.%u\" | nc %u.%u.%u.%u %u",
+         new_ip[0], new_ip[1], new_ip[2], new_ip[3],
+         client_ips[temp_cnt][0], client_ips[temp_cnt][1],
+         client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
+      temp_cnt = temp_cnt + 1;
+   }
+   #endif
 }
 
 void initial_config(FILE* config_file){

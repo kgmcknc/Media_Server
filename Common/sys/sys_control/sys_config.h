@@ -10,6 +10,7 @@ char read_port(FILE* config_file, unsigned int* config_data, long int offset);
 char write_port(FILE* config_file, unsigned int* config_data, long int offset);
 char read_ip_address(FILE* config_file, unsigned int* config_data, long int offset);
 char write_ip_address(FILE* config_file, unsigned int* config_data, long int offset);
+char set_client_ip(FILE* config_file, unsigned int* config_data, long int offset);
 char add_client(FILE* config_file, unsigned int* config_data, long int offset);
 unsigned int read_clients(FILE* config_file, unsigned int config_data[][4], long int offset);
 char remove_client(FILE* config_file, unsigned int config_data, long int offset);
@@ -17,6 +18,12 @@ char reorder_clients(FILE* config_file, unsigned int config_data, unsigned int c
 char read_config_data(FILE* config_file, char* config_data, long int offset, int size);
 char write_config_data(FILE* config_file, char* config_data, long int offset, int size);
 void update_system(FILE* config_file);
+
+void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip);
+void send_new_ip_to_clients(unsigned int* new_ip);
+void send_new_port_to_clients(unsigned int new_port);
+void send_heartbeat_to_clients(void);
+void send_heartbeat_to_server(void);
 
 void web_port_update(char* config_data);
 void web_server_ip_update(char* config_data);

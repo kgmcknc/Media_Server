@@ -503,7 +503,7 @@ char set_client_ip(FILE* config_file, unsigned int* config_data, long int offset
     
     tmp_data = getc(config_file);
     if(tmp_data == EOF) return 0;
-    client_count = tmp_data;
+    client_count = client_count | tmp_data;
     
      new_offset = offset + 1;
      if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
@@ -512,12 +512,14 @@ char set_client_ip(FILE* config_file, unsigned int* config_data, long int offset
          return 0;
      }
     
-    tmp_cnt = 0;
-    while(tmp_cnt < 4){
-        tmp_ip[tmp_cnt] = client_ips[0][tmp_cnt];
-        tmp_cnt = tmp_cnt + 1;
+    if(client_count){
+       tmp_cnt = 0;
+       while(tmp_cnt < 4){
+           tmp_ip[tmp_cnt] = client_ips[0][tmp_cnt];
+           tmp_cnt = tmp_cnt + 1;
+       }
+       send_new_ip_to_server(&tmp_ip[0], config_data);
     }
-    send_new_ip_to_server(&tmp_ip[0], config_data);
     
     tmp_cnt = 0;
     while(tmp_cnt < 4){
@@ -944,9 +946,16 @@ void web_add_client(char* config_data){
         tmp_cnt = tmp_cnt + 1;
     }
     if(!bad_ip){
-       add_client(config_file, &web_ip[0], KMF_S_IP);
+       add_client(config_file, &web_ip[0], KMF_CLIENT_COUNT);
        check_config(config_file);
     }
+   #endif
+   #ifdef IS_CLIENT
+      if(client_count){
+         send_add_client_to_server(&client_ips[0][0]);
+      } else {
+         printf("Set Client IP Before Adding To Server\n");
+      }
    #endif
 }
 
@@ -969,18 +978,22 @@ void web_set_client_ip(char* config_data){
 }
 
 void web_update_client_ip(char* config_data){
-   #ifdef IS_CLIENT
-   unsigned int web_ip[4] = {0};
+   #ifdef IS_SERVER
+   unsigned int old_ip[4] = {0};
+   unsigned int new_ip[4] = {0};
    unsigned char tmp_cnt = 0;
    char bad_ip = 0;
    
-    sscanf(config_data, "%u.%u.%u.%u", &web_ip[0], &web_ip[1], &web_ip[2], &web_ip[3]);
+    sscanf(config_data, "%u.%u.%u.%u.%u.%u.%u.%u",
+      &old_ip[0], &old_ip[1], &old_ip[2], &old_ip[3],
+      &new_ip[0], &new_ip[1], &new_ip[2], &new_ip[3]);
     while(tmp_cnt < 4){
-        if(web_ip[tmp_cnt] == 0) bad_ip = 1;
+        if(old_ip[tmp_cnt] == 0) bad_ip = 1;
+        if(new_ip[tmp_cnt] == 0) bad_ip = 1;
         tmp_cnt = tmp_cnt + 1;
     }
     if(!bad_ip){
-       change_client_ip(config_file, &client_ips[0][0], &web_ip[0], KMF_CLIENT_COUNT);
+       change_client_ip(config_file, &old_ip[0], &new_ip[0], KMF_CLIENT_COUNT);
        check_config(config_file);
     }
     #endif
@@ -1072,8 +1085,8 @@ void send_heartbeat_to_clients(void){
 
 void receive_heartbeat_from_client(char* config_data){
    #ifdef IS_SERVER
-   char function[MAX_FUNCTION_STRING] = {0};
-   unsigned int temp_cnt = 0;
+   //char function[MAX_FUNCTION_STRING] = {0};
+   //unsigned int temp_cnt = 0;
    
    printf("got heartbeat\n");
    /*while(temp_cnt < client_count){

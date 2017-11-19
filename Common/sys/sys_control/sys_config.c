@@ -33,7 +33,7 @@ char check_config(FILE* config_file){
     unsigned int port = 0;
     unsigned int ip[4] = {0};
     long int size = 0;
-    char tmp_valid = 0;
+    char tmp_valid = 1;
     
     rewind(config_file);
     while(!file_end && (cfg_cnt < MAX_CONFIG_FILE)){
@@ -48,6 +48,7 @@ char check_config(FILE* config_file){
         printf("\nConfig File Was Too Short! Need to Re-Configure!\n");
         check_file_size(config_file);
         initial_config(config_file);
+        valid_config = 0;
         return 1;
     } else {
         if(!read_file_size(config_file, &size, KMF_FILE_SIZE)){
@@ -57,38 +58,38 @@ char check_config(FILE* config_file){
            file_length = size;
         } else {
            printf("File Size: %u\n", ((int) size));
-           valid_config = 0;
+           tmp_valid = 0;
            //return 1;
         }        
         if(!read_config_data(config_file, &cfg_data[0], KMF_BASE, 3)){
            printf("config data: %s\n", cfg_data);
-           valid_config = 0;
+           tmp_valid = 0;
            //return 1;
         }
         if(strcmp(&cfg_data[0], "kmf")){
            printf("failed on kmf\n");
            //return 1;//printf("config data: %s\n", cfg_data);
-           valid_config = 0;
+           tmp_valid = 0;
         }
         if(!read_port(config_file, &port, KMF_COM_PORT)){
            printf("config port: %d\n", port);
            //return 1;
-           valid_config = 0;
+           tmp_valid = 0;
         }
         if(!port){
            printf("failed on port\n");
            //return 1;
-           valid_config = 0;
+           tmp_valid = 0;
         }
         if(!read_ip_address(config_file, &ip[0], KMF_S_IP)){
            printf("ip: %u.%u.%u.%u\n", ip[0], ip[1], ip[2], ip[3]);
            //return 1;
-           valid_config = 0;
+           tmp_valid = 0;
         }
         if(!ip[0] || !ip[1] || !ip[2] || !ip[3]){
            printf("ip: %u.%u.%u.%u\n", ip[0], ip[1], ip[2], ip[3]);
            printf("failed on ip\n");
-           valid_config = 0;
+           tmp_valid = 0;
            //return 1;
         }
         
@@ -315,6 +316,7 @@ void configure_system(void){
                  printf("\nGot %d.%d.%d.%d For New Client IP\n", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
                  if((tmp_ip[0] > 0) && (tmp_ip[1] > 0) && (tmp_ip[2] > 0) && (tmp_ip[3] > 0)){
                      set_client_ip(config_file, &tmp_ip[0], KMF_CLIENT_COUNT);
+                     check_config(config_file);
                  } else {
                      printf("\nIP Was Out of Range, Try Setting Again\n");
                  }
@@ -1018,7 +1020,7 @@ void update_system(FILE* config_file){
 void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip){
    #ifdef IS_CLIENT
    char function[MAX_FUNCTION_STRING] = {0};
-   
+   printf("port: %d\n", ms_port);
    sprintf(&function[0], "echo \"1%%kmfcip%u.%u.%u.%u.%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
       old_ip[0], old_ip[1], old_ip[2], old_ip[3],
       new_ip[0], new_ip[1], new_ip[2], new_ip[3],

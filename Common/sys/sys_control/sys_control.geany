@@ -28,13 +28,7 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=4
-FILE_NAME_0=35562;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_config.c;0;3
-FILE_NAME_1=0;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_config.h;0;3
-FILE_NAME_2=4131;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_control.c;0;3
-FILE_NAME_3=0;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_control.h;0;3
-FILE_NAME_4=263;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_functions.c;0;3
-FILE_NAME_5=0;C;0;EUTF-8;0;1;0;%2Fhome%2Fkyle%2FProjects%2FMedia_Server%2FCommon%2Fsys%2Fsys_control%2Fsys_functions.h;0;3
+current_page=0
 
 [VTE]
 last_dir=/home

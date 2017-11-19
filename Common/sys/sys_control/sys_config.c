@@ -307,6 +307,11 @@ void configure_system(void){
         if(user_option == 'i'){
             handled = 1;
             printf("\nSetting Client IP\n");
+             if(read_ip_address(config_file, &tmp_ip[0], KMF_S_IP)){
+                printf("Current Clint IP Is Set To: %d.%d.%d.%d", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
+            } else {
+                printf("\nClient IP Is Not Currently Set\n");
+            }
              printf("\nSet New Client IP with \"XXX.XXX.XXX.XXX\" or enter 0 to Go Back\n");
              printf("New Client IP: ");
              scanf("%u.%u.%u.%u%c", &tmp_ip[0], &tmp_ip[1], &tmp_ip[2], &tmp_ip[3], &empty);

@@ -1033,7 +1033,7 @@ void send_add_client_to_server(unsigned int* new_ip){
    #ifdef IS_CLIENT
    char function[MAX_FUNCTION_STRING] = {0};
    
-   sprintf(&function[0], "echo \"1%%kmfac%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
+   sprintf(&function[0], "echo \"1%%kmfaddclient%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
       new_ip[0], new_ip[1], new_ip[2], new_ip[3],
       ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
    system(&function[0]);
@@ -1046,7 +1046,7 @@ void send_new_port_to_clients(unsigned int new_port){
    unsigned int temp_cnt = 0;
    
    while(temp_cnt < client_count){
-      sprintf(&function[0], "echo \"1%%kmfspt%u%%\" | nc %u.%u.%u.%u %u",
+      sprintf(&function[0], "echo \"1%%kmfsetport%u%%\" | nc %u.%u.%u.%u %u",
          new_port, client_ips[temp_cnt][0], client_ips[temp_cnt][1],
          client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
       temp_cnt = temp_cnt + 1;

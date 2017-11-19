@@ -27,7 +27,6 @@
 #include "/usr/share/media_server/sys_control/configuration.h"
 
 char check_config(FILE* config_file){
-    //int cfg_cnt = 0;
     char cfg_data[TMP_DATA_SIZE] = {0}; // max temp data - 40 bytes
     int cfg_cnt = 0;
     char file_end = 0;
@@ -106,11 +105,13 @@ char check_config(FILE* config_file){
 }
 
 void configure_system(void){
-    unsigned int tmp_ip[4] = {0};
+    #ifdef IS_SERVER
+    int tmp_count = 0;
     unsigned int tmp_data = 0;
     unsigned int tmp_data_n = 0;
+    #endif
+    unsigned int tmp_ip[4] = {0};
     unsigned int tmp_port = 0;
-    int tmp_count = 0;
     char handled = 0;
     char empty;
     unsigned int num_clients;
@@ -324,7 +325,7 @@ void configure_system(void){
             printf("\nAdding Client To System\n");
             num_clients = read_clients(config_file, tmp_clients, KMF_CLIENT_COUNT);
             if(num_clients){
-               send_add_client_to_server(config_file, &tmp_clients[0], KMF_CLIENT_COUNT);
+               send_add_client_to_server(&tmp_clients[0][0]);
             } else {
                 printf("\nNo IP Set - Can't Add To System\n");
             }
@@ -916,8 +917,8 @@ void web_server_ip_update(char* config_data){
     }
 }
 
-#ifdef IS_SERVER
 void web_port_update(char* config_data){
+   #ifdef IS_SERVER
     unsigned int web_port = 0;
     sscanf(config_data, "%u", &web_port);
      // put scanf in for port
@@ -926,9 +927,11 @@ void web_port_update(char* config_data){
        send_new_port_to_clients(web_port);
        check_config(config_file);
     }
+   #endif
 }
 
 void web_add_client(char* config_data){
+   #ifdef IS_SERVER
    unsigned int web_ip[4] = {0};
    unsigned char tmp_cnt = 0;
    char bad_ip = 0;
@@ -942,6 +945,7 @@ void web_add_client(char* config_data){
        add_client(config_file, &web_ip[0], KMF_S_IP);
        check_config(config_file);
     }
+   #endif
 }
 
 void web_set_client_ip(char* config_data){
@@ -974,13 +978,14 @@ void web_update_client_ip(char* config_data){
         tmp_cnt = tmp_cnt + 1;
     }
     if(!bad_ip){
-       change_client_ip(config_file, &client_ips[0], &web_ip[0], KMF_CLIENT_COUNT);
+       change_client_ip(config_file, &client_ips[0][0], &web_ip[0], KMF_CLIENT_COUNT);
        check_config(config_file);
     }
     #endif
 }
 
 void web_remove_client(char* config_data){
+   #ifdef IS_SERVER
    unsigned int web_ip[4] = {0};
    unsigned char tmp_cnt = 0;
    unsigned char loop = 0;
@@ -1000,8 +1005,8 @@ void web_remove_client(char* config_data){
        remove_client(config_file, (loop + 1), KMF_CLIENT_COUNT);
        check_config(config_file);
     }
+    #endif
 }
-#endif
 
 void update_system(FILE* config_file){
    // populate global variables for port and ip from config file
@@ -1013,25 +1018,23 @@ void update_system(FILE* config_file){
 void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip){
    #ifdef IS_CLIENT
    char function[MAX_FUNCTION_STRING] = {0};
-   unsigned int temp_cnt = 0;
    
    sprintf(&function[0], "echo \"1%%kmfcip%u.%u.%u.%u.%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
       old_ip[0], old_ip[1], old_ip[2], old_ip[3],
       new_ip[0], new_ip[1], new_ip[2], new_ip[3],
       ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
-   temp_cnt = temp_cnt + 1;
+   system(&function[0]);
    #endif
 }
 
 void send_add_client_to_server(unsigned int* new_ip){
    #ifdef IS_CLIENT
    char function[MAX_FUNCTION_STRING] = {0};
-   unsigned int temp_cnt = 0;
    
    sprintf(&function[0], "echo \"1%%kmfac%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
       new_ip[0], new_ip[1], new_ip[2], new_ip[3],
       ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
-   temp_cnt = temp_cnt + 1;
+   system(&function[0]);
    #endif
 }
 
@@ -1045,6 +1048,7 @@ void send_new_port_to_clients(unsigned int new_port){
          new_port, client_ips[temp_cnt][0], client_ips[temp_cnt][1],
          client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
       temp_cnt = temp_cnt + 1;
+      system(&function[0]);
    }
    #endif
 }
@@ -1059,6 +1063,7 @@ void send_heartbeat_to_clients(void){
          client_ips[temp_cnt][0], client_ips[temp_cnt][1],
          client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
       temp_cnt = temp_cnt + 1;
+      system(&function[0]);
    }
    #endif
 }
@@ -1068,12 +1073,13 @@ void receive_heartbeat_from_client(char* config_data){
    char function[MAX_FUNCTION_STRING] = {0};
    unsigned int temp_cnt = 0;
    
-   while(temp_cnt < client_count){
+   printf("got heartbeat\n");
+   /*while(temp_cnt < client_count){
       sprintf(&function[0], "echo \"1%%hello%%\" | nc %u.%u.%u.%u %u",
          client_ips[temp_cnt][0], client_ips[temp_cnt][1],
          client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
       temp_cnt = temp_cnt + 1;
-   }
+   }*/
    #endif
 }
 
@@ -1081,11 +1087,11 @@ void send_heartbeat_to_server(void){
    #ifdef IS_CLIENT
    char function[MAX_FUNCTION_STRING] = {0};
    
-   sprintf(&function[0], "echo \"1%%imhere%u.%u.%u.%u %u%%\" | nc %u.%u.%u.%u %u",
+   sprintf(&function[0], "echo \"1%%imhere%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
       client_ips[0][0], client_ips[0][1],
       client_ips[0][2], client_ips[0][3],
       ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
-      
+      system(&function[0]);
    #endif
 }
 
@@ -1100,6 +1106,7 @@ void send_new_ip_to_clients(unsigned int* new_ip){
          client_ips[temp_cnt][0], client_ips[temp_cnt][1],
          client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
       temp_cnt = temp_cnt + 1;
+      system(&function[0]);
    }
    #endif
 }

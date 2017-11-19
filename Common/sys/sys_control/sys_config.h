@@ -23,6 +23,7 @@ void update_system(FILE* config_file);
 void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip);
 void send_new_ip_to_clients(unsigned int* new_ip);
 void send_new_port_to_clients(unsigned int new_port);
+void send_add_client_to_server(unsigned int* new_ip);
 void send_heartbeat_to_clients(void);
 void send_heartbeat_to_server(void);
 void receive_heartbeat_from_client(char* config_data);

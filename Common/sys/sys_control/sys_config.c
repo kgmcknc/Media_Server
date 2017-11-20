@@ -249,14 +249,14 @@ void configure_system(void){
                     }else{
                         printf("\nGot %d.%d.%d.%d For New Client IP\n", tmp_ip[0], tmp_ip[1], tmp_ip[2], tmp_ip[3]);
                         if((tmp_ip[0] > 0) && (tmp_ip[1] > 0) && (tmp_ip[2] > 0) && (tmp_ip[3] > 0)){
-                            change_client_ip(config_file, &client_ips[tmp_data - 1][0], &tmp_ip[0], KMF_CLIENT_COUNT);
+                            change_client_ip(config_file, &tmp_data, &tmp_ip[0], KMF_CLIENT_COUNT);
                         } else {
                             printf("\nIP Was Out of Range, Try Setting Again\n");
                         }
                     }
                 }
             } else {
-                printf("\nNo Clients To Remove\n");
+                printf("\nNo Clients To Change\n");
             }
         }
         if(user_option == 'r'){
@@ -668,13 +668,11 @@ char add_client(FILE* config_file, unsigned int* config_data, long int offset){
     return 0;
 }
 
-char change_client_ip(FILE* config_file, unsigned int* old_ip, unsigned int* new_ip, long int offset){
+char change_client_ip(FILE* config_file, unsigned int* client_num, unsigned int* new_ip, long int offset){
     unsigned char tmp_data = 0;
     unsigned char tmp_cnt = 0;
     unsigned char client_count = 0;
-    unsigned char loop_count = 0;
     long int new_offset;
-    unsigned char match = 0;
     
     if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
         if(fseek(config_file, offset, SEEK_SET)) return 0;
@@ -686,36 +684,12 @@ char change_client_ip(FILE* config_file, unsigned int* old_ip, unsigned int* new
     if(tmp_data == EOF) return 0;
     client_count = client_count | tmp_data;
     
-    while(loop_count < client_count){
-        new_offset = offset + 1 + (5*(loop_count));
-        if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
-            if(fseek(config_file, new_offset, SEEK_SET)) return 0;
-        } else {
-            return 0;
-        }
-        
-        tmp_cnt = 0;
-        match = 1;
-        while(tmp_cnt < 4){
-            tmp_data = fgetc(config_file);
-            if(tmp_data != old_ip[tmp_cnt]){
-                match = 0;
-            }
-            tmp_cnt = tmp_cnt + 1;
-        }
-        if(match){
-           break;
-        }
-        
-        loop_count = loop_count + 1;
-    }
-    
-    new_offset = offset + 1 + (5*(loop_count));
-    if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
-        if(fseek(config_file, new_offset, SEEK_SET)) return 0;
-    } else {
-        return 0;
-    }
+    new_offset = offset + 1 + (5*(*client_num));
+	if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
+		if(fseek(config_file, new_offset, SEEK_SET)) return 0;
+	} else {
+		return 0;
+	}
     
     tmp_cnt = 0;
     while(tmp_cnt < 4){
@@ -1024,12 +998,11 @@ void web_update_client_ip(char* config_data){
    unsigned int new_ip[4] = {0};
    unsigned char tmp_cnt = 0;
    char bad_ip = 0;
+   unsigned int tmp_num = 0;
    
-    sscanf(config_data, "%u.%u.%u.%u.%u.%u.%u.%u",
-      &old_ip[0], &old_ip[1], &old_ip[2], &old_ip[3],
-      &new_ip[0], &new_ip[1], &new_ip[2], &new_ip[3]);
+    sscanf(config_data, "%u.%u.%u.%u.%u",
+      &tmp_num, &new_ip[0], &new_ip[1], &new_ip[2], &new_ip[3]);
     while(tmp_cnt < 4){
-        if(old_ip[tmp_cnt] == 0) bad_ip = 1;
         if(new_ip[tmp_cnt] == 0) bad_ip = 1;
         tmp_cnt = tmp_cnt + 1;
     }

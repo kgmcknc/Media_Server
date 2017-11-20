@@ -19,7 +19,7 @@ char remove_client(FILE* config_file, unsigned int config_data, long int offset)
 char reorder_clients(FILE* config_file, unsigned int config_data, unsigned int config_data_n, long int offset);
 char read_config_data(FILE* config_file, char* config_data, long int offset, int size);
 char write_config_data(FILE* config_file, char* config_data, long int offset, int size);
-char change_client_ip(FILE* config_file, unsigned int* old_ip, unsigned int* new_ip, long int offset);
+char change_client_ip(FILE* config_file, unsigned int old_ip, unsigned int* new_ip, long int offset);
 void update_system(FILE* config_file);
 
 void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip);

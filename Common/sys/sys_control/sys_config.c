@@ -685,11 +685,11 @@ char change_client_ip(FILE* config_file, unsigned int client_num, unsigned int* 
     client_count = client_count | tmp_data;
     
     new_offset = offset + 1 + (5*(client_num - 1));
-	if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
-		if(fseek(config_file, new_offset, SEEK_SET)) return 0;
-	} else {
-		return 0;
-	}
+   if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
+      if(fseek(config_file, new_offset, SEEK_SET)) return 0;
+   } else {
+      return 0;
+   }
     
     tmp_cnt = 0;
     while(tmp_cnt < 4){
@@ -1049,7 +1049,7 @@ void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip){
    unsigned int tmp_num;
    get_client_number(config_file, &tmp_num, KMF_CLIENT_COUNT);
    printf("port: %d\n", ms_port);
-   sprintf(&function[0], "echo \"1%%kmfcip%u.%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
+   sprintf(&function[0], "echo \"1%%kmfupdclient%u.%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
       tmp_num, new_ip[0], new_ip[1], new_ip[2], new_ip[3],
       ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
    system(&function[0]);
@@ -1142,7 +1142,7 @@ void send_new_ip_to_clients(unsigned int* new_ip){
    unsigned int temp_cnt = 0;
    
    while(temp_cnt < client_count){
-      sprintf(&function[0], "echo \"kmfsip%u.%u.%u.%u\" | nc %u.%u.%u.%u %u",
+      sprintf(&function[0], "echo \"kmfupdclient%u.%u.%u.%u\" | nc %u.%u.%u.%u %u",
          new_ip[0], new_ip[1], new_ip[2], new_ip[3],
          client_ips[temp_cnt][0], client_ips[temp_cnt][1],
          client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);

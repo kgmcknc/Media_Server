@@ -937,16 +937,16 @@ void web_server_ip_update(char* config_data){
 }
 
 void web_port_update(char* config_data){
-   #ifdef IS_SERVER
     unsigned int web_port = 0;
     sscanf(config_data, "%u", &web_port);
      // put scanf in for port
     if((web_port > 0) && (web_port < MAX_PORT)){
        write_port(config_file, &web_port, KMF_COM_PORT);
+       #ifdef IS_SERVER
        send_new_port_to_clients(web_port);
+       #endif
        check_config(config_file);
     }
-   #endif
 }
 
 void web_add_client(char* config_data){

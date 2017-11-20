@@ -127,23 +127,23 @@ int main(int argc, char **argv)
             printf("\n\n----- Starting Main Loop -----\n\n");
             while(!restart_listener){
                 // wait, so pi only checks function file every second or so...
-                
+                #ifdef IS_SERVER
                 if(restart_heartbeat){
-					restart_heartbeat = 0;
-					heartbeat = fork();
-					if(heartbeat == 0){
-						char set_heartbeat[MAX_STRING] = {0};
-						char rx_fpath[MAX_STRING] = RX_PATH;
-						sleep(10);
-						sprintf(&set_heartbeat[0], "echo \"1%%sendheartbeat\" > %s", &rx_fpath[0]);
-						system(&set_heartbeat[0]);
-						exit(EXIT_SUCCESS);
-					}
-				}
+               restart_heartbeat = 0;
+               heartbeat = fork();
+               if(heartbeat == 0){
+                  char set_heartbeat[MAX_STRING] = {0};
+                  char rx_fpath[MAX_STRING] = RX_PATH;
+                  sleep(10);
+                  sprintf(&set_heartbeat[0], "echo \"1%%sendheartbeat\" > %s", &rx_fpath[0]);
+                  system(&set_heartbeat[0]);
+                  exit(EXIT_SUCCESS);
+               }
+            }
                 if(send_heartbeat){
-					send_heartbeat_to_clients();
-				}
-                
+               send_heartbeat_to_clients();
+            }
+                #endif
                 //check to see if file changed
                 checkfunctionfile(USE_TIMEOUT);
                 

@@ -11,6 +11,7 @@ char function_name[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
      "kmfaddclient",
      "kmfremclient",
      "kmfupdclient",
+     "sendheartbeat",
      "hello",
      "imhere",
      "starttightvnc",
@@ -31,6 +32,7 @@ char function_call[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
      "",
      "",
      "",
+     "",
      "tightvncserver",
      "pkill Xtightvnc",
      "omxplayer -o hdmi -b \"/home/pi/linux-main-share/MovieHD/\" </usr/share/myfolder/mysysproc/moviectrl/omxctrl >/usr/share/myfolder/mysysproc/moviectrl/omxlog & >/usr/share/myfolder/mysysproc/moviectrl/omxlog2 ; echo -n \"\" > /usr/share/myfolder/mysysproc/moviectrl/omxctrl",
@@ -41,6 +43,7 @@ char function_call[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
  
 // length of the function call strings
 int function_length[FUNCTION_COUNT] = {
+    0,
     0,
     0,
     0,
@@ -74,6 +77,7 @@ int function_type[FUNCTION_COUNT] = {
     0x18, // config extra text
     0x18, // config extra text
     0x18, // config extra text
+    0x18, // config extra text
     0x2, // starter
     0x4, // stopper
     0xA, // starter with extra text
@@ -92,8 +96,9 @@ int option_link[FUNCTION_COUNT] = {
     5,
     6,
     7,
-    8, // option 0 - tightvncserver
-    8, // option 0 - tightvncserver
+    8,
+    9, // option 0 - tightvncserver
+    9, // option 0 - tightvncserver
     1, // option 1 - startvideo
     1, // option 1 - stopvideo
     2, // option 2 - startaudio
@@ -124,6 +129,7 @@ char option_name[OPTION_COUNT][MAX_STRING] = {
     {12},
     {12},
     {12},
+    {13},
     {5},
     {6},
     "tightvncserver",
@@ -290,8 +296,9 @@ void process_function(void){
                      if(localcount == 3) web_add_client(&cust_func[0]);
                      if(localcount == 4) web_remove_client(&cust_func[0]);
                      if(localcount == 5) web_update_client_ip(&cust_func[0]);
-                     if(localcount == 6) send_heartbeat_to_server();
-                     if(localcount == 7) receive_heartbeat_from_client(&cust_func[0]);
+                     if(localcount == 6) send_heartbeat = 1;
+                     if(localcount == 7) send_heartbeat_to_server();
+                     if(localcount == 8) receive_heartbeat_from_client(&cust_func[0]);
                 } else {
                     printf("link is wrong\n");
                 }

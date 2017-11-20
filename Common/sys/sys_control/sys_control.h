@@ -14,7 +14,7 @@
 #define ERROR_HALT 1
 #define FILE_DEBUG 1
 #define USE_WPI 1
-#define OPTION_COUNT 11
+#define OPTION_COUNT 12
 #define FUNCTION_COUNT 18
 #define MAX_STRING 400
 #define MAX_FUNCTION_STRING 400
@@ -50,3 +50,6 @@ extern char valid_config;
 extern char client_count;
 extern unsigned int client_ips[MAX_CLIENTS][4];
 extern char client_state[MAX_CLIENTS];
+extern char send_heartbeat;
+extern char restart_heartbeat;
+

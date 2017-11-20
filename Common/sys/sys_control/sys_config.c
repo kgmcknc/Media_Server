@@ -558,6 +558,23 @@ char set_client_ip(FILE* config_file, unsigned int* config_data, long int offset
     return 0;
 }
 
+char set_client_number(FILE* config_file, unsigned int client_number, long int offset){
+	#ifdef IS_CLIENT
+	long int new_offset = 0;
+	new_offset = offset + 4;
+	
+	if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
+	   if(fseek(config_file, new_offset, SEEK_SET)) return 0;
+    } else {
+	   return 0;
+    }
+    
+    fputc(config_file, client_number);
+    
+	#endif
+	return 0;
+}
+
 char add_client(FILE* config_file, unsigned int* config_data, long int offset){
     unsigned char tmp_data = 0;
     unsigned char tmp_cnt = 0;
@@ -1078,14 +1095,24 @@ void send_heartbeat_to_clients(void){
    char function[MAX_FUNCTION_STRING] = {0};
    unsigned int temp_cnt = 0;
    
+   send_heartbeat = 0;
+   restart_heartbeat = 1;
+   
    while(temp_cnt < client_count){
-      sprintf(&function[0], "echo \"1%%hello%%\" | nc %u.%u.%u.%u %u",
-         client_ips[temp_cnt][0], client_ips[temp_cnt][1],
+      sprintf(&function[0], "echo \"1%%hello%u%%\" | nc %u.%u.%u.%u %u",
+         temp_cnt, client_ips[temp_cnt][0], client_ips[temp_cnt][1],
          client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
       temp_cnt = temp_cnt + 1;
       system(&function[0]);
    }
    #endif
+}
+
+void receive_heartbeat_from_server(char* config_data){
+	unsigned int tmp_num = 0;
+	printf("got heartbeat from server\n");
+	sscanf(config_data, "%u", &tmp_num);
+	set_client_number(config_file, tmp_num, KMF_CLIENT_COUNT);
 }
 
 void receive_heartbeat_from_client(char* config_data){

@@ -27,6 +27,7 @@ void send_add_client_to_server(unsigned int* new_ip);
 void send_heartbeat_to_clients(void);
 void send_heartbeat_to_server(void);
 void receive_heartbeat_from_client(char* config_data);
+void receive_heartbeat_from_server(char* config_data);
 
 void web_port_update(char* config_data);
 void web_server_ip_update(char* config_data);

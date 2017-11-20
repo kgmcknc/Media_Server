@@ -41,9 +41,12 @@ char client_count = 0;
 unsigned int client_ips[MAX_CLIENTS][4] = {{0}};
 char client_state[MAX_CLIENTS] = {0};
 char user_option = 0;
+char send_heartbeat = 0;
+char restart_heartbeat = 1;
 
 char restart_listener = 0;
 pid_t listener;
+pid_t heartbeat;
 
 FILE* config_file;
 
@@ -124,6 +127,22 @@ int main(int argc, char **argv)
             printf("\n\n----- Starting Main Loop -----\n\n");
             while(!restart_listener){
                 // wait, so pi only checks function file every second or so...
+                
+                if(restart_heartbeat){
+					restart_heartbeat = 0;
+					heartbeat = fork();
+					if(heartbeat == 0){
+						char set_heartbeat[MAX_STRING] = {0};
+						char rx_fpath[MAX_STRING] = RX_PATH;
+						sleep(10);
+						sprintf(&set_heartbeat[0], "echo \"1%%sendheartbeat\" > %s", &rx_fpath[0]);
+						system(&set_heartbeat[0]);
+						exit(EXIT_SUCCESS);
+					}
+				}
+                if(send_heartbeat){
+					send_heartbeat_to_clients();
+				}
                 
                 //check to see if file changed
                 checkfunctionfile(USE_TIMEOUT);

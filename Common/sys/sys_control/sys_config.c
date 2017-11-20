@@ -122,7 +122,7 @@ void configure_system(void){
     user_option = 0;
     
     check_file_size(config_file);
-    
+    check_config(config_file);
     initial_config(config_file);
     
     while(user_option != 'q'){

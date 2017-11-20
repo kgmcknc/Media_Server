@@ -297,7 +297,7 @@ void process_function(void){
                      if(localcount == 4) web_remove_client(&cust_func[0]);
                      if(localcount == 5) web_update_client_ip(&cust_func[0]);
                      if(localcount == 6) send_heartbeat = 1;
-                     if(localcount == 7) send_heartbeat_to_server();
+                     if(localcount == 7) receive_heartbeat_from_server(&cust_func[0]);
                      if(localcount == 8) receive_heartbeat_from_client(&cust_func[0]);
                 } else {
                     printf("link is wrong\n");

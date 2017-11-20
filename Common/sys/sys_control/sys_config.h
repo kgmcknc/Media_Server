@@ -11,6 +11,8 @@ char write_port(FILE* config_file, unsigned int* config_data, long int offset);
 char read_ip_address(FILE* config_file, unsigned int* config_data, long int offset);
 char write_ip_address(FILE* config_file, unsigned int* config_data, long int offset);
 char set_client_ip(FILE* config_file, unsigned int* config_data, long int offset);
+char set_client_number(FILE* config_file, unsigned int client_number, long int offset);
+char get_client_number(FILE* config_file, unsigned int* client_number, long int offset);
 char add_client(FILE* config_file, unsigned int* config_data, long int offset);
 unsigned int read_clients(FILE* config_file, unsigned int config_data[][4], long int offset);
 char remove_client(FILE* config_file, unsigned int config_data, long int offset);

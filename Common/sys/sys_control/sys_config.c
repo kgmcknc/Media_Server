@@ -578,7 +578,7 @@ char set_client_number(FILE* config_file, unsigned int client_number, long int o
 char get_client_number(FILE* config_file, unsigned int* client_number, long int offset){
    #ifdef IS_CLIENT
    long int new_offset = 0;
-   new_offset = offset + 4;
+   new_offset = offset + 1 + 4;
    char tmp_data = 0;
    
    if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){

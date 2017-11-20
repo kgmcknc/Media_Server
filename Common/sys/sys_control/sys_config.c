@@ -1074,10 +1074,11 @@ void update_system(FILE* config_file){
 void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip){
    #ifdef IS_CLIENT
    char function[MAX_FUNCTION_STRING] = {0};
+   unsigned int tmp_num;
+   get_client_number(config_file, &tmp_num, KMF_CLIENT_COUNT);
    printf("port: %d\n", ms_port);
-   sprintf(&function[0], "echo \"1%%kmfcip%u.%u.%u.%u.%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
-      old_ip[0], old_ip[1], old_ip[2], old_ip[3],
-      new_ip[0], new_ip[1], new_ip[2], new_ip[3],
+   sprintf(&function[0], "echo \"1%%kmfcip%u.%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
+      tmp_num, new_ip[0], new_ip[1], new_ip[2], new_ip[3],
       ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
    system(&function[0]);
    #endif
@@ -1155,9 +1156,9 @@ void send_heartbeat_to_server(void){
    char function[MAX_FUNCTION_STRING] = {0};
    unsigned int tmp_num = 0;
    get_client_number(config_file, &tmp_num, KMF_CLIENT_COUNT);
-   sprintf(&function[0], "echo \"1%%imhere%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
+   sprintf(&function[0], "echo \"1%%imhere%u.%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
       client_ips[0][0], client_ips[0][1],
-      client_ips[0][2], client_ips[0][3],
+      client_ips[0][2], client_ips[0][3], tmp_num,
       ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
       system(&function[0]);
    #endif

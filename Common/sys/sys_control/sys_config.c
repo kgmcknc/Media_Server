@@ -559,20 +559,20 @@ char set_client_ip(FILE* config_file, unsigned int* config_data, long int offset
 }
 
 char set_client_number(FILE* config_file, unsigned int client_number, long int offset){
-	#ifdef IS_CLIENT
-	long int new_offset = 0;
-	new_offset = offset + 4;
-	
-	if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
-	   if(fseek(config_file, new_offset, SEEK_SET)) return 0;
+   #ifdef IS_CLIENT
+   long int new_offset = 0;
+   new_offset = offset + 4;
+   
+   if((new_offset < MAX_CONFIG_FILE) && (new_offset <= file_length)){
+      if(fseek(config_file, new_offset, SEEK_SET)) return 0;
     } else {
-	   return 0;
+      return 0;
     }
     
-    fputc(config_file, client_number);
+    fputc(client_number, config_file);
     
-	#endif
-	return 0;
+   #endif
+   return 0;
 }
 
 char add_client(FILE* config_file, unsigned int* config_data, long int offset){
@@ -1109,10 +1109,10 @@ void send_heartbeat_to_clients(void){
 }
 
 void receive_heartbeat_from_server(char* config_data){
-	unsigned int tmp_num = 0;
-	printf("got heartbeat from server\n");
-	sscanf(config_data, "%u", &tmp_num);
-	set_client_number(config_file, tmp_num, KMF_CLIENT_COUNT);
+   unsigned int tmp_num = 0;
+   printf("got heartbeat from server\n");
+   sscanf(config_data, "%u", &tmp_num);
+   set_client_number(config_file, tmp_num, KMF_CLIENT_COUNT);
 }
 
 void receive_heartbeat_from_client(char* config_data){

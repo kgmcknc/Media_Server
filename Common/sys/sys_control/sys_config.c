@@ -1050,7 +1050,7 @@ void web_remove_client(char* config_data){
     }*/
     //if(match){
     #ifdef IS_SERVER
-    if(tmp_num < client_count){
+    if((tmp_num > 0) && ((tmp_num - 1) < client_count)){
        remove_client(config_file, tmp_num/*(loop + 1)*/, KMF_CLIENT_COUNT);
        check_config(config_file);
     }

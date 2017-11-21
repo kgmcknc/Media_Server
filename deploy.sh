@@ -32,10 +32,9 @@ else
 	fi
 fi
 
-
 sys_deploy_dir="/usr/share/media_server/"
 www_deploy_dir="/var/www/html/media_server/"
-
+rx_fifo="/var/www/html/media_server/control/web_control/rxwebfifo"
 
 if [ "$deploy_main" -eq 1 ] ; then
 	echo "Deploying Server Side System Code to $sys_deploy_dir"
@@ -110,11 +109,13 @@ if [ "$deploy_main" -eq 1 ] ; then
 	for file_name in ./Main/www/*; do
 		cp -r "$file_name" "$www_deploy_dir"
 	done
+	mkfifo "$rx_fifo"
 fi
 if [ "$deploy_pi" -eq 1 ] ; then
 	for file_name in ./Pi/www/*; do
 		cp -r "$file_name" "$www_deploy_dir"
 	done
+	mkfifo "$rx_fifo"
 fi
 if [ "$deploy_common" -eq 1 ] ; then
 	for file_name in ./Common/www/*; do

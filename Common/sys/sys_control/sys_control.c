@@ -61,7 +61,7 @@ int main(int argc, char **argv)
     if(config_file != NULL){
         printf("\n\n----- Successfully Opened Config File -----\n\n");
     } else {
-        printf("\n\n----- Failed To Open Config File Trying to Create-----\n\n");
+        /*printf("\n\n----- Failed To Open Config File Trying to Create-----\n\n");
         config_file = fopen(CONFIG_PATH, "a+b");
         if(config_file != NULL){
             printf("\n\n----- Successfully Created Config File -----\n\n");
@@ -73,10 +73,10 @@ int main(int argc, char **argv)
                 printf("\n\n----- Failed To Open Config File, Exiting -----\n\n");
                 exit(EXIT_FAILURE);
             }
-        } else {
+        } else {*/
             printf("\n\n----- Failed To Open Config File, Exiting -----\n\n");
             exit(EXIT_FAILURE);
-        }
+        //}
     }
     rewind(config_file);
     

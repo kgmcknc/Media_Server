@@ -40,6 +40,7 @@ unsigned int ms_ip[4] = {0};
 char client_count = 0;
 unsigned int client_ips[MAX_CLIENTS][4] = {{0}};
 char client_state[MAX_CLIENTS] = {0};
+unsigned int client_id[MAX_CLIENTS] = {0};
 char user_option = 0;
 char send_heartbeat = 0;
 char restart_heartbeat = 1;

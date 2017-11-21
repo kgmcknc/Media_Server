@@ -50,6 +50,7 @@ extern char valid_config;
 extern char client_count;
 extern unsigned int client_ips[MAX_CLIENTS][4];
 extern char client_state[MAX_CLIENTS];
+extern unsigned int client_id[MAX_CLIENTS];
 extern char send_heartbeat;
 extern char restart_heartbeat;
 

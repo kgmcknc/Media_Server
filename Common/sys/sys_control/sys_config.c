@@ -337,6 +337,23 @@ void configure_system(void){
                 printf("\nNo IP Set - Can't Add To System\n");
             }
         }
+        if(user_option == 'r'){
+            handled = 1;
+            printf("\nRemoving Client From Server\n");
+            num_clients = read_clients(config_file, tmp_clients, KMF_CLIENT_COUNT);
+            if(num_clients > 0){
+                printf("Number of Clients: %d\n", num_clients);
+                get_client_number(config_file, &client_id[0], KMF_CLIENT_COUNT);
+                if(client_id[0] > 0){
+                   printf("Sending Remove Client\n");
+                   send_rem_client_from_server(client_id[0], &client_ips[0][0]);
+                } else {
+                   printf("\nNo Client Id...Can't Remove...Connected??\n");
+                }
+            } else {
+                printf("\nNot Added To Server, Can't Remove\n");
+            }
+        }
         #endif
         if(handled == 0){
             printf("\nUnknown Value! %c\n", user_option);
@@ -361,6 +378,7 @@ void print_config_menu(void){
     #ifdef IS_CLIENT
     printf("\ni  Set/Change IP Address:     \n");
     printf("\na  Add Client To Server       \n");
+    printf("\nr  Remove Client From Server  \n");
     #endif
     printf("\n------------------------------\n");
     printf("\nType Input Selection: ");
@@ -1014,14 +1032,14 @@ void web_update_client_ip(char* config_data){
 }
 
 void web_remove_client(char* config_data){
-   #ifdef IS_SERVER
    unsigned int web_ip[4] = {0};
-   unsigned char tmp_cnt = 0;
-   unsigned char loop = 0;
-   char match = 0;
+   //unsigned char tmp_cnt = 0;
+   unsigned int tmp_num = 0;
+   //unsigned char loop = 0;
+   //char match = 0;
     
-    sscanf(config_data, "%u.%u.%u.%u", &web_ip[0], &web_ip[1], &web_ip[2], &web_ip[3]);
-    while(!match && (loop < client_count)){
+    sscanf(config_data, "%u.%u.%u.%u.%u", &tmp_num, &web_ip[0], &web_ip[1], &web_ip[2], &web_ip[3]);
+    /*while(!match && (loop < client_count)){
        tmp_cnt = 0;
        match = 1;
        while(match && (tmp_cnt < 4)){
@@ -1029,11 +1047,16 @@ void web_remove_client(char* config_data){
            tmp_cnt = tmp_cnt + 1;
        }
        loop = loop + 1;
-    }
-    if(match){
-       remove_client(config_file, (loop + 1), KMF_CLIENT_COUNT);
+    }*/
+    //if(match){
+    #ifdef IS_SERVER
+    if(tmp_num < client_count){
+       remove_client(config_file, tmp_num/*(loop + 1)*/, KMF_CLIENT_COUNT);
        check_config(config_file);
     }
+    #endif
+    #ifdef IS_CLIENT
+      send_rem_client_from_server(tmp_num, &web_ip[0]);
     #endif
 }
 
@@ -1063,6 +1086,18 @@ void send_add_client_to_server(unsigned int* new_ip){
    
    sprintf(&function[0], "echo \"1%%kmfaddclient%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
       new_ip[0], new_ip[1], new_ip[2], new_ip[3],
+      ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
+   system(&function[0]);
+   #endif
+}
+
+void send_rem_client_from_server(unsigned int client_id, unsigned int* client_ip){
+   #ifdef IS_CLIENT
+   char function[MAX_FUNCTION_STRING] = {0};
+   
+   sprintf(&function[0], "echo \"1%%kmfremclient%u.%u.%u.%u.%u%%\" | nc %u.%u.%u.%u %u",
+      client_id, client_ip[0], client_ip[1],
+      client_ip[2], client_ip[3],
       ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
    system(&function[0]);
    #endif

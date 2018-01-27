@@ -1,2 +1,6 @@
 # This is the ignore file for the Media Server Git Repository
 # Ignoring object files from C programs
+
+*.o
+*.geany
+*.gch

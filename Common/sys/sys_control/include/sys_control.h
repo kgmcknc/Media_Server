@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <unistd.h>
-#include "/usr/share/media_server/sys_control/configuration.h"
+#include "configuration.h"
 //#include <wiringPi.h>
 
 #define PI_IS_ON 1

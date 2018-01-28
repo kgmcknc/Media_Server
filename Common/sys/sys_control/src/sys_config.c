@@ -24,7 +24,7 @@
 #include "sys_control.h"
 #include "sys_config.h"
 #include "sys_functions.h"
-#include "/usr/share/media_server/sys_control/configuration.h"
+#include "configuration.h"
 
 char check_config(FILE* config_file){
     char cfg_data[TMP_DATA_SIZE] = {0}; // max temp data - 40 bytes

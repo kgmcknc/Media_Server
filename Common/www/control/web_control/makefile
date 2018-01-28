@@ -8,7 +8,7 @@ CFLAGS=-I$(INCDIR)
 DEPS = $(wildcard $(INCDIR)/*.h)
 OBJ = $(patsubst $(SRCDIR)/%.c,$(OUTDIR)/%.o,$(wildcard $(SRCDIR)/*.c))
 
-$(OUTDIR)/%.o: %.c $(DEPS)
+$(OUTDIR)/%.o: $(SRCDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 web_control: $(OBJ)

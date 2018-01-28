@@ -63,8 +63,8 @@ else
 	fi
 fi
 
-sys_deploy_dir="/usr/share/media_server/"
-www_deploy_dir="/var/www/html/media_server/"
+sys_deploy_dir="/usr/share/media_server"
+www_deploy_dir="/var/www/html/media_server"
 rx_fifo="/var/www/html/media_server/control/web_control/rxwebfifo"
 
 if [ "$deploy_server" -eq 1 ] ; then
@@ -165,3 +165,9 @@ if [ "$deploy_common" -eq 1 ] ; then
 	echo "Deployed Common Side WWW Files"
 fi
 
+
+# Handle Compiling C Programs when Deploying Code
+cd $sys_deploy_dir/sys_control/
+make
+cd $www_deploy_dir/control/web_control/
+make

@@ -64,8 +64,10 @@ else
 fi
 
 sys_deploy_dir="/usr/share/media_server"
+sys_config_file="/usr/share/media_server/sys_config.kmf"
 www_deploy_dir="/var/www/html/media_server"
-rx_fifo="/var/www/html/media_server/control/web_control/rxwebfifo"
+rx_fifo="/var/www/html/media_server/control/web_control/rxwebpipe"
+tx_fifo="/var/www/html/media_server/control/web_control/txwebpipe"
 
 if [ "$deploy_server" -eq 1 ] ; then
 	echo "Deploying Server Side System Code to $sys_deploy_dir"
@@ -140,13 +142,11 @@ if [ "$deploy_server" -eq 1 ] ; then
 	for file_name in ./Server/www/*; do
 		cp -r "$file_name" "$www_deploy_dir"
 	done
-	mkfifo "$rx_fifo"
 fi
 if [ "$deploy_client" -eq 1 ] ; then
 	for file_name in ./Client/www/*; do
 		cp -r "$file_name" "$www_deploy_dir"
 	done
-	mkfifo "$rx_fifo"
 fi
 if [ "$deploy_common" -eq 1 ] ; then
 	for file_name in ./Common/www/*; do
@@ -165,9 +165,28 @@ if [ "$deploy_common" -eq 1 ] ; then
 	echo "Deployed Common Side WWW Files"
 fi
 
+if [ -e $sys_config_file ] ; then
+	echo "Sys Config File Already Exists"
+else 
+	touch $sys_config_file
+fi
+
+if [ -e $rx_fifo ] ; then
+	echo "Rx Fifo Already Exists"
+else 
+	mkfifo $rx_fifo
+fi
+
+if [ -e $tx_fifo ] ; then
+	echo "Tx Fifo Already Exists"
+else
+	mkfifo $tx_fifo
+fi
 
 # Handle Compiling C Programs when Deploying Code
 cd $sys_deploy_dir/sys_control/
 make
 cd $www_deploy_dir/control/web_control/
 make
+
+echo "Run sudo /usr/share/media_server/sys_control/sys_control -config"

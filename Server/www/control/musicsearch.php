@@ -2,7 +2,7 @@
 <?php
 
 $q = $_REQUEST["q"];
-$basedir = "/home/pi/linux-main-share/MusicHD";
+$basedir = "/home/kyle/linux-main-share/MusicHD";
 $dir = 0;
 $dirlist;
 

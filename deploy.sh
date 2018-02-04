@@ -64,7 +64,9 @@ else
 fi
 
 sys_deploy_dir="/usr/share/media_server"
-sys_config_file="/usr/share/media_server/sys_config.kmf"
+sys_config_file="/usr/share/media_server/sys_control/sys_config.kmf"
+sys_moviedir_file="/usr/share/media_server/sys_control/moviectrl/moviedir.kmf"
+sys_musicdir_file="/usr/share/media_server/sys_control/musicctrl/musicdir.kmf"
 www_deploy_dir="/var/www/html/media_server"
 rx_fifo="/var/www/html/media_server/control/web_control/rxwebpipe"
 tx_fifo="/var/www/html/media_server/control/web_control/txwebpipe"
@@ -181,6 +183,20 @@ if [ -e $tx_fifo ] ; then
 	echo "Tx Fifo Already Exists"
 else
 	mkfifo $tx_fifo
+fi
+
+if [ "$deploy_server" -eq 1 ] ; then
+	if [ -e $sys_moviedir_file ] ; then
+		echo "MovieDir Config File Already Exists"
+	else 
+		touch $sys_moviedir_file
+	fi
+	
+	if [ -e $sys_musicdir_file ] ; then
+		echo "MovieDir Config File Already Exists"
+	else 
+		touch $sys_moviedir_file
+	fi
 fi
 
 # Handle Compiling C Programs when Deploying Code

@@ -5,6 +5,7 @@ var music_array = [];
 function search_music(){
 	var xmlhttp = 0;
 	var dir = "/";
+	var error_html;
 	if (window.XMLHttpRequest) {
 		xmlhttp = new XMLHttpRequest();
 	} else {
@@ -16,8 +17,18 @@ function search_music(){
 	xmlhttp.onreadystatechange = function() {
 		if (this.readyState == 4 && this.status == 200) {
 			directory_list = this.responseText;
-			dir_tree.push(dir);
-			update_page();
+			if(directory_list == 0) {
+				error_html = document.getElementById("musiclist");
+				error_html.innerHTML = "Could Not Open Music Dir File";
+			} else {
+				if(directory_list == 1) {
+					error_html = document.getElementById("musiclist");
+					error_html.innerHTML = "No Music Directory Set";
+				} else {
+					dir_tree.push(dir);
+					update_page();
+				}
+			}
 		}
 	}
 }

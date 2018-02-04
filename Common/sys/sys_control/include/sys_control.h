@@ -32,6 +32,8 @@
 #define NO_TIMEOUT 0
 
 #define CONFIG_PATH "/usr/share/media_server/sys_control/sys_config.kmf"
+#define MOVIEDIR_PATH "/usr/share/media_server/sys_control/moviectrl/moviedir.kmf"
+#define MUSICDIR_PATH "/usr/share/media_server/sys_control/musicctrl/musicdir.kmf"
 #define RX_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
 #define WEB_PATH "/var/www/html/media_server/control/web_control/txwebpipe"
 

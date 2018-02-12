@@ -14,3 +14,4 @@ Add server active to config too
 Add functions to write/read config data (rather than just having command line config interface). This allows web config and read.
 Then add polling/keep alive/active from functions and global broadcast across the system.
 
+don't add setting movie and music directory from the webpage - security bug

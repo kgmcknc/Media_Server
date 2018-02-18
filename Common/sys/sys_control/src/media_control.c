@@ -41,7 +41,7 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
             start_movie(stream_select, input_option, input_src, out_count, out_address);
             #endif
             #ifdef IS_CLIENT
-            start_listener(0,server_ip);
+            start_listener(0,ms_ip);
             #endif
         } else {
             // too many movies going... don't start
@@ -110,6 +110,7 @@ char start_music(char stream_select, char input_option, char* input_src, unsigne
     music_clients[stream_select] = out_count;
     active_music_count = active_music_count + 1;
     //start vlc player and connect to pipe
+    //  cvlc -I rc input_src --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/test.flv}' < test_fifo
     //send update to pause player
     //send start stream to all outputs
 }

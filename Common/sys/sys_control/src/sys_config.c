@@ -12,7 +12,7 @@ char check_config(FILE* config_file){
     unsigned int ip[4] = {0};
     long int size = 0;
     char tmp_valid = 1;
-    
+    printf("Checking Config Data\n");
     rewind(config_file);
     while(!file_end && (cfg_cnt < MAX_CONFIG_FILE)){
         fgetc(config_file);
@@ -73,10 +73,12 @@ char check_config(FILE* config_file){
         
         valid_config = tmp_valid;
         if(valid_config){
+           printf("Config Data Was Valid\n");
            update_system(config_file);
            restart_listener = 1;
            return 0;
         } else {
+           printf("Config Data Wasn't Valid\n");
            restart_listener = 0;
            return 1;
         }
@@ -1176,6 +1178,7 @@ void send_heartbeat_to_clients(void){
          (temp_cnt + 1), client_ips[temp_cnt][0], client_ips[temp_cnt][1],
          client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
       temp_cnt = temp_cnt + 1;
+      printf("Running: %s\n", function);
       system(&function[0]);
    }
    #endif
@@ -1215,7 +1218,9 @@ void send_heartbeat_to_server(void){
       client_ips[0][0], client_ips[0][1],
       client_ips[0][2], client_ips[0][3], tmp_num,
       ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
+      printf("Running: %s\n", function);
       system(&function[0]);
+   printf("Sent Heartbeat to Server\n");
    #endif
 }
 

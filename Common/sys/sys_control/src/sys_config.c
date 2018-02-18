@@ -1,25 +1,3 @@
-/*
- * sys_config.c
- * 
- * Copyright 2017 kyle <kyle@linux-main>
- * 
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- * MA 02110-1301, USA.
- * 
- * 
- */
 
 #include "sys_control.h"
 #include "sys_config.h"
@@ -1272,4 +1250,12 @@ void initial_config(FILE* config_file){
     #endif
     write_config_data(config_file, &cfg_data[0], KMF_SYS_ID, 1);
 }
+
+void send_to(unsigned char input_string[MAX_INPUT_STRING], unsigned int address[4]){
+   char send_string[MAX_FUNCTION_STRING] = {0};
+   
+   sprintf(send_string, "echo \"1%%%s%%\" | nc %u.%u.%u.%u %u", input_string, address[0], address[1], address[2], address[3], ms_port);
+   system(send_string);
+}
+
 

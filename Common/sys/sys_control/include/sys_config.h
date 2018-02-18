@@ -39,6 +39,8 @@ void web_remove_client(char* config_data);
 void web_set_client_ip(char* config_data);
 void web_update_client_ip(char* config_data);
 
+void send_to(unsigned char input_string[MAX_INPUT_STRING], unsigned int address[4]);
+
 #define KMF_BASE 0
 #define KMF_VERSION 3
 #define KMF_FILE_SIZE 6

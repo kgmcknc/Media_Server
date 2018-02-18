@@ -2,6 +2,18 @@
 #include "sys_control.h"
 #include "sys_config.h"
 #include "sys_functions.h"
+#include "media_control.h"
+
+struct function_struct {
+    char type_flags;
+    char in_string[MAX_INPUT_STRING];
+    char in_length;
+    char f_string[MAX_FUNCTION_STRING];
+    char f_length;
+    char linked_function;
+    
+};
+struct function_struct struct_functions[FUNCTION_COUNT];
 
 // function name to match web call string
 char function_name[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
@@ -19,7 +31,8 @@ char function_name[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
      "startvideo",
      "stopvideo",
      "startaudio",
-     "stopaudio"
+     "stopaudio",
+     "mc"
  };
     
 // function call for system
@@ -38,7 +51,8 @@ char function_call[FUNCTION_COUNT][MAX_FUNCTION_STRING] = {
      "omxplayer -o hdmi -b \"/home/pi/linux-main-share/MovieHD/\" </usr/share/myfolder/mysysproc/moviectrl/omxctrl >/usr/share/myfolder/mysysproc/moviectrl/omxlog & >/usr/share/myfolder/mysysproc/moviectrl/omxlog2 ; echo -n \"\" > /usr/share/myfolder/mysysproc/moviectrl/omxctrl",
      "echo -n \"q\" > /usr/share/myfolder/mysysproc/moviectrl/omxctrl",
      "omxplayer -o hdmi -b \"/home/pi/linux-main-share/MusicHD/\" </usr/share/myfolder/mysysproc/musicctrl/omxctrl >/usr/share/myfolder/mysysproc/musicctrl/omxlog & >/usr/share/myfolder/mysysproc/musicctrl/omxlog2 ; echo -n \"\" > /usr/share/myfolder/mysysproc/musicctrl/omxctrl",
-     "echo -n \"q\" > /usr/share/myfolder/mysysproc/musicctrl/omxctrl"
+     "echo -n \"q\" > /usr/share/myfolder/mysysproc/musicctrl/omxctrl",
+     ""
  };
  
 // length of the function call strings
@@ -57,7 +71,8 @@ int function_length[FUNCTION_COUNT] = {
     271,
     34,
     271,
-    34
+    34,
+    0
 };
 
 // type of call: 0 - no condition, 1 - start, 2 - stop, 3 - extra text
@@ -69,6 +84,7 @@ int function_type[FUNCTION_COUNT] = {
     // 3 - extra text
     // 4 - config
     // 5 - function
+    // 6 - media control
     0x18, // config extra text
     0x18, // config extra text
     0x18, // config extra text
@@ -83,7 +99,8 @@ int function_type[FUNCTION_COUNT] = {
     0xA, // starter with extra text
     0x4, // stopper
     0xA, // starter with extra text
-    0x4 // stopper
+    0x4, // stopper
+    0x48
 };
 
 // option_status that "start" or "stop" is linked to
@@ -102,7 +119,8 @@ int option_link[FUNCTION_COUNT] = {
     1, // option 1 - startvideo
     1, // option 1 - stopvideo
     2, // option 2 - startaudio
-    2  // option 2 - stopaudio
+    2, // option 2 - stopaudio
+    12
 };
 
 // extra_text_offset
@@ -115,10 +133,14 @@ char extra_offset[FUNCTION_COUNT] = {
     0,
     0,
     0,
+    0,
+    0,
+    0,
     56,
     0,
     56,
-    0
+    0,
+    2
 };
 
 int option_status[OPTION_COUNT] = {0};
@@ -134,7 +156,8 @@ char option_name[OPTION_COUNT][MAX_STRING] = {
     {6},
     "tightvncserver",
     {10}, // length of command constant
-    {10} // length of command constant
+    {10}, // length of command constant
+    {2}
 };
 
 void checkfunctionfile(char use_timeout){
@@ -333,6 +356,14 @@ void process_function(void){
                     }
                 } else {
                     printf("link is wrong\n");
+                }
+            }
+            if(function_type[localcount] == 0x48){
+                char media_type = funcstring[2] - 48;
+                if(media_type == 0){
+                    movie_control(0, (funcstring[3] - 48), "/usr/share/media_server/sys_control/current_playlist.txt", 1, &client_ips[0]);
+                } else {
+                    music_control(0, (funcstring[3] - 48), "/usr/share/media_server/sys_control/current_playlist.txt", 1, &client_ips[0]);
                 }
             }
         } else {

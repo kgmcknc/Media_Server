@@ -178,25 +178,28 @@ void checkfunctionfile(char use_timeout){
     }
     if(forkid == 0){
         // child id -- timeout catch
-        printf("called fork!\n");
+        printf("called fork in timeout child!\n");
         sleep(10);
+        printf("child sending timeout!\n");
         in_file = open(RX_PATH, O_WRONLY, 0x0);
         write(in_file, "T", 1);
         exit(EXIT_SUCCESS);
     } else {
         // Parent id -- read and handle timeout
+        printf("parent opening receive!\n");
         in_file = open(RX_PATH, O_RDONLY, 0x0);
         //newfunction = fscanf(in_file, "%400[^\n]", filestring);
         newfunction = read(in_file, filestring, 400);
         
-        if(FILE_DEBUG) printf("Read: %d, String: %s\n", newfunction, filestring);
+        if(FILE_DEBUG) printf("Parent read: %d, String: %s\n", newfunction, filestring);
     //  rewind(in_file);
         if(newfunction > 0){
             //clearfile = 1;
             if(filestring[0] == 'T'){
-                 kill(forkid, SIGKILL);
-                 printf("Timeout!\n");
+                 printf("Parent got Timeout! Don't Kill\n");
             } else {
+                printf("Parent got function! Kill Timeout\n");
+                kill(forkid, SIGKILL);
                 if(filestring[0] < 48){ // character
                     if(FILE_DEBUG) printf("First was %c, not 0 or 1\n", filestring[0]);
                     functionready = 0;
@@ -217,6 +220,7 @@ void checkfunctionfile(char use_timeout){
         }
         
         if(functionready){
+            functionready = 0;
             if(FILE_DEBUG) printf("Found Valid Function!\n");
             if(filestring[1] == '%'){
                 if(FILE_DEBUG) printf("Second was %%!\n");
@@ -261,7 +265,7 @@ void process_function(void){
     char cust_func[MAX_FUNCTION_STRING] = {0};
     if(fvalid){
         if(FILE_DEBUG) printf("Function: %s\n", funcstring);
-        
+        fvalid = 0;
         for(localcount=0;localcount<FUNCTION_COUNT;localcount=localcount+1){
             if(function_type[localcount] & 0x8){ // check for extra text type
                 func_const = option_name[option_link[localcount]][0];

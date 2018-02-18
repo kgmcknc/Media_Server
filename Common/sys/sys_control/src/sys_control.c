@@ -56,7 +56,13 @@ int main(int argc, char **argv) {
 
     printf("\n\n----- Checking Configuration Settings -----\n\n");
     check_config(config_file);
-
+    #ifdef IS_SERVER
+        printf("\n\n----- Running as Server -----\n\n");
+    #endif
+    #ifdef IS_CLIENT
+        printf("\n\n----- Running as Client -----\n\n");
+    #endif
+    
     printf("\n\n----- Resetting Web State -----\n\n");
     //init_webstate(webfile);
 

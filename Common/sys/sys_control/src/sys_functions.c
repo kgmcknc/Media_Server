@@ -363,10 +363,14 @@ void process_function(void){
                 }
             }
             if(function_type[localcount] == 0x48){
+                printf("Found Media Function!\n");
                 char media_type = funcstring[2] - 48;
                 if(media_type == 0){
+                    printf("Found Movie Function!\n");
                     movie_control(0, (funcstring[3] - 48), "/usr/share/media_server/sys_control/current_playlist.txt", 1, &client_ips[0]);
-                } else {
+                }
+                if(media_type == 1){
+                    printf("Found Music Function!\n");
                     music_control(0, (funcstring[3] - 48), "/usr/share/media_server/sys_control/current_playlist.txt", 1, &client_ips[0]);
                 }
             }

@@ -19,6 +19,7 @@ void init_media(){
 
 void start_listener(char type, unsigned int in_address[4]){
     char listening = 0;
+    printf("In Media Listener Function");
     if(system("pgrep pwomxplayer") > 0) listening = 1;
     else listening = 0;
     if(listening){
@@ -35,7 +36,9 @@ void start_listener(char type, unsigned int in_address[4]){
 }
 
 char movie_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
+    printf("Movie inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
     if(input_option == 1){ // start stream
+        printf("Start Stream Option\n");
         if(active_movie_count < MOVIE_MAX){
             #ifdef IS_SERVER
             start_movie(stream_select, input_option, input_src, out_count, out_address);
@@ -49,9 +52,11 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
         }
     } else {
         if(active_movie_count > 0){
+            printf("Update Stream Option\n");
             update_movie(stream_select, input_option, input_src);
         } else {
             // can't do anything to streams... none going
+            printf("Unknown Option\n");
             return 0;
         }
     }

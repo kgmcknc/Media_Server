@@ -1262,7 +1262,7 @@ void initial_config(FILE* config_file){
 
 void send_to(unsigned char input_string[MAX_INPUT_STRING], unsigned int address[4]){
    char send_string[MAX_FUNCTION_STRING] = {0};
-   
+   printf("In Send To: %s, %u.%u.%u.%u\n", input_string, address[0], address[1], address[2], address[3]);
    sprintf(send_string, "echo \"1%%%s%%\" | nc -q 0 %u.%u.%u.%u %u", input_string, address[0], address[1], address[2], address[3], ms_port);
    system(send_string);
 }

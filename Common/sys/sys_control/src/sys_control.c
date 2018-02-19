@@ -89,6 +89,7 @@ int main(int argc, char **argv) {
             exit(EXIT_SUCCESS);
         } else {
             printf("\n\n----- Starting Main Loop -----\n\n");
+            char rx_fpath[MAX_STRING] = RX_PATH;
             while(!restart_listener){
                 // wait, so pi only checks function file every second or so...
                 #ifdef IS_SERVER
@@ -97,7 +98,6 @@ int main(int argc, char **argv) {
                     heartbeat = fork();
                     if(heartbeat == 0) {
                         char set_heartbeat[MAX_STRING] = {0};
-                        char rx_fpath[MAX_STRING] = RX_PATH;
                         sleep(10);
                         sprintf(&set_heartbeat[0], "echo \"1%%sendheartbeat%%\" > %s", &rx_fpath[0]);
                         system(&set_heartbeat[0]);

@@ -19,16 +19,19 @@ void init_media(){
 
 void start_listener(char type, unsigned int in_address[4]){
     char listening = 0;
-    printf("In Media Listener Function");
-    if(system("pgrep pwomxplayer") > 0) listening = 1;
+    char ps_id = 0;
+    printf("In Media Listener Function\n");
+    ps_id = system("pgrep \"pwomxplayer\"");
+    if(ps_id > 0) listening = 1;
     else listening = 0;
     if(listening){
         // can't listen - already listening
+        printf("Already Listening to a stream!!\n");
     } else {
         listening = 1;
         char start_string[MAX_FUNCTION_STRING];
         // start listener
-        sprintf(start_string, "pwomxplayer -o hdmi https://%u.%u.%u.%u:8080/ms.flv?buffer_size 12000000B&", in_address[0], in_address[1], in_address[2], in_address[3]);
+        sprintf(start_string, "pwomxplayer -o hdmi http://%u.%u.%u.%u:8080/ms.flv?buffer_size 12000000B&", in_address[0], in_address[1], in_address[2], in_address[3]);
         system(start_string);
         if(type == 0) send_to("mc02", in_address);
         if(type == 1) send_to("mc12", in_address);
@@ -65,10 +68,14 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
 
 char start_movie(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
     char send_count = 0;
+    char stream_string[MAX_STRING] = {0};
     movie_clients_ready[stream_select] = 0;
     movie_clients[stream_select] = out_count;
     active_movie_count = active_movie_count + 1;
     //start vlc player and connect to pipe
+    sprintf(stream_string, "su - %s -c \"cvlc %s --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/ms.flv}'&\"", "kyle", input_src);
+    printf("Starting: %s\n", stream_string);
+    system(stream_string);
     //send update to pause player
     //send start stream to all outputs
     for(send_count=0;send_count<out_count;send_count++){
@@ -111,11 +118,12 @@ char music_control(char stream_select, char input_option, char* input_src, unsig
 }
 
 char start_music(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
+    char stream_string[MAX_STRING] = {0};
     music_clients_ready[stream_select] = 0;
     music_clients[stream_select] = out_count;
     active_music_count = active_music_count + 1;
     //start vlc player and connect to pipe
-    //  cvlc -I rc input_src --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/test.flv}' < test_fifo
+    //cvlc -I rc input_src --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/test.flv}' < test_fifo
     //send update to pause player
     //send start stream to all outputs
 }

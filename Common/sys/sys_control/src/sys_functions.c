@@ -407,3 +407,18 @@ void init_webstate(FILE* out_file){
 void transmit(int tx_port, char* tx_ip, char* tx_data){
    
 }
+
+void system_kill(char* proc_name){
+    char sys_string[MAX_STRING] = {0};
+    unsigned int proc_id = 0;
+    sprintf(sys_string, "pgrep \"%s\"", proc_name);
+    proc_id = system(sys_string);
+    if(proc_id > 0){
+        printf("Found %s, Killing...\n", proc_name);
+        sprintf(sys_string, "pkill \"%u\"", proc_id);
+        system(sys_string);
+    }
+}
+
+
+

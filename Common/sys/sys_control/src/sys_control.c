@@ -74,12 +74,16 @@ int main(int argc, char **argv) {
         listener = fork();
         if(listener == 0){
             char nclistener[MAX_STRING] = {0};
+            char check[MAX_STRING] = {0};
             char rx_fpath[MAX_STRING] = RX_PATH;
+            unsigned int ps_id = 0;
             sprintf(&nclistener[0], "nc -k -l %u > %s", ms_port, &rx_fpath[0]);
             // child id -- timeout catch
             printf("Child calling listener!\n");
             // make this be the listener system call
             printf("Function: %s\n", &nclistener[0]);
+            system_kill(nclistener);
+            printf("Starting Listener\n");
             system(&nclistener[0]);
             printf("Exitting Listener\n");
             exit(EXIT_SUCCESS);
@@ -109,7 +113,10 @@ int main(int argc, char **argv) {
 
                 if(restart_listener){
                     printf("\n\n----- Breaking Out of Main -----\n\n");
+                    char killstring[MAX_STRING] = {0};
                     kill(listener, SIGKILL);
+                    sprintf(killstring, "nc -k -l %u > %s", ms_port, &rx_fpath[0]);
+                    system_kill(killstring);
                 }
             }
         }

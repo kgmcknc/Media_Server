@@ -368,11 +368,12 @@ void process_function(void){
                 if(media_type == 0){
                     printf("Found Movie Function!\n");
                     ///usr/share/media_server/sys_control/moviectrl/current_playlist.txt
-                    movie_control(0, (funcstring[3] - 48), "/home/kyle/linux-main-share/MovieHD/9.m4v", 1, &client_ips[0]);
+                    ///home/kyle/linux-main-share/MovieHD/9.m4v
+                    movie_control(0, (funcstring[3] - 48), "/usr/share/media_server/sys_control/moviectrl/movie.m3u", 1, &client_ips[0]);
                 }
                 if(media_type == 1){
                     printf("Found Music Function!\n");
-                    music_control(0, (funcstring[3] - 48), "/usr/share/media_server/sys_control/musicctrl/current_playlist.txt", 1, &client_ips[0]);
+                    //music_control(0, (funcstring[3] - 48), "/usr/share/media_server/sys_control/musicctrl/current_playlist.txt", 1, &client_ips[0]);
                 }
             }
         } else {

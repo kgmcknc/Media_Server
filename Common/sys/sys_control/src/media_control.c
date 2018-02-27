@@ -47,7 +47,7 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
             start_movie(stream_select, input_option, input_src, out_count, out_address);
             #endif
             #ifdef IS_CLIENT
-            start_listener(0,ms_ip);
+            start_listener(0, ms_ip);
             #endif
         } else {
             // too many movies going... don't start
@@ -73,10 +73,11 @@ char start_movie(char stream_select, char input_option, char* input_src, unsigne
     movie_clients[stream_select] = out_count;
     active_movie_count = active_movie_count + 1;
     //start vlc player and connect to pipe
-    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host localhost:%u --extraintf=http --http-password=ms %s --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/ms.flv}'&\"", "kyle", (ms_port+1), input_src);
+    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/ms.flv}'&\"", "kyle", ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
     printf("Starting: %s\n", stream_string);
     system(stream_string);
-    //send update to pause player
+    sleep(2);
+    send_media("pause", ms_ip);
     //send start stream to all outputs
     for(send_count=0;send_count<out_count;send_count++){
         send_to("mc01", out_address[send_count]);
@@ -90,11 +91,14 @@ char update_movie(char stream_select, char input_option, char* input_src){
     if(input_option == 2){
         movie_clients_ready[stream_select] = movie_clients_ready[stream_select] + 1;
         if(movie_clients_ready[stream_select] >= movie_clients[stream_select]){
-            // play stream - or... essentially unpause to start...
+            send_media("play", ms_ip);
         }
     }
     if(input_option == 3){
-        
+        send_media("stop", ms_ip);
+        sleep(1);
+        send_media("shutdown", ms_ip);
+        active_movie_count = active_movie_count - 1;
     }
 }
 
@@ -143,4 +147,10 @@ char update_music(char stream_select, char input_option, char* input_src){
     }
 }
 
+void send_media(unsigned char input_string[MAX_INPUT_STRING], unsigned int address[4]){
+   char send_string[MAX_FUNCTION_STRING] = {0};
+   printf("In Send Media: %s, %u.%u.%u.%u\n", input_string, address[0], address[1], address[2], address[3]);
+   sprintf(send_string, "echo \"%s\" | nc -q 0 %u.%u.%u.%u %u", input_string, address[0], address[1], address[2], address[3], (ms_port+1));
+   system(send_string);
+}
 

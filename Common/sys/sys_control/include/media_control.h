@@ -21,3 +21,4 @@ char update_movie(char stream_select, char input_option, char* input_src);
 char update_music(char stream_select, char input_option, char* input_src);
 void media_init(void);
 void start_listener(char type, unsigned int in_address[4]);
+void send_media(unsigned char input_string[MAX_INPUT_STRING], unsigned int address[4]);

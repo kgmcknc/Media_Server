@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
 
     while(PI_IS_ON){
         restart_listener = 0;
+        while(waitpid(-1, NULL, WNOHANG) > 0);
         listener = fork();
         if(listener == 0){
             char nclistener[MAX_STRING] = {0};
@@ -92,6 +93,7 @@ int main(int argc, char **argv) {
             char rx_fpath[MAX_STRING] = RX_PATH;
             while(!restart_listener){
                 // wait, so pi only checks function file every second or so...
+                while(waitpid(-1, NULL, WNOHANG) > 0);
                 #ifdef IS_SERVER
                 if(restart_heartbeat) {
                     restart_heartbeat = 0;
@@ -115,6 +117,7 @@ int main(int argc, char **argv) {
                     printf("\n\n----- Breaking Out of Main -----\n\n");
                     char killstring[MAX_STRING] = {0};
                     kill(listener, SIGKILL);
+                    while(waitpid(-1, NULL, WNOHANG) > 0);
                     sprintf(killstring, "nc -k -l %u > %s", ms_port, &rx_fpath[0]);
                     system_kill(killstring);
                 }

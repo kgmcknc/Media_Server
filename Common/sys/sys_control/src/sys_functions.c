@@ -169,7 +169,7 @@ void checkfunctionfile(char use_timeout){
     char fend = 0;
     pid_t forkid;
     //int clrcnt = 0;
-    
+    while(waitpid(-1, NULL, WNOHANG) > 0);
     if(use_timeout){
       fvalid = 0;
       forkid = fork();
@@ -183,6 +183,7 @@ void checkfunctionfile(char use_timeout){
         printf("child sending timeout!\n");
         in_file = open(RX_PATH, O_WRONLY, 0x0);
         write(in_file, "T", 1);
+        close(in_file);
         exit(EXIT_SUCCESS);
     } else {
         // Parent id -- read and handle timeout
@@ -200,6 +201,7 @@ void checkfunctionfile(char use_timeout){
             } else {
                 printf("Parent got function! Kill Timeout\n");
                 kill(forkid, SIGKILL);
+                while(waitpid(-1, NULL, WNOHANG) > 0);
                 if(filestring[0] < 48){ // character
                     if(FILE_DEBUG) printf("First was %c, not 0 or 1\n", filestring[0]);
                     functionready = 0;

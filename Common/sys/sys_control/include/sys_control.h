@@ -41,6 +41,7 @@
 
 extern FILE* config_file;
 
+extern char username[MAX_STRING];
 extern char filestring[MAX_STRING];
 extern char funcstring[MAX_STRING];
 extern char fvalid;

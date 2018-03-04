@@ -2,6 +2,8 @@
 #include "sys_control.h"
 #include "sys_config.h"
 #include "sys_functions.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 void updatewebstate(FILE* out_file);
 void init_webstate(FILE* out_file);
@@ -13,6 +15,8 @@ int flength = 0;
 char valid_config = 0;
 long int file_length = 0;
 
+char usertmp[MAX_STRING] = {0};
+char username[MAX_STRING] = {0};
 unsigned int ms_port = 0;
 unsigned int ms_ip[4] = {0};
 char client_count = 0;
@@ -27,13 +31,23 @@ char restart_listener = 0;
 pid_t listener;
 pid_t heartbeat;
 
+FILE* user_fp;
 FILE* config_file;
 
 int main(int argc, char **argv) {
 
     printf("\n\n----- Starting Kyle's System -----\n\n");
+    
+    user_fp = popen("ls /home/", "r");
+    if(user_fp == NULL){
+        printf("Failed to get User...\n");
+        exit(1);
+    } else {
+        fgets(usertmp, sizeof(usertmp)-1, user_fp);
+        strncpy(username, usertmp, (strlen(usertmp)-1));
+        printf("\n\n----- Got %s As User -----\n\n", username);
+    }
 
-    printf("\n\n----- Opening Config File -----\n\n");
     config_file = fopen(CONFIG_PATH, "r+b");
     if(config_file != NULL){
         printf("\n\n----- Successfully Opened Config File -----\n\n");

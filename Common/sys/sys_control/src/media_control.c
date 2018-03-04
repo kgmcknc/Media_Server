@@ -73,7 +73,7 @@ char start_movie(char stream_select, char input_option, char* input_src, unsigne
     movie_clients[stream_select] = out_count;
     active_movie_count = active_movie_count + 1;
     //start vlc player and connect to pipe
-    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/ms.flv}'&\"", "kyle", ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
+    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/ms.flv}'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
     printf("Starting: %s\n", stream_string);
     system(stream_string);
     sleep(2);

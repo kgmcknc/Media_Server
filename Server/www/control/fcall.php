@@ -3,7 +3,7 @@
 
 $q = $_REQUEST["q"];
 $function;
-$program = "/var/www/html/control/websysproc/websys \"";
+$program = "/var/www/html/media_server/control/web_control/web_control \"";
 $quotes = "\"";
 
 if ($q !== "") {

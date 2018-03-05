@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<link rel="stylesheet" type="text/css" href="../system.css">
+        <link rel="stylesheet" type="text/css" href="../movies.css">
 	</head>
 	<body onload="search_movies()">
 	<div id="navbar" class="navbar">
@@ -14,15 +15,18 @@
 	</div>
 	control page:
 	<div class="controlbox">
-		<span id="stopvideo" onclick="write_function('stopvideo')">Stop Movie</span>
+		<span id="stopvideo" onclick="write_function('mc03')">Stop Movie</span>
 		<span id="pausevideo" onclick="write_function('pausevideo')">Pause Movie</span>
 		<span id="resumevideo" onclick="write_function('resumevideo')">Resume Movie</span>
 		<span id="rrvideo" onclick="write_function('rrvideo')">Rewind Movie</span>
 		<span id="ffvideo" onclick="write_function('ffvideo')">FastForward Movie</span>
 	</div>
-	<div id="movielist">
-		
-	</div>
+    <div id="movielist">
+        
+    </div>
+    <div id="playlists">
+        
+    </div>
 	<script src="control.js"></script>
 	<script src="movies.js"></script>
 	</body>

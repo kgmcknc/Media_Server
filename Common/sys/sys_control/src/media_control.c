@@ -39,12 +39,14 @@ void start_listener(char type, unsigned int in_address[4]){
 }
 
 char movie_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
+    char movie_text[MAX_STRING] = {0};
+    sprintf(movie_text, "\\\"/home/kyle/linux-main-share/MovieHD/%s\\\"", input_src);
     printf("Movie inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
     if(input_option == 1){ // start stream
         printf("Start Stream Option\n");
         if(active_movie_count < MOVIE_MAX){
             #ifdef IS_SERVER
-            start_movie(stream_select, input_option, input_src, out_count, out_address);
+            start_movie(stream_select, input_option, movie_text, out_count, out_address);
             #endif
             #ifdef IS_CLIENT
             start_listener(0, ms_ip);
@@ -95,10 +97,12 @@ char update_movie(char stream_select, char input_option, char* input_src){
         }
     }
     if(input_option == 3){
-        send_media("stop", ms_ip);
-        sleep(1);
-        send_media("shutdown", ms_ip);
-        active_movie_count = active_movie_count - 1;
+        #ifdef IS_SERVER
+            send_media("stop", ms_ip);
+            sleep(1);
+            send_media("shutdown", ms_ip);
+            active_movie_count = active_movie_count - 1;
+        #endif
     }
 }
 

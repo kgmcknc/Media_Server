@@ -132,12 +132,14 @@ function update_page(){
 		if(movie_name.lastIndexOf(".") > 0){ // FIX THIS CHECK! FAILS ON FOLDER NAME WITH DOT
 			tmp_id = "movie" + String(count);
 			new_elem.id = tmp_id;
-			new_elem.onclick = start_movie;
+			new_elem.onclick = open_item_options;
+            new_elem.classList.add("dropbtn");
 			movie_name = movie_name.slice(0, (movie_name.lastIndexOf(".")));
 		} else {
 			tmp_id = "movie" + String(count);
 			new_elem.id = tmp_id;
-			new_elem.onclick = enter_dir;
+			new_elem.onclick = open_folder_options;
+            new_elem.classList.add("dropbtn");
 			movie_name = movie_name;
 		}
 		new_text = document.createTextNode(movie_name);
@@ -188,7 +190,7 @@ function start_movie(){
 	var base = "movie";
 	var idname = this.id;
 	var movie_num = 0;
-	var moviecall = "startvideo";
+	var moviecall = "mc01";
 
 	idname = idname.slice(base.length);
 	movie_num = string_to_dec(idname);
@@ -218,4 +220,73 @@ function string_to_dec(name){
 	}
 	
 	return number;
+}
+
+function open_item_options(){
+    var new_div = 0;
+    cleardropdowns();
+    new_elem = document.createElement("div");
+    new_elem.id = "item_dropdown";
+    new_elem.classList.add("dropdown-content");
+    new_div = document.createElement("div");
+    new_div.id = this.id;
+    new_div.onclick = start_movie;
+    new_text = document.createTextNode("Play");
+    new_div.appendChild(new_text);
+    new_elem.appendChild(new_div);
+    new_div = document.createElement("div");
+    new_div.id = this.id;
+    new_div.onclick = add_to_list_end;
+    new_text = document.createTextNode("Add To Current Playlist");
+    new_div.appendChild(new_text);
+    new_elem.appendChild(new_div);
+    this.appendChild(new_elem);
+}
+
+function open_folder_options(){
+    var new_div = 0;
+    cleardropdowns();
+    new_elem = document.createElement("div");
+    new_elem.id = "folder_dropdown";
+    new_elem.classList.add("dropdown-content");
+    new_div = document.createElement("div");
+    new_div.id = this.id;
+    new_div.onclick = enter_dir;
+    new_text = document.createTextNode("Enter Folder");
+    new_div.appendChild(new_text);
+    new_elem.appendChild(new_div);
+    new_div = document.createElement("div");
+    new_div.id = this.id;
+    new_div.onclick = start_movie;
+    new_text = document.createTextNode("Play Folder");
+    new_div.appendChild(new_text);
+    new_elem.appendChild(new_div);
+    new_div = document.createElement("div");
+    new_div.id = this.id;
+    new_div.onclick = add_to_list_end;
+    new_text = document.createTextNode("Add Folder To Current Playlist");
+    new_div.appendChild(new_text);
+    new_elem.appendChild(new_div);
+    this.appendChild(new_elem);
+}
+
+window.onclick = function(event) {
+    if(!event.target.matches('.dropbtn')){
+        cleardropdowns();
+    }
+}
+
+function cleardropdowns(){
+    var dropdowns = document.getElementsByClassName("dropdown-content");
+    var parent = 0;
+    var i;
+    for(i=0;i<dropdowns.length;i++){
+        var openDropdown = dropdowns[i];
+        parent = openDropdown.parentNode;
+        parent.removeChild(openDropdown);
+    }
+}
+
+function add_to_list_end(){
+   alert("not implemented");
 }

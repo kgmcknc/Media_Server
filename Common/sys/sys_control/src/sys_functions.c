@@ -365,19 +365,20 @@ void process_function(void){
                 }
             }
             if(function_type[localcount] == 0x48){
-                char movietext[MAX_STRING] = {0};
+                char mediatext[MAX_STRING] = {0};
                 printf("Found Media Function!\n");
                 char media_type = funcstring[2] - 48;
                 if(media_type == 0){
                     printf("Found Movie Function!\n");
-                    strncpy(movietext, &funcstring[4], strlen(funcstring)-1);
+                    strncpy(mediatext, &funcstring[4], strlen(funcstring)-1);
                     ///usr/share/media_server/sys_control/moviectrl/current_playlist.txt
                     ///home/kyle/linux-main-share/MovieHD/9.m4v
-                    movie_control(0, (funcstring[3] - 48), movietext, 1, &client_ips[0]);
+                    movie_control(0, (funcstring[3] - 48), mediatext, 1, &client_ips[0]);
                 }
                 if(media_type == 1){
                     printf("Found Music Function!\n");
-                    //music_control(0, (funcstring[3] - 48), "/usr/share/media_server/sys_control/musicctrl/current_playlist.txt", 1, &client_ips[0]);
+                    strncpy(mediatext, &funcstring[4], strlen(funcstring)-1);
+                    movie_control(0, (funcstring[3] - 48), mediatext, 1, &client_ips[0]);
                 }
             }
         } else {

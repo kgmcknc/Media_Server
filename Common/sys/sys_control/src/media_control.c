@@ -31,7 +31,7 @@ void start_listener(char type, unsigned int in_address[4]){
         listening = 1;
         char start_string[MAX_FUNCTION_STRING];
         // start listener
-        sprintf(start_string, "pwomxplayer -o hdmi http://%u.%u.%u.%u:8080/ms.flv?buffer_size 12000000B&", in_address[0], in_address[1], in_address[2], in_address[3]);
+        sprintf(start_string, "pwomxplayer -o hdmi http://%u.%u.%u.%u:8080/ms0.mkv?buffer_size 12000000B&", in_address[0], in_address[1], in_address[2], in_address[3]);
         system(start_string);
         if(type == 0) send_to("mc02", in_address);
         if(type == 1) send_to("mc12", in_address);
@@ -75,7 +75,12 @@ char start_movie(char stream_select, char input_option, char* input_src, unsigne
     movie_clients[stream_select] = out_count;
     active_movie_count = active_movie_count + 1;
     //start vlc player and connect to pipe
-    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/ms.flv}'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
+    // this has worked on everything so far:
+    // cvlc /home/kyle/linux-main-share/MovieHD/streamtest.m3u dst=gather --sout-keep --sout "#standard{access=http,dst=:8080/ms0.mkv}"
+    // backup "cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/ms.mkv}'&\""
+    // --http-reconnect --http-continuous
+    // THIS WORKS!! cvlc /home/kyle/linux-main-share/MovieHD/The\ Emperors\ New\ Groove.mp4 dst=gather --sout-keep --sout '#standard{access=http,dst=:8080/ms0.mkv}'
+    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout \'#standard{access=http,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
     printf("Starting: %s\n", stream_string);
     system(stream_string);
     sleep(2);
@@ -106,10 +111,19 @@ char update_movie(char stream_select, char input_option, char* input_src){
     }
 }
 
+
 char music_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
+    char music_text[MAX_STRING] = {0};
+    sprintf(music_text, "\\\"/home/kyle/linux-main-share/MusicHD/%s\\\"", input_src);
+    printf("Music inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
     if(input_option == 1){ // start stream
         if(active_music_count < MUSIC_MAX){
-            start_music(stream_select, input_option, input_src, out_count, out_address);
+            #ifdef IS_SERVER
+            start_music(stream_select, input_option, music_text, out_count, out_address);
+            #endif
+            #ifdef IS_CLIENT
+            start_listener(0, ms_ip);
+            #endif
         } else {
             // too many movies going... don't start
             return 0;
@@ -126,14 +140,20 @@ char music_control(char stream_select, char input_option, char* input_src, unsig
 }
 
 char start_music(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
+    char send_count = 0;
     char stream_string[MAX_STRING] = {0};
     music_clients_ready[stream_select] = 0;
     music_clients[stream_select] = out_count;
     active_music_count = active_music_count + 1;
-    //start vlc player and connect to pipe
-    //cvlc -I rc input_src --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/test.flv}' < test_fifo
-    //send update to pause player
+    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout \'#standard{access=http,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
+    printf("Starting: %s\n", stream_string);
+    system(stream_string);
+    sleep(2);
+    send_media("pause", ms_ip);
     //send start stream to all outputs
+    for(send_count=0;send_count<out_count;send_count++){
+        send_to("mc01", out_address[send_count]);
+    }
 }
 
 char update_music(char stream_select, char input_option, char* input_src){
@@ -143,11 +163,16 @@ char update_music(char stream_select, char input_option, char* input_src){
     if(input_option == 2){
         music_clients_ready[stream_select] = music_clients_ready[stream_select] + 1;
         if(music_clients_ready[stream_select] >= music_clients[stream_select]){
-            // play stream - or... essentially unpause to start...
+            send_media("play", ms_ip);
         }
     }
     if(input_option == 3){
-        //other option like pause...
+        #ifdef IS_SERVER
+            send_media("stop", ms_ip);
+            sleep(1);
+            send_media("shutdown", ms_ip);
+            active_movie_count = active_movie_count - 1;
+        #endif
     }
 }
 

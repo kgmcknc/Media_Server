@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<link rel="stylesheet" type="text/css" href="../system.css">
+        <link rel="stylesheet" type="text/css" href="../music.css">
 	</head>
 	<body onload="search_music()">
 	<div id="navbar" class="navbar">
@@ -14,7 +15,7 @@
 	</div>
 	control page:
 	<div class="controlbox">
-		<span id="stopmusic" onclick="write_function('stopaudio')">Stop Music</span>
+		<span id="stopmusic" onclick="write_function('mc13')">Stop Music</span>
 		<span id="pausemusic" onclick="write_function('pauseaudio')">Pause Music</span>
 		<span id="resumemusic" onclick="write_function('resumeaudio')">Resume Music</span>
 		<span id="rrmusic" onclick="write_function('rraudio')">Rewind Music</span>
@@ -23,6 +24,9 @@
 	<div id="musiclist">
 		
 	</div>
+    <div id="playlists">
+        
+    </div>
 	<script src="control.js"></script>
 	<script src="music.js"></script>
 	</body>

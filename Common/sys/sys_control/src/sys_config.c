@@ -288,7 +288,7 @@ void configure_system(void){
 	if(user_option == 't'){
             handled = 1;
             dir_fp = fopen(MOVIEDIR_PATH, "r");
-            if(dir_fp < 0){
+            if(dir_fp <= 0){
                 printf("Couldn't Open Movie Directory File...");
             } else {
                 if(fscanf(dir_fp, "%s", &directory[0])){
@@ -317,7 +317,7 @@ void configure_system(void){
 	if(user_option == 'b'){
             handled = 1;
             dir_fp = fopen(MUSICDIR_PATH, "r");
-            if(dir_fp < 0){
+            if(dir_fp <= 0){
                 printf("Couldn't Open Music Directory File...");
             } else {
                 if(fscanf(dir_fp, "%s", &directory[0])){
@@ -329,7 +329,7 @@ void configure_system(void){
                 printf("\nSet New Music Directory from root or enter 0 to Go Back\n");
                 printf("New Music Directory: ");
                 scanf("%s%c", &directory[0], &empty);
-                if(directory[0] == 0){
+                if(directory[0] == '0'){
                     printf("\nGot 0, Going Back to Menu\n");
                 }else{
                     printf("\nGot %s For Music Directory\n", &directory[0]);

@@ -195,7 +195,7 @@ if [ "$deploy_server" -eq 1 ] ; then
 	if [ -e $sys_musicdir_file ] ; then
 		echo "MovieDir Config File Already Exists"
 	else 
-		touch $sys_moviedir_file
+		touch $sys_musicdir_file
 	fi
 fi
 

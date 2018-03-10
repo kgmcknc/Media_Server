@@ -80,7 +80,7 @@ char start_movie(char stream_select, char input_option, char* input_src, unsigne
     // backup "cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout '#http{mux=ffmpeg,mux=flv,dst=:8080/ms.mkv}'&\""
     // --http-reconnect --http-continuous
     // THIS WORKS!! cvlc /home/kyle/linux-main-share/MovieHD/The\ Emperors\ New\ Groove.mp4 dst=gather --sout-keep --sout '#standard{access=http,dst=:8080/ms0.mkv}'
-    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout \'#standard{access=http,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
+    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout-keep --sout-all --sout \'#standard{access=http,mux=ts,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
     printf("Starting: %s\n", stream_string);
     system(stream_string);
     sleep(2);
@@ -145,7 +145,7 @@ char start_music(char stream_select, char input_option, char* input_src, unsigne
     music_clients_ready[stream_select] = 0;
     music_clients[stream_select] = out_count;
     active_music_count = active_music_count + 1;
-    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout \'#standard{access=http,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
+    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout-keep --sout-all --sout \'#standard{access=http,mux=ts,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
     printf("Starting: %s\n", stream_string);
     system(stream_string);
     sleep(2);

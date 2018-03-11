@@ -366,7 +366,7 @@ void process_function(void){
             }
             if(function_type[localcount] == 0x48){
                 char mediatext[MAX_STRING] = {0};
-                printf("Found Media Function!\n");
+                printf("Found Media Function!: %s\n", funcstring);
                 char media_type = funcstring[2] - 48;
                 if(media_type == 0){
                     printf("Found Movie Function!\n");
@@ -378,7 +378,7 @@ void process_function(void){
                 if(media_type == 1){
                     printf("Found Music Function!\n");
                     strncpy(mediatext, &funcstring[4], strlen(funcstring)-1);
-                    movie_control(0, (funcstring[3] - 48), mediatext, 1, &client_ips[0]);
+                    music_control(0, (funcstring[3] - 48), mediatext, 1, &client_ips[0]);
                 }
             }
         } else {

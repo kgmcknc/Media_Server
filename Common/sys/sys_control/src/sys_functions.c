@@ -181,19 +181,29 @@ void checkfunctionfile(char use_timeout){
         printf("called fork: in timeout child!\n");
         sleep(10);
         printf("child sending timeout!\n");
-        in_file = open(RX_PATH, O_WRONLY | O_NONBLOCK, 0x0);
-        usleep(100);
-        write(in_file, "T", 1);
-        close(in_file);
+        in_file = open(RX_PATH, O_WRONLY, 0x0);
+        if(in_file < 0){
+            printf("Couldn't Open Rx Fifo to write in timeout\n");
+        } else {
+            write(in_file, "T", 1);
+            close(in_file);
+        }
         exit(EXIT_SUCCESS);
     } else {
         // Parent id -- read and handle timeout
         printf("parent opening receive!\n");
         in_file = open(RX_PATH, O_RDONLY, 0x0);
         //newfunction = fscanf(in_file, "%400[^\n]", filestring);
-        newfunction = read(in_file, filestring, 400);
-        close(in_file);
-        if(FILE_DEBUG) printf("Parent read: %d, String: %s\n", newfunction, filestring);
+        if(in_file < 0){
+            newfunction = 0;
+            functionready = 0;
+            printf("Couldn't Open Rx Path to Read Input\n");
+        } else {
+            newfunction = read(in_file, filestring, 400);
+            close(in_file);
+            if(FILE_DEBUG) printf("Parent read: %d, String: %s\n", newfunction, filestring);
+        }
+        
     //  rewind(in_file);
         if(newfunction > 0){
             //clearfile = 1;

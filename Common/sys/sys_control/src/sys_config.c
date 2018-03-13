@@ -288,7 +288,7 @@ void configure_system(void){
 	if(user_option == 't'){
             handled = 1;
             dir_fp = fopen(MOVIEDIR_PATH, "r");
-            if(dir_fp <= 0){
+            if(dir_fp == NULL){
                 printf("Couldn't Open Movie Directory File...");
             } else {
                 if(fscanf(dir_fp, "%s", &directory[0])){
@@ -309,15 +309,19 @@ void configure_system(void){
                         directory[string_count - 1] = '\0';
                     }
                     dir_fp = fopen(MOVIEDIR_PATH, "w");
-                    fprintf(dir_fp, "%s", &directory[0]);
-                    fclose(dir_fp);
+                    if(dir_fp == NULL){
+                        printf("Couldn't Open Movie Dir\n");
+                    } else {
+                        fprintf(dir_fp, "%s", &directory[0]);
+                        fclose(dir_fp);
+                    }
 	        }
             }
         }
 	if(user_option == 'b'){
             handled = 1;
             dir_fp = fopen(MUSICDIR_PATH, "r");
-            if(dir_fp <= 0){
+            if(dir_fp == NULL){
                 printf("Couldn't Open Music Directory File...");
             } else {
                 if(fscanf(dir_fp, "%s", &directory[0])){
@@ -338,9 +342,13 @@ void configure_system(void){
                         directory[string_count - 1] = '\0';
                     }
                     dir_fp = fopen(MUSICDIR_PATH, "w");
-                    fprintf(dir_fp, "%s", &directory[0]);
-                    fclose(dir_fp);
-	        }
+                    if(dir_fp == NULL){
+                        printf("Couldn't Open Music Dir\n");
+                    } else {
+                        fprintf(dir_fp, "%s", &directory[0]);
+                        fclose(dir_fp);
+                    }
+	            }
             }
         }
         #endif

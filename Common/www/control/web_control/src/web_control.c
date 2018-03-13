@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     int rxfile;
     
     if(argc ==  2) {
-        if(FILE_DEBUG) printf("New Function! text: %s, size: %d\n", argv[1], strlen(argv[1]));
+        if(FILE_DEBUG) printf("New Function! text: %s, size: %d\n", argv[1], (int) strlen(argv[1]));
         
         rxfile = open(RX_PIPE_PATH, O_WRONLY | O_NONBLOCK, 0x0);
         

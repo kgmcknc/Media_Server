@@ -170,18 +170,19 @@ void checkfunctionfile(char use_timeout){
     pid_t forkid;
     //int clrcnt = 0;
     while(waitpid(-1, NULL, WNOHANG) > 0);
+    fvalid = 0;
     if(use_timeout){
-      fvalid = 0;
       forkid = fork();
     } else {
        forkid = 1;
     }
     if(forkid == 0){
         // child id -- timeout catch
-        printf("called fork in timeout child!\n");
+        printf("called fork: in timeout child!\n");
         sleep(10);
         printf("child sending timeout!\n");
-        in_file = open(RX_PATH, O_WRONLY, 0x0);
+        in_file = open(RX_PATH, O_WRONLY | O_NONBLOCK, 0x0);
+        usleep(100);
         write(in_file, "T", 1);
         close(in_file);
         exit(EXIT_SUCCESS);
@@ -191,13 +192,16 @@ void checkfunctionfile(char use_timeout){
         in_file = open(RX_PATH, O_RDONLY, 0x0);
         //newfunction = fscanf(in_file, "%400[^\n]", filestring);
         newfunction = read(in_file, filestring, 400);
-        
+        close(in_file);
         if(FILE_DEBUG) printf("Parent read: %d, String: %s\n", newfunction, filestring);
     //  rewind(in_file);
         if(newfunction > 0){
             //clearfile = 1;
             if(filestring[0] == 'T'){
                  printf("Parent got Timeout! Don't Kill\n");
+                 kill(forkid, SIGKILL);
+                 while(waitpid(-1, NULL, WNOHANG) > 0);
+                 functionready = 0;
             } else {
                 printf("Parent got function! Kill Timeout\n");
                 kill(forkid, SIGKILL);
@@ -251,7 +255,6 @@ void checkfunctionfile(char use_timeout){
         //  rewind(in_file);
         //  for(clrcnt=0;clrcnt<MAX_STRING;clrcnt++) filestring[clrcnt] = 0;
         //}
-        close(in_file);
         process_function();
     }
 }

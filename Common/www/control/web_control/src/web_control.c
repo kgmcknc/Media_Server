@@ -57,8 +57,11 @@ int main(int argc, char **argv)
         if(FILE_DEBUG) printf("New Function! text: %s, size: %d\n", argv[1], (int) strlen(argv[1]));
         
         rxfile = open(RX_PIPE_PATH, O_WRONLY | O_NONBLOCK, 0x0);
-        
-        write_function(rxfile, argv[1]);
+        if(rxfile < 0){
+            printf("Couldn't Open Rx Pipe...\n");
+        } else {
+            write_function(rxfile, argv[1]);
+        }
         
         close(rxfile);
         

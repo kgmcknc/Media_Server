@@ -94,15 +94,13 @@ int main(int argc, char **argv) {
             unsigned int ps_id = 0;
             sprintf(&nclistener[0], "nc -k -l %u > %s", ms_port, &rx_fpath[0]);
             // child id -- timeout catch
-            while(1){
-                printf("Child calling listener!\n");
-                // make this be the listener system call
-                printf("Function: %s\n", &nclistener[0]);
-                system_kill(nclistener);
-                printf("Starting Listener\n");
-                system(&nclistener[0]);
-                printf("Exitting Listener\n");
-            }
+            printf("Child calling listener!\n");
+            // make this be the listener system call
+            printf("Function: %s\n", &nclistener[0]);
+            system_kill(nclistener);
+            printf("Starting Listener\n");
+            system(&nclistener[0]);
+            printf("Exitting Listener\n");
             exit(EXIT_SUCCESS);
         } else {
             printf("\n\n----- Starting Main Loop -----\n\n");

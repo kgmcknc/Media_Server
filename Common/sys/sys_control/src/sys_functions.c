@@ -191,6 +191,7 @@ void checkfunctionfile(char use_timeout){
         exit(EXIT_SUCCESS);
     } else {
         // Parent id -- read and handle timeout
+        memset(filestring, '\0', sizeof(filestring));
         printf("parent opening receive!\n");
         in_file = open(RX_PATH, O_RDONLY, 0x0);
         newfunction = 0;
@@ -208,27 +209,30 @@ void checkfunctionfile(char use_timeout){
     //  rewind(in_file);
         if(newfunction > 0){
             //clearfile = 1;
+            functionready = 0;
             if(filestring[0] == 'T'){
                  printf("Parent got Timeout! Don't Kill\n");
                  kill(forkid, SIGKILL);
                  while(waitpid(-1, NULL, WNOHANG) > 0);
-                 functionready = 0;
+                 if(filestring[1] == '1'){
+                     strncpy(filestring, filestring + 1, strlen(filestring));
+                 }
             } else {
                 printf("Parent got function! Kill Timeout\n");
                 kill(forkid, SIGKILL);
                 while(waitpid(-1, NULL, WNOHANG) > 0);
-                if(filestring[0] < 48){ // character
-                    if(FILE_DEBUG) printf("First was %c, not 0 or 1\n", filestring[0]);
-                    functionready = 0;
+            }
+            if(filestring[0] < 48){ // character
+                if(FILE_DEBUG) printf("First was %c, not 0 or 1\n", filestring[0]);
+                functionready = 0;
+            } else {
+                filestring[0] = filestring[0] - 48;
+                if(filestring[0] == 1){
+                    if(FILE_DEBUG) printf("First was 1, Valid set\n");
+                    functionready = 1;
                 } else {
-                    filestring[0] = filestring[0] - 48;
-                    if(filestring[0] == 1){
-                        if(FILE_DEBUG) printf("First was 1, Valid set\n");
-                        functionready = 1;
-                    } else {
-                        if(FILE_DEBUG) printf("First was %d, not 1\n", filestring[0]);
-                        functionready = 0;
-                    }
+                    if(FILE_DEBUG) printf("First was %d, not 1\n", filestring[0]);
+                    functionready = 0;
                 }
             }
         } else {

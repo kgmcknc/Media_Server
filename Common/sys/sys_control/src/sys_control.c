@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
         strncpy(username, usertmp, (strlen(usertmp)-1));
         printf("\n\n----- Got %s As User -----\n\n", username);
     }
+    pclose(user_fp);
 
     config_file = fopen(CONFIG_PATH, "r+b");
     if(config_file != NULL){

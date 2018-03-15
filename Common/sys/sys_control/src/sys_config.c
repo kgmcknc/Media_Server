@@ -315,7 +315,7 @@ void configure_system(void){
                         fprintf(dir_fp, "%s", &directory[0]);
                         fclose(dir_fp);
                     }
-	        }
+	            }
             }
         }
 	if(user_option == 'b'){

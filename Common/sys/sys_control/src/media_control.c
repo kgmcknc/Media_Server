@@ -31,7 +31,14 @@ void start_listener(char type, unsigned int in_address[4]){
         listening = 1;
         char start_string[MAX_FUNCTION_STRING];
         // start listener
-        sprintf(start_string, "pwomxplayer -o hdmi http://%u.%u.%u.%u:8080/ms0.mkv?buffer_size 12000000B&", in_address[0], in_address[1], in_address[2], in_address[3]);
+        if(type == 0){
+            // video
+            sprintf(start_string, "pwomxplayer -o hdmi http://%u.%u.%u.%u:8080/ms0.mkv?buffer_size 12000000B&", in_address[0], in_address[1], in_address[2], in_address[3]);
+        }
+        if(type == 1){
+            // audio
+            sprintf(start_string, "pwomxplayer -o hdmi http://%u.%u.%u.%u:8080/ms0.mkv?buffer_size 12000000B&", in_address[0], in_address[1], in_address[2], in_address[3]);
+        }
         system(start_string);
         if(type == 0) send_to("mc02", in_address);
         if(type == 1) send_to("mc12", in_address);
@@ -74,7 +81,7 @@ char start_movie(char stream_select, char input_option, char* input_src, unsigne
     movie_clients_ready[stream_select] = 0;
     movie_clients[stream_select] = out_count;
     active_movie_count = active_movie_count + 1;
-    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout-keep --sout-all --sout \'#gather:std{access=http,mux=ts,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
+    sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout \'#standard{access=http,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
     printf("Starting: %s\n", stream_string);
     system(stream_string);
     sleep(2);

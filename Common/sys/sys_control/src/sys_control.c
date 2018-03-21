@@ -250,7 +250,7 @@ int socket_handler(){
 #endif
 #ifdef IS_CLIENT
                 // check for local connection
-                if(new_addr.sin_addr.s_addr == ((client_ips[0][0] << 24)+(client_ips[0][1] << 16)+(client_ips[0][2] << 8)+client_ips[0][3])){
+                if(new_addr.sin_addr.s_addr == ((client_ips[0][3]<<24)|(client_ips[0][2]<<16)|(client_ips[0][1]<<8)|(client_ips[0][0]))){
                     printf("Found Local Client\n");
                     if(active_local < MAX_LOCAL_SOCKETS){
                         printf("Added To Local: %d\n", active_local);

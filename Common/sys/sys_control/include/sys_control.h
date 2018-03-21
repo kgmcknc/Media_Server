@@ -43,7 +43,7 @@
 #define MOVIEDIR_PATH "/usr/share/media_server/sys_control/moviectrl/moviedir.kmf"
 #define MUSICDIR_PATH "/usr/share/media_server/sys_control/musicctrl/musicdir.kmf"
 #define RX_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
-#define WEB_PATH "/var/www/html/media_server/control/web_control/txwebpipe"
+//#define WEB_PATH "/var/www/html/media_server/control/web_control/txwebpipe"
 
 #define HEARTBEAT_PATH "\0/home/kyle/Projects/sys_control/hb_socket"
 #define COM_PATH "\0/home/kyle/Projects/sys_control/com_socket"
@@ -70,6 +70,10 @@
 : Client Sockets -- attached decoder clients
 
 */
+
+struct system_function{
+    char string[MAX_FUNCTION_STRING];
+};
 
 void server_listener(void);
 void get_rx(int com_socket);

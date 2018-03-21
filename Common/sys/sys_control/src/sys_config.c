@@ -1186,7 +1186,8 @@ void send_heartbeat_to_clients(void){
          (temp_cnt + 1), client_ips[temp_cnt][0], client_ips[temp_cnt][1],
          client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
       temp_cnt = temp_cnt + 1;
-      printf("Running: %s\n", function);
+      //printf("Running: %s\n", function);
+      printf("Sending Heartbeat To Client\n");
       system(&function[0]);
    }
    #endif
@@ -1219,14 +1220,14 @@ void send_heartbeat_to_server(void){
    #ifdef IS_CLIENT
    char function[MAX_FUNCTION_STRING] = {0};
    unsigned int tmp_num = 0;
-   printf("Getting Client Number to send to server\n");
+   //printf("Getting Client Number to send to server\n");
    get_client_number(config_file, &tmp_num, KMF_CLIENT_COUNT);
-   printf("Got Client Number %u to send to server\n", tmp_num);
+   //printf("Got Client Number %u to send to server\n", tmp_num);
    sprintf(&function[0], "echo \"1%%imhere%u.%u.%u.%u.%u%%\" | nc -q 0 %u.%u.%u.%u %u",
       client_ips[0][0], client_ips[0][1],
       client_ips[0][2], client_ips[0][3], tmp_num,
       ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
-      printf("Running: %s\n", function);
+      //printf("Running: %s\n", function);
       system(&function[0]);
    printf("Sent Heartbeat to Server\n");
    #endif
@@ -1238,7 +1239,7 @@ void send_new_ip_to_clients(unsigned int* new_ip){
    unsigned int temp_cnt = 0;
    
    while(temp_cnt < client_count){
-      sprintf(&function[0], "echo \"kmfupdclient%u.%u.%u.%u\" | nc -q q %u.%u.%u.%u %u",
+      sprintf(&function[0], "echo \"kmfupdclient%u.%u.%u.%u\" | nc -q 0 q %u.%u.%u.%u %u",
          new_ip[0], new_ip[1], new_ip[2], new_ip[3],
          client_ips[temp_cnt][0], client_ips[temp_cnt][1],
          client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
@@ -1270,7 +1271,7 @@ void initial_config(FILE* config_file){
 
 void send_to(unsigned char input_string[MAX_INPUT_STRING], unsigned int address[4]){
    char send_string[MAX_FUNCTION_STRING] = {0};
-   printf("In Send To: %s, %u.%u.%u.%u\n", input_string, address[0], address[1], address[2], address[3]);
+   //printf("In Send To: %s, %u.%u.%u.%u\n", input_string, address[0], address[1], address[2], address[3]);
    sprintf(send_string, "echo \"1%%%s%%\" | nc -q 0 %u.%u.%u.%u %u", input_string, address[0], address[1], address[2], address[3], ms_port);
    system(send_string);
 }

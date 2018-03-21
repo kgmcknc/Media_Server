@@ -178,16 +178,20 @@ void checkfunctionfile(char use_timeout){
     }
     if(forkid == 0){
         // child id -- timeout catch
+        char timeout_call[MAX_FUNCTION_STRING];
         printf("called fork: in timeout child!\n");
         sleep(10);
         printf("child sending timeout!\n");
-        in_file = open(RX_PATH, O_WRONLY | O_NONBLOCK, 0x0);
-        if(in_file < 0){
-            printf("Couldn't Open Rx Fifo to write in timeout\n");
-        } else {
-            write(in_file, "T", 1);
-        }
-        close(in_file);
+        sprintf(&timeout_call[0], "echo \"t\" | nc -q 0 %u.%u.%u.%u %u",
+            ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
+        system(&timeout_call[0]);
+        //in_file = open(RX_PATH, O_WRONLY, 0x0);
+        //if(in_file < 0){
+        //    printf("Couldn't Open Rx Fifo to write in timeout\n");
+        //} else {
+        //    write(in_file, "T", 1);
+        //}
+        //close(in_file);
         exit(EXIT_SUCCESS);
     } else {
         // Parent id -- read and handle timeout

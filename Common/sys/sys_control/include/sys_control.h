@@ -45,10 +45,10 @@
 #define RX_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
 //#define WEB_PATH "/var/www/html/media_server/control/web_control/txwebpipe"
 
-#define HEARTBEAT_PATH "\0/home/kyle/Projects/sys_control/hb_socket"
-#define COM_PATH "\0/home/kyle/Projects/sys_control/com_socket"
-#define LOCAL_PATH "\0/home/kyle/Projects/sys_control/main_socket"
-#define WEB_PATH "\0/home/kyle/Projects/sys_control/web_socket"
+#define HEARTBEAT_PATH "\0/usr/share/media_server/sys_control/hb_socket"
+#define COM_PATH "\0/usr/share/media_server/sys_control/com_socket"
+#define LOCAL_PATH "\0/usr/share/media_server/sys_control/main_socket"
+#define WEB_PATH "\0/usr/share/media_server/sys_control/web_socket"
 
 #define RUNNING 1
 #define STOPPED 0

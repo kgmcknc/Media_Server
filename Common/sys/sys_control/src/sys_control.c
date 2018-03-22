@@ -130,6 +130,7 @@ int main(int argc, char **argv) {
 
 void server_system(void){
     int heartbeat_socket_s;
+    int new_client;
     char system_state = RUNNING;
     active_system = 0;
     active_unix = 0;
@@ -143,8 +144,11 @@ void server_system(void){
     active_unix = active_unix + 1;
 #endif
 #ifdef IS_CLIENT
-    client_sockets[active_clients] = connect_client_socket(ms_ip, ms_port);
-    active_clients = active_clients + 1;
+    new_client = connect_client_socket(ms_ip, ms_port);
+    if(new_client >= 0){
+        client_sockets[active_clients] = new_client;
+        active_clients = active_clients + 1;
+    }
 #endif
 
     while(system_state == RUNNING){

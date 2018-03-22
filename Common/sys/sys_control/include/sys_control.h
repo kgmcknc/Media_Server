@@ -83,7 +83,7 @@ void heartbeat(int hb_socket);
 int create_unix_socket(char path[MAX_FILE_STRING]);
 int connect_unix_socket(char path[MAX_FILE_STRING]);
 int create_main_socket(unsigned int port);
-int connect_client_socket(char ip[4], unsigned int port);
+int connect_client_socket(unsigned int ip[4], unsigned int port);
 int socket_handler(void);
 void system_setup(void);
 void function_setup(void);

@@ -142,6 +142,10 @@ void server_system(void){
     unix_sockets[active_unix] = create_unix_socket(HEARTBEAT_PATH);
     active_unix = active_unix + 1;
 #endif
+#ifdef IS_CLIENT
+    client_sockets[active_clients] = create_unix_socket(ms_ip, ms_port);
+    active_clients = active_clients + 1;
+#endif
 
     while(system_state == RUNNING){
         printf("In System While\n");
@@ -263,15 +267,15 @@ int socket_handler(){
                     }
                 } else {
                     // must be client connection
-                    if(active_clients < MAX_CLIENTS){
-                        printf("Added To Client: %d\n", active_clients);
-                        client_sockets[active_clients] = new_socket;
-                        active_clients = active_clients + 1;
-                    } else {
+                    //if(active_clients < MAX_CLIENTS){
+                    //    printf("Added To Client: %d\n", active_clients);
+                    //    client_sockets[active_clients] = new_socket;
+                    //    active_clients = active_clients + 1;
+                    //} else {
                         // Too Many Clients - reject
-                        printf("Too Many Clients... Rejected\n");
+                        printf("Can't Have Clients... Rejected\n");
                         close(new_socket);
-                    }
+                    //}
                 }
 #endif
             }
@@ -477,7 +481,7 @@ int create_main_socket(unsigned int port){
     return com_fd;
 }
 
-int connect_client_socket(char ip[4], unsigned int port){
+int connect_client_socket(unsigned int ip[4], unsigned int port){
     char address[16];
     // connect to unix_socket as client
     int com_fd, com_socket, com_len, com_opt = 1;

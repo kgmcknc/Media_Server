@@ -143,7 +143,7 @@ void server_system(void){
     active_unix = active_unix + 1;
 #endif
 #ifdef IS_CLIENT
-    client_sockets[active_clients] = create_unix_socket(ms_ip, ms_port);
+    client_sockets[active_clients] = connect_client_socket(ms_ip, ms_port);
     active_clients = active_clients + 1;
 #endif
 

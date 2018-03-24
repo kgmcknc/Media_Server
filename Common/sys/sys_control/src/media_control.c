@@ -52,7 +52,7 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
     printf("Movie inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
     if(input_option == 1){ // start stream
         printf("Start Stream Option\n");
-        ps_id = system("pgrep \"cvlc\"");
+        ps_id = system("pgrep \"vlc\"");
         if(ps_id > 0) active_movie_count = 1;
         else active_movie_count = 0;
         if(active_movie_count == 0){
@@ -123,7 +123,7 @@ char music_control(char stream_select, char input_option, char* input_src, unsig
     sprintf(music_text, "\'/home/kyle/linux-main-share/MusicHD/%s\'", input_src);
     printf("Music inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
     if(input_option == 1){ // start stream
-        ps_id = system("pgrep \"cvlc\"");
+        ps_id = system("pgrep \"vlc\"");
         if(ps_id > 0) active_music_count = 1;
         else active_music_count = 0;
         if(active_music_count == 0){

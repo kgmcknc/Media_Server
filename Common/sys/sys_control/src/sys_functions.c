@@ -160,7 +160,7 @@ char option_name[OPTION_COUNT][MAX_STRING] = {
     {2}
 };
 
-void checkfunctionfile(char use_timeout){
+void check_function(char f_string[MAX_FUNCTION_STRING]){
     int newfunction = 0;
     int functionready = 0;
     int localcount = 0;
@@ -169,113 +169,52 @@ void checkfunctionfile(char use_timeout){
     char fend = 0;
     pid_t forkid;
     //int clrcnt = 0;
-    while(waitpid(-1, NULL, WNOHANG) > 0);
     fvalid = 0;
-    if(use_timeout){
-      forkid = fork();
-    } else {
-       forkid = 1;
-    }
-    if(forkid == 0){
-        // child id -- timeout catch
-        char timeout_call[MAX_FUNCTION_STRING];
-        printf("called fork: in timeout child!\n");
-        sleep(10);
-        printf("child sending timeout!\n");
-        sprintf(&timeout_call[0], "echo \"t\" | nc -q 0 %u.%u.%u.%u %u",
-            ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
-        system(&timeout_call[0]);
-        //in_file = open(RX_PATH, O_WRONLY, 0x0);
-        //if(in_file < 0){
-        //    printf("Couldn't Open Rx Fifo to write in timeout\n");
-        //} else {
-        //    write(in_file, "T", 1);
-        //}
-        //close(in_file);
-        exit(EXIT_SUCCESS);
-    } else {
-        // Parent id -- read and handle timeout
-        memset(filestring, '\0', sizeof(filestring));
-        printf("parent opening receive!\n");
-        in_file = open(RX_PATH, O_RDONLY, 0x0);
-        newfunction = 0;
+
+    newfunction = 0;
+    functionready = 0;
+    strcpy(filestring, f_string);
+    printf("Function is: %s\n", filestring);
+    //clearfile = 1;
+    functionready = 0;
+    if(filestring[0] < 48){ // character
+        if(FILE_DEBUG) printf("First was %c, not 0 or 1\n", filestring[0]);
         functionready = 0;
-        //newfunction = fscanf(in_file, "%400[^\n]", filestring);
-        if(in_file < 0){
-            printf("Couldn't Open Rx Path to Read Input\n");
+    } else {
+        filestring[0] = filestring[0] - 48;
+        if(filestring[0] == 1){
+            if(FILE_DEBUG) printf("First was 1, Valid set\n");
+            functionready = 1;
         } else {
-            sleep(1);
-            newfunction = read(in_file, filestring, 400);
-            if(FILE_DEBUG) printf("Parent read: %d, String: %s\n", newfunction, filestring);
-        }
-        close(in_file);
-        
-    //  rewind(in_file);
-        if(newfunction > 0){
-            //clearfile = 1;
-            functionready = 0;
-            if(filestring[0] == 'T'){
-                 printf("Parent got Timeout! Don't Kill\n");
-                 kill(forkid, SIGKILL);
-                 while(waitpid(-1, NULL, WNOHANG) > 0);
-                 if(filestring[1] == '1'){
-                     strncpy(filestring, filestring + 1, strlen(filestring));
-                 }
-            } else {
-                printf("Parent got function! Kill Timeout\n");
-                kill(forkid, SIGKILL);
-                while(waitpid(-1, NULL, WNOHANG) > 0);
-            }
-            if(filestring[0] < 48){ // character
-                if(FILE_DEBUG) printf("First was %c, not 0 or 1\n", filestring[0]);
-                functionready = 0;
-            } else {
-                filestring[0] = filestring[0] - 48;
-                if(filestring[0] == 1){
-                    if(FILE_DEBUG) printf("First was 1, Valid set\n");
-                    functionready = 1;
-                } else {
-                    if(FILE_DEBUG) printf("First was %d, not 1\n", filestring[0]);
-                    functionready = 0;
-                }
-            }
-        } else {
-            if(FILE_DEBUG) printf("Couldn't Read File...\n");
+            if(FILE_DEBUG) printf("First was %d, not 1\n", filestring[0]);
             functionready = 0;
         }
-        
-        if(functionready){
-            functionready = 0;
-            if(FILE_DEBUG) printf("Found Valid Function!\n");
-            if(filestring[1] == '%'){
-                if(FILE_DEBUG) printf("Second was %%!\n");
-                fend = 0;
-                while(!fend && (localcount < (MAX_FUNCTION_STRING - 2))){
-                    if(filestring[2 + localcount] == '%'){
-                        if(FILE_DEBUG) printf("Found end %%!\n");
-                        fvalid = 1;
-                        fend = 1;
-                        flength = localcount;
-                        if(FILE_DEBUG) printf("Function Is: %s\n", funcstring);
-                        if(FILE_DEBUG) printf("Function Length Is: %d\n", flength);
-                    } else {
-                        funcstring[localcount] = filestring[2 + localcount];
-                    }
-                    localcount = localcount + 1;
-                }
-            } else {
-                if(FILE_DEBUG) printf("Second was %c, not %%\n", filestring[1]);
-            }
-        }
-        //if(clearfile) {
-        //  clearfile = 0;
-        //  fputc('0', in_file);
-        //  fputc('\0', in_file);
-        //  rewind(in_file);
-        //  for(clrcnt=0;clrcnt<MAX_STRING;clrcnt++) filestring[clrcnt] = 0;
-        //}
-        process_function();
     }
+    
+    if(functionready){
+        functionready = 0;
+        if(FILE_DEBUG) printf("Found Valid Function!\n");
+        if(filestring[1] == '%'){
+            if(FILE_DEBUG) printf("Second was %%!\n");
+            fend = 0;
+            while(!fend && (localcount < (MAX_FUNCTION_STRING - 2))){
+                if(filestring[2 + localcount] == '%'){
+                    if(FILE_DEBUG) printf("Found end %%!\n");
+                    fvalid = 1;
+                    fend = 1;
+                    flength = localcount;
+                    if(FILE_DEBUG) printf("Function Is: %s\n", funcstring);
+                    if(FILE_DEBUG) printf("Function Length Is: %d\n", flength);
+                } else {
+                    funcstring[localcount] = filestring[2 + localcount];
+                }
+                localcount = localcount + 1;
+            }
+        } else {
+            if(FILE_DEBUG) printf("Second was %c, not %%\n", filestring[1]);
+        }
+    }
+    process_function();
 }
 
 void process_function(void){
@@ -336,6 +275,7 @@ void process_function(void){
                 if(option_link[localcount] < OPTION_COUNT){
                      extra_cnt = func_const;
                      tmp_cnt = 0;
+                     printf("Extra: %d, Flength: %d\n", extra_cnt, flength);
                      for(cust_cnt=extra_cnt;cust_cnt<flength;cust_cnt++){
                         cust_func[tmp_cnt] = funcstring[cust_cnt];
                         tmp_cnt = tmp_cnt + 1;
@@ -347,7 +287,7 @@ void process_function(void){
                      if(localcount == 3) web_add_client(&cust_func[0]);
                      if(localcount == 4) web_remove_client(&cust_func[0]);
                      if(localcount == 5) web_update_client_ip(&cust_func[0]);
-                     if(localcount == 6) send_heartbeat = 1;
+                     if(localcount == 6) send_heartbeat_to_clients();
                      if(localcount == 7) receive_heartbeat_from_server(&cust_func[0]);
                      if(localcount == 8) receive_heartbeat_from_client(&cust_func[0]);
                 } else {

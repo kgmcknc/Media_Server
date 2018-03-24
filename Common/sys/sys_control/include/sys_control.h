@@ -77,7 +77,8 @@ struct system_function{
 
 void server_listener(void);
 void get_rx(int com_socket);
-void process(int client, char f_string[MAX_FUNCTION_STRING]);
+void process(char f_string[MAX_FUNCTION_STRING]);
+void process_function(void);
 void server_system(void);
 void heartbeat(int hb_socket);
 int create_unix_socket(char path[MAX_FILE_STRING]);
@@ -90,6 +91,15 @@ void function_setup(void);
 void set_function(struct system_function* sf, char f_string[MAX_FUNCTION_STRING]);
 
 extern FILE* config_file;
+
+extern int sys_sockets[MAX_SYS_SOCKETS];
+extern int unix_sockets[MAX_UNIX_SOCKETS];
+extern int local_sockets[MAX_LOCAL_SOCKETS];
+extern int client_sockets[MAX_INET_SOCKETS];
+extern char active_clients;
+extern char active_unix;
+extern char active_local;
+extern char active_system;
 
 extern char username[MAX_STRING];
 extern char filestring[MAX_STRING];
@@ -106,6 +116,5 @@ extern char client_count;
 extern unsigned int client_ips[MAX_CLIENTS][4];
 extern char client_state[MAX_CLIENTS];
 extern unsigned int client_id[MAX_CLIENTS];
-extern char send_heartbeat;
 extern char restart_heartbeat;
 

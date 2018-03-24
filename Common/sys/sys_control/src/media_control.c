@@ -40,8 +40,8 @@ void start_listener(char type, unsigned int in_address[4]){
             sprintf(start_string, "pwomxplayer -o hdmi http://%u.%u.%u.%u:8080/ms0.mkv?buffer_size 12000000B&", in_address[0], in_address[1], in_address[2], in_address[3]);
         }
         system(start_string);
-        if(type == 0) send_to("mc02", in_address);
-        if(type == 1) send_to("mc12", in_address);
+        if(type == 0) send(client_sockets[0], "mc02", sizeof("mc02"), 0);
+        if(type == 1) send(client_sockets[0], "mc12", sizeof("mc02"), 0);
     }
 }
 
@@ -87,8 +87,8 @@ char start_movie(char stream_select, char input_option, char* input_src, unsigne
     sleep(2);
     send_media("pause", ms_ip);
     //send start stream to all outputs
-    for(send_count=0;send_count<out_count;send_count++){
-        send_to("mc01", out_address[send_count]);
+    for(send_count=0;send_count<active_clients;send_count++){
+        send(client_sockets[send_count], "mc01", sizeof("mc01"), 0);
     }
 }
 
@@ -152,8 +152,8 @@ char start_music(char stream_select, char input_option, char* input_src, unsigne
     sleep(2);
     send_media("pause", ms_ip);
     //send start stream to all outputs
-    for(send_count=0;send_count<out_count;send_count++){
-        send_to("mc11", out_address[send_count]);
+    for(send_count=0;send_count<active_clients;send_count++){
+        send(client_sockets[send_count], "mc11", sizeof("mc11"), 0);
     }
 }
 
@@ -181,6 +181,7 @@ void send_media(unsigned char input_string[MAX_INPUT_STRING], unsigned int addre
    char send_string[MAX_FUNCTION_STRING] = {0};
    printf("In Send Media: %s, %u.%u.%u.%u\n", input_string, address[0], address[1], address[2], address[3]);
    sprintf(send_string, "echo \"%s\" | nc -q 0 %u.%u.%u.%u %u", input_string, address[0], address[1], address[2], address[3], (ms_port+1));
-   system(send_string);
+   send(client_sockets[0], send_string, sizeof(send_string), 0);
+   //system(send_string);
 }
 

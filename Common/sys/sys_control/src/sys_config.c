@@ -1126,10 +1126,13 @@ void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip){
    unsigned int tmp_num;
    get_client_number(config_file, &tmp_num, KMF_CLIENT_COUNT);
    printf("port: %d\n", ms_port);
-   sprintf(&function[0], "echo \"1%%kmfupdclient%u.%u.%u.%u.%u%%\" | nc -q 0 %u.%u.%u.%u %u",
-      tmp_num, new_ip[0], new_ip[1], new_ip[2], new_ip[3],
-      ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
-   system(&function[0]);
+   sprintf(&function[0], "1%%kmfupdclient%u.%u.%u.%u.%u%%",
+      tmp_num, new_ip[0], new_ip[1], new_ip[2], new_ip[3]);
+   //   ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
+   //system(&function[0]);
+   if(active_clients){
+      send(client_sockets[0],function,sizeof(function),0);
+   }
    #endif
 }
 
@@ -1137,10 +1140,13 @@ void send_add_client_to_server(unsigned int* new_ip){
    #ifdef IS_CLIENT
    char function[MAX_FUNCTION_STRING] = {0};
    
-   sprintf(&function[0], "echo \"1%%kmfaddclient%u.%u.%u.%u%%\" | nc -q 0 %u.%u.%u.%u %u",
-      new_ip[0], new_ip[1], new_ip[2], new_ip[3],
-      ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
-   system(&function[0]);
+   sprintf(&function[0], "1%%kmfaddclient%u.%u.%u.%u%%",
+      new_ip[0], new_ip[1], new_ip[2], new_ip[3]);
+   //   ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
+   //system(&function[0]);
+   if(active_clients){
+       send(client_sockets[0],function,sizeof(function),0);
+   }
    #endif
 }
 
@@ -1148,11 +1154,14 @@ void send_rem_client_from_server(unsigned int client_id, unsigned int* client_ip
    #ifdef IS_CLIENT
    char function[MAX_FUNCTION_STRING] = {0};
    
-   sprintf(&function[0], "echo \"1%%kmfremclient%u.%u.%u.%u.%u%%\" | nc -q 0 %u.%u.%u.%u %u",
+   sprintf(&function[0], "1%%kmfremclient%u.%u.%u.%u.%u%%",
       client_id, client_ip[0], client_ip[1],
-      client_ip[2], client_ip[3],
-      ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
-   system(&function[0]);
+      client_ip[2], client_ip[3]);
+   //   ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
+   //system(&function[0]);
+   if(active_clients){
+      send(client_sockets[0],function,sizeof(function),0);
+   }
    #endif
 }
 
@@ -1162,13 +1171,13 @@ void send_new_port_to_clients(unsigned int new_port){
    unsigned int temp_cnt = 0;
    
    printf("new port: %d, Client Count: %d\n", new_port, client_count);
-   while(temp_cnt < client_count){
-      sprintf(&function[0], "echo \"1%%kmfsetport%u%%\" | nc -q 0 %u.%u.%u.%u %u",
-         new_port, client_ips[temp_cnt][0], client_ips[temp_cnt][1],
-         client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
+   while(temp_cnt < active_clients){
+      sprintf(&function[0], "1%%kmfsetport%u%%",
+         new_port);
+      send(client_sockets[temp_cnt],function,sizeof(function),0);
       temp_cnt = temp_cnt + 1;
       printf("Update Port: %s\n", &function[0]);
-      system(&function[0]);
+      //system(&function[0]);
    }
    #endif
 }
@@ -1178,17 +1187,16 @@ void send_heartbeat_to_clients(void){
    char function[MAX_FUNCTION_STRING] = {0};
    unsigned int temp_cnt = 0;
    
-   send_heartbeat = 0;
    restart_heartbeat = 1;
    
-   while(temp_cnt < client_count){
-      sprintf(&function[0], "echo \"1%%hello%u%%\" | nc -q 0 %u.%u.%u.%u %u",
-         (temp_cnt + 1), client_ips[temp_cnt][0], client_ips[temp_cnt][1],
-         client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
+   while(temp_cnt < active_clients){
+      sprintf(&function[0], "1%%hello%u%%",
+         (temp_cnt + 1));
+      send(client_sockets[temp_cnt],function,sizeof(function),0);
       temp_cnt = temp_cnt + 1;
       //printf("Running: %s\n", function);
       printf("Sending Heartbeat To Client\n");
-      system(&function[0]);
+      //system(&function[0]);
    }
    #endif
 }
@@ -1220,16 +1228,18 @@ void send_heartbeat_to_server(void){
    #ifdef IS_CLIENT
    char function[MAX_FUNCTION_STRING] = {0};
    unsigned int tmp_num = 0;
-   //printf("Getting Client Number to send to server\n");
-   get_client_number(config_file, &tmp_num, KMF_CLIENT_COUNT);
-   //printf("Got Client Number %u to send to server\n", tmp_num);
-   sprintf(&function[0], "echo \"1%%imhere%u.%u.%u.%u.%u%%\" | nc -q 0 %u.%u.%u.%u %u",
-      client_ips[0][0], client_ips[0][1],
-      client_ips[0][2], client_ips[0][3], tmp_num,
-      ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], ms_port);
-      //printf("Running: %s\n", function);
-      system(&function[0]);
-   printf("Sent Heartbeat to Server\n");
+   if(active_clients){
+       //printf("Getting Client Number to send to server\n");
+       get_client_number(config_file, &tmp_num, KMF_CLIENT_COUNT);
+       //printf("Got Client Number %u to send to server\n", tmp_num);
+       sprintf(&function[0], "1%%imhere%u.%u.%u.%u.%u%%",
+          client_ips[0][0], client_ips[0][1],
+          client_ips[0][2], client_ips[0][3], tmp_num);
+          //printf("Running: %s\n", function);
+          //system(&function[0]);
+       send(client_sockets[0],function,sizeof(function),0);
+       printf("Sent Heartbeat to Server\n");
+   }
    #endif
 }
 
@@ -1239,12 +1249,11 @@ void send_new_ip_to_clients(unsigned int* new_ip){
    unsigned int temp_cnt = 0;
    
    while(temp_cnt < client_count){
-      sprintf(&function[0], "echo \"kmfupdclient%u.%u.%u.%u\" | nc -q 0 q %u.%u.%u.%u %u",
-         new_ip[0], new_ip[1], new_ip[2], new_ip[3],
-         client_ips[temp_cnt][0], client_ips[temp_cnt][1],
-         client_ips[temp_cnt][2], client_ips[temp_cnt][3], ms_port);
+      sprintf(&function[0], "kmfupdclient%u.%u.%u.%u",
+         new_ip[0], new_ip[1], new_ip[2], new_ip[3]);
+      send(client_sockets[temp_cnt],function,sizeof(function),0);
       temp_cnt = temp_cnt + 1;
-      system(&function[0]);
+      //system(&function[0]);
    }
    #endif
 }
@@ -1272,8 +1281,8 @@ void initial_config(FILE* config_file){
 void send_to(unsigned char input_string[MAX_INPUT_STRING], unsigned int address[4]){
    char send_string[MAX_FUNCTION_STRING] = {0};
    //printf("In Send To: %s, %u.%u.%u.%u\n", input_string, address[0], address[1], address[2], address[3]);
-   sprintf(send_string, "echo \"1%%%s%%\" | nc -q 0 %u.%u.%u.%u %u", input_string, address[0], address[1], address[2], address[3], ms_port);
-   system(send_string);
+   //sprintf(send_string, "echo \"1%%%s%%\" | nc -q 0 %u.%u.%u.%u %u", input_string, address[0], address[1], address[2], address[3], ms_port);
+   //system(send_string);
 }
 
 

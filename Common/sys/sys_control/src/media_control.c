@@ -55,7 +55,7 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
         ps_id = system("pgrep \"cvlc\"");
         if(ps_id > 0) active_movie_count = 1;
         else active_movie_count = 0;
-        if(active_movie_count){
+        if(active_movie_count == 0){
             #ifdef IS_SERVER
             start_movie(stream_select, input_option, movie_text, out_count, out_address);
             #endif
@@ -126,7 +126,7 @@ char music_control(char stream_select, char input_option, char* input_src, unsig
         ps_id = system("pgrep \"cvlc\"");
         if(ps_id > 0) active_music_count = 1;
         else active_music_count = 0;
-        if(active_music_count){
+        if(active_music_count == 0){
             #ifdef IS_SERVER
             start_music(stream_select, input_option, music_text, out_count, out_address);
             #endif

@@ -28,6 +28,9 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 
 #define PI_IS_ON 1
@@ -38,16 +41,28 @@
 #define MAX_STRING 200
 #define MAX_FUNCTION_STRING 200
 #define TIMEOUT 10
+#define KMF_COM_PORT 11
+#define KMF_S_IP 13
+#define MAX_CONFIG_FILE 4096
 
+#define CONFIG_PATH "/usr/share/media_server/sys_control/sys_config.kmf"
 #define RX_PIPE_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
 #define TX_PIPE_PATH "/var/www/html/media_server/control/web_control/txwebpipe"
 
 char function_name[MAX_FUNCTION_STRING] = {0};
-
+unsigned int ms_ip[4] = {0};
 void check_file(FILE* out_file);
-void write_function(int out_file, char* in_string);
-
+void write_function(int socket, char* in_string);
+int connect_client_socket(unsigned int ip[4], unsigned int port);
+char read_ip_address(FILE* config_file, unsigned int* config_data, long int offset);
+char read_port(FILE* config_file, unsigned int* config_data, long int offset);
+FILE* config_file;
 unsigned int file_ready;
+unsigned int ms_port;
+int new_socket;
+int cfg_cnt = 0;
+int file_length = 0;
+char file_end = 0;
 
 int main(int argc, char **argv)
 {
@@ -56,15 +71,32 @@ int main(int argc, char **argv)
     if(argc ==  2) {
         if(FILE_DEBUG) printf("New Function! text: %s, size: %d\n", argv[1], (int) strlen(argv[1]));
         
-        rxfile = open(RX_PIPE_PATH, O_WRONLY | O_NONBLOCK, 0x0);
-        if(rxfile < 0){
-            printf("Couldn't Open Rx Pipe...\n");
+        config_file = fopen(CONFIG_PATH, "r");
+        if(config_file != NULL){
+            printf("\n\n----- Successfully Opened Config File -----\n\n");
         } else {
-            write_function(rxfile, argv[1]);
+            printf("\n\n----- Failed To Open Config File, Exiting -----\n\n");
+            return 0;
         }
-        
-        close(rxfile);
-        
+        rewind(config_file);
+        while(!file_end && (cfg_cnt < MAX_CONFIG_FILE)){
+            fgetc(config_file);
+            file_end = feof(config_file);
+            cfg_cnt = cfg_cnt + 1;
+        }
+        rewind(config_file);
+        file_length = cfg_cnt;
+        read_ip_address(config_file, &ms_ip[0], KMF_S_IP);
+        rewind(config_file);
+        read_port(config_file, &ms_port, KMF_COM_PORT);
+        fclose(config_file);
+        new_socket = connect_client_socket(ms_ip, ms_port);
+        if(new_socket < 0){
+            printf("Couldn't Connect to System...\n");
+        } else {
+            write_function(new_socket, argv[1]);
+            close(new_socket);
+        }
     } else {
         if(FILE_DEBUG) printf("No Function...Closing\n");
     }
@@ -135,12 +167,84 @@ int main(int argc, char **argv)
     }
 }*/
 
-void write_function(int out_file, char* in_string){
+int connect_client_socket(unsigned int ip[4], unsigned int port){
+    char address[16];
+    // connect to unix_socket as client
+    int com_fd, com_socket, com_len, com_opt = 1;
+    struct sockaddr_in com_addr;
+    com_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if(com_socket < 0){
+        printf("Client Failed Socket\n");
+        return -1;
+    }
+    memset(&com_addr, '0', sizeof(com_addr));
+    com_addr.sin_family = AF_INET;
+    com_addr.sin_port = htons(port);
+    sprintf(address, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+    if(inet_pton(AF_INET, address, &com_addr.sin_addr) <= 0){
+        printf("Client Failed Address\n");
+        return -1;
+    }
+    printf("Doing Connect in Client\n");
+    
+    if((connect(com_socket, (struct sockaddr *)&com_addr, sizeof(com_addr))) < 0){
+        printf("Client Failed Connect\n");
+        return -1;
+    }
+    
+    return com_socket;
+}
+
+char read_ip_address(FILE* config_file, unsigned int* config_data, long int offset){
+    unsigned char tmp_data = 0;
+    unsigned char tmp_cnt = 0;
+    
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
+    
+    while(tmp_cnt < 4){
+        tmp_data = getc(config_file);
+        if(tmp_data == EOF) return 0;
+        config_data[tmp_cnt] = tmp_data;
+        tmp_cnt = tmp_cnt + 1;
+    }
+    
+    return 1;
+}
+
+char read_port(FILE* config_file, unsigned int* config_data, long int offset){
+    unsigned char tmp_data = 0;
+    unsigned int tmp_int = 0;
+    
+    if((offset < MAX_CONFIG_FILE) && (offset <= file_length)){
+        if(fseek(config_file, offset, SEEK_SET)) return 0;
+    } else {
+        return 0;
+    }
+    
+    tmp_data = getc(config_file);
+
+    if(tmp_data == EOF) return 0;
+    tmp_int = tmp_data;
+    tmp_int = tmp_int << 8;
+    tmp_data = getc(config_file);
+
+    if(tmp_data == EOF) return 0;
+    tmp_int = tmp_int | tmp_data;
+    *config_data = tmp_int;
+
+    return 1;
+}
+
+void write_function(int socket, char* in_string){
     int write_size = 0;
     strcat(function_name, "1%");
     strcat(function_name, in_string);
     strcat(function_name, "%");
     write_size = strlen(function_name);
     if(FILE_DEBUG) printf("Function is %s\n", function_name);
-    write(out_file, function_name, write_size);
+    send(socket, function_name, write_size, 0);
 }

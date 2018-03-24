@@ -47,11 +47,15 @@ void start_listener(char type, unsigned int in_address[4]){
 
 char movie_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
     char movie_text[MAX_STRING] = {0};
+    char ps_id = 0;
     sprintf(movie_text, "\'/home/kyle/linux-main-share/MovieHD/%s\'", input_src);
     printf("Movie inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
+    ps_id = system("pgrep \"vlc\"");
+    if(ps_id > 0) active_movie_count = 1;
+    else active_movie_count = 0;
     if(input_option == 1){ // start stream
         printf("Start Stream Option\n");
-        if(active_movie_count < MOVIE_MAX){
+        if(active_movie_count == 0){
             #ifdef IS_SERVER
             start_movie(stream_select, input_option, movie_text, out_count, out_address);
             #endif
@@ -63,7 +67,7 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
             return 0;
         }
     } else {
-        if(active_movie_count > 0){
+        if(active_movie_count){
             printf("Update Stream Option\n");
             update_movie(stream_select, input_option, input_src);
         } else {
@@ -80,7 +84,7 @@ char start_movie(char stream_select, char input_option, char* input_src, unsigne
     char stream_string[MAX_STRING] = {0};
     movie_clients_ready[stream_select] = 0;
     movie_clients[stream_select] = out_count;
-    active_movie_count = active_movie_count + 1;
+    //active_movie_count = active_movie_count + 1;
     sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout \'#standard{access=http,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
     printf("Starting: %s\n", stream_string);
     system(stream_string);
@@ -107,7 +111,7 @@ char update_movie(char stream_select, char input_option, char* input_src){
             send_media("stop", ms_ip);
             sleep(1);
             send_media("shutdown", ms_ip);
-            active_movie_count = active_movie_count - 1;
+            //active_movie_count = active_movie_count - 1;
         #endif
     }
 }
@@ -115,10 +119,14 @@ char update_movie(char stream_select, char input_option, char* input_src){
 
 char music_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
     char music_text[MAX_STRING] = {0};
+    char ps_id = 0;
     sprintf(music_text, "\'/home/kyle/linux-main-share/MusicHD/%s\'", input_src);
     printf("Music inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
+    ps_id = system("pgrep \"vlc\"");
+    if(ps_id > 0) active_music_count = 1;
+    else active_music_count = 0;
     if(input_option == 1){ // start stream
-        if(active_music_count < MUSIC_MAX){
+        if(active_music_count == 0){
             #ifdef IS_SERVER
             start_music(stream_select, input_option, music_text, out_count, out_address);
             #endif
@@ -130,7 +138,7 @@ char music_control(char stream_select, char input_option, char* input_src, unsig
             return 0;
         }
     } else {
-        if(active_music_count > 0){
+        if(active_music_count){
             update_music(stream_select, input_option, input_src);
         } else {
             // can't do anything to streams... none going
@@ -145,7 +153,7 @@ char start_music(char stream_select, char input_option, char* input_src, unsigne
     char stream_string[MAX_STRING] = {0};
     music_clients_ready[stream_select] = 0;
     music_clients[stream_select] = out_count;
-    active_music_count = active_music_count + 1;
+    //active_music_count = active_music_count + 1;
     sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout-keep --sout-all --sout \'#gather:std{access=http,mux=ts,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
     printf("Starting: %s\n", stream_string);
     system(stream_string);
@@ -172,7 +180,7 @@ char update_music(char stream_select, char input_option, char* input_src){
             send_media("stop", ms_ip);
             sleep(1);
             send_media("shutdown", ms_ip);
-            active_music_count = active_music_count - 1;
+            //active_music_count = active_music_count - 1;
         #endif
     }
 }

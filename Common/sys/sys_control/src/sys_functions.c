@@ -333,8 +333,6 @@ void process_function(void){
                 if(media_type == 0){
                     printf("Found Movie Function!\n");
                     strncpy(mediatext, &funcstring[4], strlen(funcstring)-1);
-                    ///usr/share/media_server/sys_control/moviectrl/current_playlist.txt
-                    ///home/kyle/linux-main-share/MovieHD/9.m4v
                     movie_control(0, (funcstring[3] - 48), mediatext, 1, &client_ips[0]);
                 }
                 if(media_type == 1){

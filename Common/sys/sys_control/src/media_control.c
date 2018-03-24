@@ -181,7 +181,7 @@ void send_media(unsigned char input_string[MAX_INPUT_STRING], unsigned int addre
    char send_string[MAX_FUNCTION_STRING] = {0};
    printf("In Send Media: %s, %u.%u.%u.%u\n", input_string, address[0], address[1], address[2], address[3]);
    sprintf(send_string, "echo \"%s\" | nc -q 0 %u.%u.%u.%u %u", input_string, address[0], address[1], address[2], address[3], (ms_port+1));
-   send(client_sockets[0], send_string, sizeof(send_string), 0);
-   //system(send_string);
+   //send(client_sockets[0], send_string, sizeof(send_string), 0);
+   system(send_string);
 }
 

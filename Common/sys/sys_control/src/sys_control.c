@@ -143,13 +143,6 @@ void server_system(void){
     unix_sockets[active_unix] = create_unix_socket(HEARTBEAT_PATH);
     active_unix = active_unix + 1;
 #endif
-#ifdef IS_CLIENT
-    new_client = connect_client_socket(ms_ip, ms_port);
-    if(new_client >= 0){
-        client_sockets[active_clients] = new_client;
-        active_clients = active_clients + 1;
-    }
-#endif
 
     while(system_state == RUNNING){
         printf("In System While\n");
@@ -180,6 +173,17 @@ int socket_handler(){
     struct sockaddr_in new_addr;
     new_addr_len = sizeof(new_addr);
     
+#ifdef IS_CLIENT
+    if(active_clients == 0){
+        new_socket = connect_client_socket(ms_ip, ms_port);
+        if(new_socket >= 0){
+            client_sockets[active_clients] = new_socket;
+            active_clients = active_clients + 1;
+        }
+        new_socket = 0;
+    }
+#endif
+
     // clear socket set
     FD_ZERO(&all_sockets);
     // always update max file descriptor for select
@@ -504,8 +508,8 @@ int connect_client_socket(unsigned int ip[4], unsigned int port){
         return -1;
     }
     printf("Doing Connect in Client\n");
-    connect(com_socket, (struct sockaddr *)&com_addr, sizeof(com_addr));
-    if(com_socket < 0){
+    
+    if((connect(com_socket, (struct sockaddr *)&com_addr, sizeof(com_addr))) < 0){
         printf("Client Failed Connect\n");
         return -1;
     }

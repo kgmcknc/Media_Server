@@ -40,6 +40,7 @@
 #define USE_HEARTBEAT 1
 
 #define CONFIG_PATH "/usr/share/media_server/sys_control/sys_config.kmf"
+#define STATUS_PATH "/usr/share/media_server/sys_control/sys_status.kmf"
 #define MOVIEDIR_PATH "/usr/share/media_server/sys_control/moviectrl/moviedir.kmf"
 #define MUSICDIR_PATH "/usr/share/media_server/sys_control/musicctrl/musicdir.kmf"
 #define RX_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"

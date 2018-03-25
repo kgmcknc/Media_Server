@@ -21,6 +21,7 @@ char read_config_data(FILE* config_file, char* config_data, long int offset, int
 char write_config_data(FILE* config_file, char* config_data, long int offset, int size);
 char change_client_ip(FILE* config_file, unsigned int old_ip, unsigned int* new_ip, long int offset);
 void update_system(FILE* config_file);
+void set_status(FILE* status_file);
 
 void send_new_ip_to_server(unsigned int* old_ip, unsigned int* new_ip);
 void send_new_ip_to_clients(unsigned int* new_ip);

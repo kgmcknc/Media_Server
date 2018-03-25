@@ -35,6 +35,7 @@ pid_t heartbeat_fork;
 
 FILE* user_fp;
 FILE* config_file;
+FILE* status_file;
 
 int sys_sockets[MAX_SYS_SOCKETS] = {0};
 int unix_sockets[MAX_UNIX_SOCKETS] = {0};
@@ -99,6 +100,14 @@ int main(int argc, char **argv) {
     #ifdef IS_CLIENT
         printf("\n\n----- Running as Client -----\n\n");
     #endif
+
+    status_file = fopen(STATUS_PATH, "r+b");
+    if(status_file != NULL){
+        printf("\n\n----- Successfully Opened Status File -----\n\n");
+    } else {
+        printf("\n\n----- Failed To Open Status File, Exiting -----\n\n");
+        exit(EXIT_FAILURE);
+    }
     
     system_setup();
 
@@ -123,6 +132,8 @@ int main(int argc, char **argv) {
     
     // kill all child processes
     kill(heartbeat_fork, SIGKILL);
+    fclose(status_file);
+    fclose(config_file);
     printf("\n---- Exitting System ----\n");
     exit(EXIT_SUCCESS);
 }
@@ -146,6 +157,7 @@ void server_system(void){
     while(system_state == RUNNING){
         printf("In System While\n");
         while(waitpid(-1, NULL, WNOHANG) > 0);
+        set_status(status_file);
         system_state = socket_handler();
     }
 }

@@ -36,6 +36,7 @@ pid_t heartbeat_fork;
 FILE* user_fp;
 FILE* config_file;
 FILE* status_file;
+FILE* grep_fp;
 
 int sys_sockets[MAX_SYS_SOCKETS] = {0};
 int unix_sockets[MAX_UNIX_SOCKETS] = {0};

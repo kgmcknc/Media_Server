@@ -333,12 +333,12 @@ void process_function(void){
                 if(media_type == 0){
                     printf("Found Movie Function!\n");
                     strncpy(mediatext, &funcstring[4], strlen(funcstring)-1);
-                    movie_control(0, (funcstring[3] - 48), mediatext, 1, &client_ips[0]);
+                    movie_control(0, (funcstring[3] - 48), mediatext, active_clients, &client_ips[0]);
                 }
                 if(media_type == 1){
                     printf("Found Music Function!\n");
                     strncpy(mediatext, &funcstring[4], strlen(funcstring)-1);
-                    music_control(0, (funcstring[3] - 48), mediatext, 1, &client_ips[0]);
+                    music_control(0, (funcstring[3] - 48), mediatext, active_clients, &client_ips[0]);
                 }
             }
         } else {

@@ -47,14 +47,23 @@ void start_listener(char type, unsigned int in_address[4]){
 
 char movie_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
     char movie_text[MAX_STRING] = {0};
-    char ps_id = 0;
+    char ps_id[8] = {0};
     sprintf(movie_text, "\'/home/kyle/linux-main-share/MovieHD/%s\'", input_src);
     printf("Movie inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
-    ps_id = system("pgrep \"vlc\"");
-    if(ps_id > 0) active_movie_count = 1;
+    grep_fp = popen("pgrep \"vlc\"", "r");
+    if(grep_fp == NULL){
+        printf("Failed to grep vlc...\n");
+        return -1;
+    } else {
+        fgets(ps_id, sizeof(ps_id)-1, grep_fp);
+        printf("\n\n----- Got %d for ps_id -----\n\n", ps_id[0]);
+    }
+    pclose(grep_fp);
+    if(ps_id[0] > 0) active_movie_count = 1;
     else active_movie_count = 0;
     if(input_option == 1){ // start stream
         printf("Start Stream Option\n");
+        printf("Active: %d\n", active_movie_count);
         if(active_movie_count == 0){
             #ifdef IS_SERVER
             start_movie(stream_select, input_option, movie_text, out_count, out_address);
@@ -67,6 +76,7 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
             return 0;
         }
     } else {
+        printf("Active: %d\n", active_movie_count);
         if(active_movie_count){
             printf("Update Stream Option\n");
             update_movie(stream_select, input_option, input_src);
@@ -119,11 +129,19 @@ char update_movie(char stream_select, char input_option, char* input_src){
 
 char music_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
     char music_text[MAX_STRING] = {0};
-    char ps_id = 0;
+    char ps_id[8] = {0};
     sprintf(music_text, "\'/home/kyle/linux-main-share/MusicHD/%s\'", input_src);
     printf("Music inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
-    ps_id = system("pgrep \"vlc\"");
-    if(ps_id > 0) active_music_count = 1;
+    grep_fp = popen("pgrep \"vlc\"", "r");
+    if(grep_fp == NULL){
+        printf("Failed to grep vlc...\n");
+        return -1;
+    } else {
+        fgets(ps_id, sizeof(ps_id)-1, grep_fp);
+        printf("\n\n----- Got %d for ps_id -----\n\n", ps_id[0]);
+    }
+    pclose(grep_fp);
+    if(ps_id[0] > 0) active_music_count = 1;
     else active_music_count = 0;
     if(input_option == 1){ // start stream
         if(active_music_count == 0){

@@ -109,6 +109,7 @@ int main(int argc, char **argv) {
         printf("\n\n----- Failed To Open Status File, Exiting -----\n\n");
         exit(EXIT_FAILURE);
     }
+    fclose(status_file);
     
     system_setup();
 
@@ -133,7 +134,6 @@ int main(int argc, char **argv) {
     
     // kill all child processes
     kill(heartbeat_fork, SIGKILL);
-    fclose(status_file);
     fclose(config_file);
     printf("\n---- Exitting System ----\n");
     exit(EXIT_SUCCESS);
@@ -158,7 +158,7 @@ void server_system(void){
     while(system_state == RUNNING){
         printf("In System While\n");
         while(waitpid(-1, NULL, WNOHANG) > 0);
-        set_status(status_file);
+        set_status();
         system_state = socket_handler();
     }
 }

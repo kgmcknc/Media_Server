@@ -92,6 +92,7 @@ void function_setup(void);
 void set_function(struct system_function* sf, char f_string[MAX_FUNCTION_STRING]);
 
 extern FILE* config_file;
+extern FILE* status_file;
 extern FILE* grep_fp;
 
 extern int sys_sockets[MAX_SYS_SOCKETS];

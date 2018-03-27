@@ -1285,15 +1285,20 @@ void send_to(unsigned char input_string[MAX_INPUT_STRING], unsigned int address[
    //system(send_string);
 }
 
-void set_status(FILE* status_file){
+void set_status(){
     int status_count = 0;
     printf("Setting Status\n");
-    rewind(status_file);
-    fprintf(status_file, "s:%s\n","server");
-    for(status_count=0;status_count<active_clients;status_count++){
-        fprintf(status_file, "c%d:%s\n",active_clients,"cname");
+    status_file = fopen(STATUS_PATH, "w");
+    if(status_file != NULL){
+        printf("\n\n----- Successfully Opened Status File -----\n\n");
+        fprintf(status_file, "s:%s\n","server");
+        for(status_count=0;status_count<active_clients;status_count++){
+            fprintf(status_file, "c%d:%s\n",active_clients,"cname");
+        }
+        fclose(status_file);
+    } else {
+        printf("\n\n----- Failed To Open Status File, Exiting -----\n\n");
     }
-    
 }
 
 

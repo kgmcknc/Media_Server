@@ -1,6 +1,61 @@
 var directory_list;
 var dir_tree = [];
 var movie_array = [];
+var active_clients = 2;
+var status_data = 0;
+
+function init_movies(){
+    read_status();
+    search_movies();
+    setInterval(read_status, 20000);
+}
+
+function update_status(){
+    parse_status();
+    update_clients();
+}
+
+function read_status(){
+    var xmlhttp = 0;
+	var dir = "/";
+	var error_html;
+	if (window.XMLHttpRequest) {
+		xmlhttp = new XMLHttpRequest();
+	} else {
+		// code for IE6, IE5
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+    xmlhttp.open("POST", "read_status.php?q=" + dir, true);
+	xmlhttp.send();
+	xmlhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			status_data = this.responseText;
+            update_status();
+		}
+	}
+}
+
+function parse_status(){
+    active_clients = status_data;
+}
+
+function update_clients(){
+    var client_table;
+    var ccount = 0;
+    var new_client = 0;
+    var clength = 0;
+    client_table = document.getElementById("clients");
+    clength = client_table.children.length;
+    for(ccount=0;ccount<clength;ccount++){
+        client_table.removeChild(client_table.children[clength-ccount-1]);
+    }
+    for(ccount=0;ccount<active_clients;ccount++){
+        new_client = document.createElement("span");
+        new_client.id = "client" + ccount;
+        new_client.innerText = "Client " + ccount;
+        client_table.appendChild(new_client);
+    }
+}
 
 function search_movies(){
 	var xmlhttp = 0;

@@ -1,7 +1,7 @@
 var directory_list;
 var dir_tree = [];
 var movie_array = [];
-var active_clients = 2;
+var active_clients = 0;
 var status_data = 0;
 
 function init_movies(){
@@ -36,7 +36,24 @@ function read_status(){
 }
 
 function parse_status(){
-    active_clients = status_data;
+    var status_count = 0;
+    var status_length = 0;
+    var line_data = "";
+    active_clients = 0;
+    status_length = status_data.length;
+    for(status_count=0;status_count<status_length;status_count++){
+        if(status_data.charAt(status_count) != "\n"){
+            line_data = line_data + status_data.charAt(status_count);
+        } else {
+            // finished reading line... process
+            if(line_data.startsWith("c")){
+                active_clients = active_clients + 1;
+            } else {
+                // server or other
+            }
+            line_data = "";
+        }
+    }
 }
 
 function update_clients(){

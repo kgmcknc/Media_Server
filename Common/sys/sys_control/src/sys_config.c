@@ -1293,7 +1293,7 @@ void set_status(){
         printf("\n\n----- Successfully Opened Status File -----\n\n");
         fprintf(status_file, "s:%s\n","server");
         for(status_count=0;status_count<active_clients;status_count++){
-            fprintf(status_file, "c%d:%s\n",active_clients,"cname");
+            fprintf(status_file, "c%d:%s\n",status_count,"cname");
         }
         fclose(status_file);
     } else {

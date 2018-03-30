@@ -311,7 +311,7 @@ int socket_handler(){
             if(num_read){
                 // Got Data
                 read_data[num_read] = '\0';
-                process(read_data);
+                process(0, s_count, read_data);
             } else {
                 // No Data... Closing Connection
                 printf("Closing Unix Socket: %d\n", s_count);
@@ -329,7 +329,7 @@ int socket_handler(){
             if(num_read){
                 // Got Data
                 read_data[num_read] = '\0';
-                process(read_data);
+                process(1, s_count, read_data);
             } else {
                 // No Data... Closing Connection
                 printf("Closing Local Socket: %d\n", s_count);
@@ -347,7 +347,7 @@ int socket_handler(){
             if(num_read){
                 // Got Data
                 read_data[num_read] = '\0';
-                process(read_data);
+                process(2, s_count, read_data);
             } else {
                 // No Data... Closing Connection
                 printf("Closing Client Socket: %d\n", s_count);
@@ -530,8 +530,8 @@ int connect_client_socket(unsigned int ip[4], unsigned int port){
     return com_socket;
 }
 
-void process(char f_string[MAX_FUNCTION_STRING]){
+void process(char type, char client, char f_string[MAX_FUNCTION_STRING]){
     printf("Processing: %s\n", f_string);
-    check_function(f_string);
+    check_function(client, f_string);
 }
 

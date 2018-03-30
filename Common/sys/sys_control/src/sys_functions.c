@@ -160,7 +160,7 @@ char option_name[OPTION_COUNT][MAX_STRING] = {
     {2}
 };
 
-void check_function(char f_string[MAX_FUNCTION_STRING]){
+void check_function(char client, char f_string[MAX_FUNCTION_STRING]){
     int newfunction = 0;
     int functionready = 0;
     int localcount = 0;
@@ -214,10 +214,10 @@ void check_function(char f_string[MAX_FUNCTION_STRING]){
             if(FILE_DEBUG) printf("Second was %c, not %%\n", filestring[1]);
         }
     }
-    process_function();
+    process_function(client);
 }
 
-void process_function(void){
+void process_function(char client){
     int localcount = 0;
     char match = 0;
     int func_const = 0;
@@ -332,13 +332,13 @@ void process_function(void){
                 char media_type = funcstring[2] - 48;
                 if(media_type == 0){
                     printf("Found Movie Function!\n");
-                    strncpy(mediatext, &funcstring[4], strlen(funcstring)-1);
-                    movie_control(0, (funcstring[3] - 48), mediatext, active_clients, &client_ips[0]);
+                    strncpy(mediatext, &funcstring[5], strlen(funcstring)-1);
+                    movie_control(0, (funcstring[3] - 48), mediatext, (funcstring[4] - 48), &client_ips[0], client);
                 }
                 if(media_type == 1){
                     printf("Found Music Function!\n");
-                    strncpy(mediatext, &funcstring[4], strlen(funcstring)-1);
-                    music_control(0, (funcstring[3] - 48), mediatext, active_clients, &client_ips[0]);
+                    strncpy(mediatext, &funcstring[5], strlen(funcstring)-1);
+                    music_control(0, (funcstring[3] - 48), mediatext, (funcstring[4] - 48), &client_ips[0], client);
                 }
             }
         } else {

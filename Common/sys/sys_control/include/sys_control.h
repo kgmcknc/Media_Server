@@ -78,8 +78,8 @@ struct system_function{
 
 void server_listener(void);
 void get_rx(int com_socket);
-void process(char f_string[MAX_FUNCTION_STRING]);
-void process_function(void);
+void process(char type, char client, char f_string[MAX_FUNCTION_STRING]);
+void process_function(char client);
 void server_system(void);
 void heartbeat(int hb_socket);
 int create_unix_socket(char path[MAX_FILE_STRING]);

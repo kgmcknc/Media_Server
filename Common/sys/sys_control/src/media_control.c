@@ -45,11 +45,11 @@ void start_listener(char type, unsigned int in_address[4]){
     }
 }
 
-char movie_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
+char movie_control(char stream_select, char input_option, char* input_src, unsigned int out_clients, unsigned int out_address[][4], char client){
     char movie_text[MAX_STRING] = {0};
     char ps_id[8] = {0};
     sprintf(movie_text, "\'/home/kyle/linux-main-share/MovieHD/%s\'", input_src);
-    printf("Movie inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
+    printf("Movie inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_clients);
     grep_fp = popen("pgrep \"vlc\"", "r");
     if(grep_fp == NULL){
         printf("Failed to grep vlc...\n");
@@ -66,7 +66,7 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
         printf("Active: %d\n", active_movie_count);
         if(active_movie_count == 0){
             #ifdef IS_SERVER
-            start_movie(stream_select, input_option, movie_text, out_count, out_address);
+            start_movie(stream_select, input_option, movie_text, out_clients, out_address);
             #endif
             #ifdef IS_CLIENT
             start_listener(0, ms_ip);
@@ -79,7 +79,7 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
         printf("Active: %d\n", active_movie_count);
         if(active_movie_count){
             printf("Update Stream Option\n");
-            update_movie(stream_select, input_option, input_src);
+            update_movie(stream_select, input_option, input_src, client);
         } else {
             // can't do anything to streams... none going
             printf("Unknown Option\n");
@@ -89,11 +89,11 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
     return 0;
 }
 
-char start_movie(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
+char start_movie(char stream_select, char input_option, char* input_src, unsigned int out_clients, unsigned int out_address[][4]){
     char send_count = 0;
     char stream_string[MAX_STRING] = {0};
     movie_clients_ready[stream_select] = 0;
-    movie_clients[stream_select] = out_count;
+    movie_clients[stream_select] = out_clients;
     //active_movie_count = active_movie_count + 1;
     sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout \'#standard{access=http,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
     printf("Starting: %s\n", stream_string);
@@ -102,17 +102,17 @@ char start_movie(char stream_select, char input_option, char* input_src, unsigne
     send_media("pause", ms_ip);
     //send start stream to all outputs
     for(send_count=0;send_count<active_clients;send_count++){
-        send(client_sockets[send_count], "1%mc01%", sizeof("1%mc01%"), 0);
+        if(out_clients & (1<<send_count)) send(client_sockets[send_count], "1%mc01%", sizeof("1%mc01%"), 0);
     }
 }
 
-char update_movie(char stream_select, char input_option, char* input_src){
+char update_movie(char stream_select, char input_option, char* input_src, char client){
     if(input_option == 0){
         // stop selected stream
     }
     if(input_option == 2){
-        movie_clients_ready[stream_select] = movie_clients_ready[stream_select] + 1;
-        if(movie_clients_ready[stream_select] >= movie_clients[stream_select]){
+        movie_clients_ready[stream_select] = movie_clients_ready[stream_select] | (1 << client);
+        if(movie_clients_ready[stream_select] == movie_clients[stream_select]){
             send_media("play", ms_ip);
         }
     }
@@ -127,7 +127,7 @@ char update_movie(char stream_select, char input_option, char* input_src){
 }
 
 
-char music_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
+char music_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4], char client){
     char music_text[MAX_STRING] = {0};
     char ps_id[8] = {0};
     sprintf(music_text, "\'/home/kyle/linux-main-share/MusicHD/%s\'", input_src);
@@ -157,7 +157,7 @@ char music_control(char stream_select, char input_option, char* input_src, unsig
         }
     } else {
         if(active_music_count){
-            update_music(stream_select, input_option, input_src);
+            update_music(stream_select, input_option, input_src, client);
         } else {
             // can't do anything to streams... none going
             return 0;
@@ -183,7 +183,7 @@ char start_music(char stream_select, char input_option, char* input_src, unsigne
     }
 }
 
-char update_music(char stream_select, char input_option, char* input_src){
+char update_music(char stream_select, char input_option, char* input_src, char client){
     if(input_option == 0){
         // stop selected stream
     }

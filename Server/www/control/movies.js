@@ -69,8 +69,34 @@ function update_clients(){
     for(ccount=0;ccount<active_clients;ccount++){
         new_client = document.createElement("span");
         new_client.id = "client" + ccount;
+        new_client.onclick = select_client;
         new_client.innerText = "Client " + ccount;
         client_table.appendChild(new_client);
+    }
+}
+
+var selected_clients = 0;
+function select_client(){
+    var this_number = 0;
+    var c_count = 0;
+    var parent = 0;
+    parent = this.parentNode;
+    c_count = parent.childElementCount;
+    while(this_number < c_count){
+        if(this === parent.children[this_number]){
+            break;
+        } else {
+            this_number = this_number + 1;
+        }
+    }
+    if(selected_clients & (1 << this_number)){
+        this.style.backgroundColor = "";
+        this.style.opacity = "";
+        selected_clients = selected_clients & ~(1 << this_number);
+    } else {
+        this.style.backgroundColor = "#101010";
+        this.style.opacity = 0.4;
+        selected_clients = selected_clients | (1 << this_number);
     }
 }
 
@@ -271,7 +297,7 @@ function start_movie(){
 		if(dir_tree.length > 1){
 			moviecall = moviecall + dir_tree[dir_tree.length-1];
 		}
-		moviecall = moviecall + movie_array[movie_num];
+		moviecall = moviecall + selected_clients + movie_array[movie_num];
 		//this.innerText = moviecall;
 		write_function(moviecall);
 	}

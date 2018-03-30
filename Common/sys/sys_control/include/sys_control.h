@@ -27,6 +27,7 @@
 #define MAX_FUNCTION_STRING 400
 #define MAX_CONFIG_FILE 4096
 #define MIN_CONFIG_SIZE 20
+#define MAX_NAME_LENGTH 200
 #define TMP_DATA_SIZE 40
 #define MAX_PORT 50000
 #ifdef IS_SERVER
@@ -41,6 +42,7 @@
 
 #define CONFIG_PATH "/usr/share/media_server/sys_control/sys_config.kmf"
 #define STATUS_PATH "/usr/share/media_server/sys_control/sys_status.kmf"
+#define NAME_PATH "/usr/share/media_server/sys_control/sys_names.kmf"
 #define MOVIEDIR_PATH "/usr/share/media_server/sys_control/moviectrl/moviedir.kmf"
 #define MUSICDIR_PATH "/usr/share/media_server/sys_control/musicctrl/musicdir.kmf"
 #define RX_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
@@ -93,6 +95,7 @@ void set_function(struct system_function* sf, char f_string[MAX_FUNCTION_STRING]
 
 extern FILE* config_file;
 extern FILE* status_file;
+extern FILE* name_file;
 extern FILE* grep_fp;
 
 extern int sys_sockets[MAX_SYS_SOCKETS];
@@ -114,10 +117,12 @@ extern unsigned int ms_port;
 extern char restart_listener;
 extern char user_option;
 extern unsigned int ms_ip[4];
+extern char ms_name[MAX_NAME_LENGTH];
 extern char valid_config;
 extern char client_count;
 extern unsigned int client_ips[MAX_CLIENTS][4];
 extern char client_state[MAX_CLIENTS];
+extern char client_names[MAX_CLIENTS][MAX_NAME_LENGTH];
 extern unsigned int client_id[MAX_CLIENTS];
 extern char restart_heartbeat;
 

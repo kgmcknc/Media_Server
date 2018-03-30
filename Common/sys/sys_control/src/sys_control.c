@@ -19,10 +19,12 @@ char usertmp[MAX_STRING] = {0};
 char username[MAX_STRING] = {0};
 unsigned int ms_port = 0;
 unsigned int ms_ip[4] = {0};
+char ms_name[MAX_NAME_LENGTH];
 char client_count = 0;
 unsigned int client_ips[MAX_CLIENTS][4] = {{0}};
 char client_state[MAX_CLIENTS] = {0};
 unsigned int client_id[MAX_CLIENTS] = {0};
+char client_names[MAX_CLIENTS][MAX_NAME_LENGTH] = {0};
 char user_option = 0;
 char restart_heartbeat = 1;
 
@@ -36,6 +38,7 @@ pid_t heartbeat_fork;
 FILE* user_fp;
 FILE* config_file;
 FILE* status_file;
+FILE* name_file;
 FILE* grep_fp;
 
 int sys_sockets[MAX_SYS_SOCKETS] = {0};
@@ -72,7 +75,16 @@ int main(int argc, char **argv) {
         printf("\n\n----- Got %s As User -----\n\n", username);
     }
     pclose(user_fp);
-
+    
+    name_file = fopen(NAME_PATH, "r+b");
+    if(name_file != NULL){
+        printf("\n\n----- Successfully Opened Name File -----\n\n");
+    } else {
+        printf("\n\n----- Failed To Open Name File, Exiting -----\n\n");
+        exit(EXIT_FAILURE);
+    }
+    fclose(name_file);
+    
     config_file = fopen(CONFIG_PATH, "r+b");
     if(config_file != NULL){
         printf("\n\n----- Successfully Opened Config File -----\n\n");

@@ -70,6 +70,12 @@ char check_config(FILE* config_file){
            tmp_valid = 0;
            //return 1;
         }
+#ifdef IS_SERVER
+        read_name(&ms_name[0], 0);
+#endif
+#ifdef IS_CLIENT
+        read_name(&client_names[0][0], 0);
+#endif
         
         valid_config = tmp_valid;
         if(valid_config){
@@ -93,6 +99,7 @@ void configure_system(void){
     #endif
     unsigned int tmp_ip[4] = {0};
     unsigned int tmp_port = 0;
+    char tmp_name[MAX_NAME_LENGTH] = {0};
     char handled = 0;
     char empty;
     char directory[100] = {0};
@@ -171,6 +178,23 @@ void configure_system(void){
             }
         }
         #ifdef IS_SERVER
+        if(user_option == 'n'){
+            handled = 1;
+            if(read_name(&tmp_name[0], 0)){
+                printf("Current Server Name Is: %s\n", tmp_name);
+            } else {
+                printf("\nServer Name Is Not Currently Set\n");
+            }
+            printf("\nSet New Server Name or enter 0 to Go Back\n");
+            printf("New Server Name: ");
+            scanf("%s%c", tmp_name, &empty);
+            if(tmp_name[0] == '0'){
+                printf("\nGot 0, Going Back to Menu\n");
+            }else{
+                printf("\nGot %s For New Server Name\n", tmp_name);
+                write_name(&tmp_name[0], 0);
+            }
+        }
         if(user_option == 'v'){
             handled = 1;
             printf("\nListing Attached Clients\n");
@@ -353,6 +377,23 @@ void configure_system(void){
         }
         #endif
         #ifdef IS_CLIENT
+        if(user_option == 'n'){
+            handled = 1;
+            if(read_name(&tmp_name[0], 0)){
+                printf("Current Client Name Is: %s\n", tmp_name);
+            } else {
+                printf("\nClient Name Is Not Currently Set\n");
+            }
+            printf("\nSet New Client Name or enter 0 to Go Back\n");
+            printf("New Client Name: ");
+            scanf("%s%c", tmp_name, &empty);
+            if(tmp_name[0] == '0'){
+                printf("\nGot 0, Going Back to Menu\n");
+            }else{
+                printf("\nGot %s For New Client Name\n", tmp_name);
+                write_name(&tmp_name[0], 0);
+            }
+        }
         if(user_option == 'i'){
             handled = 1;
             printf("\nSetting Client IP\n");
@@ -418,6 +459,7 @@ void print_config_menu(void){
     printf("\np  Communication Port:        \n");
     printf("\ns  Server IP Address:         \n");
     #ifdef IS_SERVER
+    printf("\nn  Server Name:               \n");
     printf("\nv  View Attached Clients      \n");
     printf("\na  Add New Client IPs         \n");
     printf("\nc  Change Client IP           \n");
@@ -428,6 +470,7 @@ void print_config_menu(void){
     #endif
     #ifdef IS_CLIENT
     printf("\ni  Set/Change IP Address:     \n");
+    printf("\nn  Set/Change Client Name:    \n");
     printf("\na  Add Client To Server       \n");
     printf("\nr  Remove Client From Server  \n");
     #endif
@@ -558,6 +601,52 @@ char write_ip_address(FILE* config_file, unsigned int* config_data, long int off
     }
     
     return 0;
+}
+
+char read_name(char* name_data, long int offset){
+    unsigned char tmp_data = 0;
+    unsigned char tmp_cnt = 0;
+    unsigned char name_length = 0;
+    FILE* name_fp = 0;
+    
+    name_fp = fopen(NAME_PATH, "r");
+    if(name_fp == NULL){
+        printf("Couldn't Open Names File...");
+        return 0;
+    } else {
+        while(tmp_cnt < offset){
+            if(feof(name_file)) break;
+            fgets(name_data, MAX_NAME_LENGTH, name_fp);
+            tmp_cnt = tmp_cnt + 1;
+        }
+        if(feof(name_file)) return 0;
+        fgets(name_data, MAX_NAME_LENGTH, name_fp);
+
+        return 1;
+    }
+    fclose(name_fp);
+}
+
+char write_name(char* name_data, long int offset){
+    unsigned char tmp_cnt = 0;
+    unsigned char tmp_data = 0;
+    unsigned char name_length = 0;
+    FILE* name_fp = 0;
+
+    name_fp = fopen(NAME_PATH, "w");
+    if(name_fp == NULL){
+        printf("Couldn't Open Name File\n");
+        return 0;
+    } else {
+        while(tmp_cnt < offset){
+            fgets(name_data, MAX_NAME_LENGTH, name_fp);
+            tmp_cnt = tmp_cnt + 1;
+        }
+        
+        fprintf(name_fp, "%s", name_data);
+        
+        return 0;
+    }
 }
 
 char set_client_ip(FILE* config_file, unsigned int* config_data, long int offset){
@@ -1190,8 +1279,8 @@ void send_heartbeat_to_clients(void){
    restart_heartbeat = 1;
    
    while(temp_cnt < active_clients){
-      sprintf(&function[0], "1%%hello%u%%",
-         (temp_cnt + 1));
+      sprintf(&function[0], "1%%hello%u:%s%%",
+         (temp_cnt + 1), ms_name);
       send(client_sockets[temp_cnt],function,sizeof(function),0);
       temp_cnt = temp_cnt + 1;
       //printf("Running: %s\n", function);
@@ -1203,18 +1292,21 @@ void send_heartbeat_to_clients(void){
 
 void receive_heartbeat_from_server(char* config_data){
    unsigned int tmp_num = 0;
+   char tmp_name[MAX_NAME_LENGTH] = {0};
    printf("got heartbeat from server\n");
-   sscanf(config_data, "%u", &tmp_num);
+   sscanf(config_data, "%u:%s", &tmp_num, tmp_name);
+   strcpy(ms_name, tmp_name);
    set_client_number(config_file, tmp_num, KMF_CLIENT_COUNT);
    send_heartbeat_to_server();
 }
 
-void receive_heartbeat_from_client(char* config_data){
+void receive_heartbeat_from_client(char client, char* config_data){
    #ifdef IS_SERVER
    //char function[MAX_FUNCTION_STRING] = {0};
    //unsigned int temp_cnt = 0;
    
    printf("got heartbeat from Client\n");
+   strcpy(client_names[client], config_data);
    /*while(temp_cnt < client_count){
       sprintf(&function[0], "echo \"1%%hello%%\" | nc -q 0 %u.%u.%u.%u %u",
          client_ips[temp_cnt][0], client_ips[temp_cnt][1],
@@ -1232,9 +1324,8 @@ void send_heartbeat_to_server(void){
        //printf("Getting Client Number to send to server\n");
        get_client_number(config_file, &tmp_num, KMF_CLIENT_COUNT);
        //printf("Got Client Number %u to send to server\n", tmp_num);
-       sprintf(&function[0], "1%%imhere%u.%u.%u.%u.%u%%",
-          client_ips[0][0], client_ips[0][1],
-          client_ips[0][2], client_ips[0][3], tmp_num);
+       sprintf(&function[0], "1%%imhere%s%",
+          client_names[0], tmp_num);
           //printf("Running: %s\n", function);
           //system(&function[0]);
        send(client_sockets[0],function,sizeof(function),0);
@@ -1285,15 +1376,15 @@ void send_to(unsigned char input_string[MAX_INPUT_STRING], unsigned int address[
    //system(send_string);
 }
 
-void set_status(){
+void set_status(void){
     int status_count = 0;
     printf("Setting Status\n");
     status_file = fopen(STATUS_PATH, "w");
     if(status_file != NULL){
         printf("\n\n----- Successfully Opened Status File -----\n\n");
-        fprintf(status_file, "s:%s\n","server");
+        fprintf(status_file, "s:%s\n",ms_name);
         for(status_count=0;status_count<active_clients;status_count++){
-            fprintf(status_file, "c%d:%s\n",status_count,"cname");
+            fprintf(status_file, "c%d:%s\n",status_count,client_names[status_count]);
         }
         fclose(status_file);
     } else {

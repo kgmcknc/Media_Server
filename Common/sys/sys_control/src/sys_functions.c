@@ -289,7 +289,7 @@ void process_function(char client){
                      if(localcount == 5) web_update_client_ip(&cust_func[0]);
                      if(localcount == 6) send_heartbeat_to_clients();
                      if(localcount == 7) receive_heartbeat_from_server(&cust_func[0]);
-                     if(localcount == 8) receive_heartbeat_from_client(&cust_func[0]);
+                     if(localcount == 8) receive_heartbeat_from_client(client, &cust_func[0]);
                 } else {
                     printf("link is wrong\n");
                 }

@@ -71,6 +71,13 @@ function update_clients(){
         new_client.id = "client" + ccount;
         new_client.onclick = select_client;
         new_client.innerText = "Client " + ccount;
+        if(selected_clients & (1 << ccount)){
+            new_client.style.backgroundColor = "#00A000";
+            new_client.style.opacity = 0.4;
+        } else {
+            new_client.style.backgroundColor = "";
+            new_client.style.opacity = "";
+        }
         client_table.appendChild(new_client);
     }
 }
@@ -94,7 +101,7 @@ function select_client(){
         this.style.opacity = "";
         selected_clients = selected_clients & ~(1 << this_number);
     } else {
-        this.style.backgroundColor = "#101010";
+        this.style.backgroundColor = "#00A000";
         this.style.opacity = 0.4;
         selected_clients = selected_clients | (1 << this_number);
     }

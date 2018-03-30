@@ -66,6 +66,7 @@ fi
 sys_deploy_dir="/usr/share/media_server"
 sys_config_file="/usr/share/media_server/sys_control/sys_config.kmf"
 sys_status_file="/usr/share/media_server/sys_control/sys_status.kmf"
+sys_names_file="/usr/share/media_server/sys_control/sys_names.kmf"
 sys_moviedir_file="/usr/share/media_server/sys_control/moviectrl/moviedir.kmf"
 sys_musicdir_file="/usr/share/media_server/sys_control/musicctrl/musicdir.kmf"
 www_deploy_dir="/var/www/html/media_server"
@@ -178,6 +179,12 @@ if [ -e $sys_status_file ] ; then
 	echo "Sys Status File Already Exists"
 else 
 	touch $sys_status_file
+fi
+
+if [ -e $sys_names_file ] ; then
+	echo "Sys Names File Already Exists"
+else 
+	touch $sys_names_file
 fi
 
 if [ -e $rx_fifo ] ; then

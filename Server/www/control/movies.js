@@ -52,7 +52,12 @@ function parse_status(){
             if(line_data.startsWith("c")){
                 active_clients = active_clients + 1;
                 name = line_data.substr((line_data.indexOf(':')+1),line_data.length);
-                client_name.push(name);
+                if(name.length > 0){
+                    client_name.push(name);
+                } else {
+                    name = "NoName" + active_clients;
+                    client_name.push(name);
+                }
             } else {
                 // server or other
             }

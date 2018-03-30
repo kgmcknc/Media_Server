@@ -186,6 +186,8 @@ int socket_handler(){
     struct sockaddr_in new_addr;
     new_addr_len = sizeof(new_addr);
     
+    printf("Active Clients: %d\n", active_clients);
+    
 #ifdef IS_CLIENT
     if(active_clients == 0){
         new_socket = connect_client_socket(ms_ip, ms_port);

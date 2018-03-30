@@ -309,7 +309,7 @@ void configure_system(void){
                 printf("\nNo Clients To Re-Order\n");
             }
         }
-	if(user_option == 't'){
+	    if(user_option == 't'){
             handled = 1;
             dir_fp = fopen(MOVIEDIR_PATH, "r");
             if(dir_fp == NULL){
@@ -342,7 +342,7 @@ void configure_system(void){
 	            }
             }
         }
-	if(user_option == 'b'){
+	    if(user_option == 'b'){
             handled = 1;
             dir_fp = fopen(MUSICDIR_PATH, "r");
             if(dir_fp == NULL){
@@ -621,10 +621,11 @@ char read_name(char* name_data, long int offset){
         }
         if(feof(name_file)) return 0;
         fgets(name_data, MAX_NAME_LENGTH, name_fp);
-
+        
+        fclose(name_fp);
+        
         return 1;
     }
-    fclose(name_fp);
 }
 
 char write_name(char* name_data, long int offset){
@@ -645,7 +646,9 @@ char write_name(char* name_data, long int offset){
         
         fprintf(name_fp, "%s", name_data);
         
-        return 0;
+        fclose(name_fp);
+        
+        return 1;
     }
 }
 

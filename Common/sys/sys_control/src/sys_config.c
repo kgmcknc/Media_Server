@@ -1324,7 +1324,7 @@ void send_heartbeat_to_server(void){
        //printf("Getting Client Number to send to server\n");
        get_client_number(config_file, &tmp_num, KMF_CLIENT_COUNT);
        //printf("Got Client Number %u to send to server\n", tmp_num);
-       sprintf(&function[0], "1%%imhere%s%",
+       sprintf(&function[0], "1%%imhere%s%%",
           client_names[0], tmp_num);
           //printf("Running: %s\n", function);
           //system(&function[0]);

@@ -2,6 +2,7 @@ var directory_list;
 var dir_tree = [];
 var movie_array = [];
 var active_clients = 0;
+var client_name = [];
 var status_data = 0;
 
 function init_movies(){
@@ -39,7 +40,9 @@ function parse_status(){
     var status_count = 0;
     var status_length = 0;
     var line_data = "";
+    var name = "";
     active_clients = 0;
+    client_name = [];
     status_length = status_data.length;
     for(status_count=0;status_count<status_length;status_count++){
         if(status_data.charAt(status_count) != "\n"){
@@ -48,6 +51,8 @@ function parse_status(){
             // finished reading line... process
             if(line_data.startsWith("c")){
                 active_clients = active_clients + 1;
+                name = line_data.substr((line_data.indexOf(':')+1),line_data.length);
+                client_name.push(name);
             } else {
                 // server or other
             }
@@ -70,7 +75,7 @@ function update_clients(){
         new_client = document.createElement("span");
         new_client.id = "client" + ccount;
         new_client.onclick = select_client;
-        new_client.innerText = "Client " + ccount;
+        new_client.innerText = client_name[ccount];
         if(selected_clients & (1 << ccount)){
             new_client.style.backgroundColor = "#00A000";
             new_client.style.opacity = 0.4;

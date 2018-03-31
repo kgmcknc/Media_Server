@@ -4,7 +4,7 @@
 		<link rel="stylesheet" type="text/css" href="../system.css">
         <link rel="stylesheet" type="text/css" href="../music.css">
 	</head>
-	<body onload="search_music()">
+	<body onload="init_music()">
 	<div id="navbar" class="navbar">
 		<span><a href="../../index.html">Home</a></span>
 		<span><a href="./mshome.html">Media Server Home</a></span>
@@ -15,12 +15,18 @@
 	</div>
 	control page:
 	<div class="controlbox">
-		<span id="stopmusic" onclick="write_function('mc13')">Stop Music</span>
-		<span id="pausemusic" onclick="write_function('pauseaudio')">Pause Music</span>
-		<span id="resumemusic" onclick="write_function('resumeaudio')">Resume Music</span>
-		<span id="rrmusic" onclick="write_function('rraudio')">Rewind Music</span>
-		<span id="ffmusic" onclick="write_function('ffaudio')">FastForward Music</span>
+        <span id="poweron" onclick="update_media(0)">Power On</span>
+        <span id="poweroff" onclick="update_media(1)">Power Off</span>
+        <span id="stopvideo" onclick="update_media(2)">Active Source</span>
+		<span id="stopvideo" onclick="update_media(3)">Stop Movie</span>
+		<span id="pausevideo" onclick="update_media(4)">Pause Movie</span>
+		<span id="resumevideo" onclick="update_media(5)">Resume Movie</span>
+		<span id="rrvideo" onclick="update_media(6)">Rewind Movie</span>
+		<span id="ffvideo" onclick="update_media(7)">FastForward Movie</span>
 	</div>
+    <div id="clients">
+    
+    </div>
 	<div id="musiclist">
 		
 	</div>

@@ -41,7 +41,7 @@ void start_listener(char type, unsigned int in_address[4]){
         }
         system(start_string);
         if(type == 0) send(client_sockets[0], "1%mc02%", sizeof("1%mc02%"), 0);
-        if(type == 1) send(client_sockets[0], "1%mc12%", sizeof("1%mc02%"), 0);
+        if(type == 1) send(client_sockets[0], "1%mc12%", sizeof("1%mc12%"), 0);
     }
 }
 
@@ -202,12 +202,12 @@ char music_control(char stream_select, char input_option, char* input_src, unsig
             return 0;
         }
     } else {
-        if(active_music_count){
+        //if(active_music_count){
             update_music(stream_select, input_option, input_src, out_clients, client);
-        } else {
+        //} else {
             // can't do anything to streams... none going
-            return 0;
-        }
+        //    return 0;
+        //}
     }
     return 0;
 }
@@ -216,7 +216,7 @@ char start_music(char stream_select, char input_option, char* input_src, unsigne
     char send_count = 0;
     char stream_string[MAX_STRING] = {0};
     music_clients_ready[stream_select] = 0;
-    music_clients[stream_select] = out_count;
+    music_clients[stream_select] = out_clients;
     //active_music_count = active_music_count + 1;
     sprintf(stream_string, "su - %s -c \"cvlc -I rc --rc-host %u.%u.%u.%u:%u --extraintf=http --http-password=ms %s --sout-keep --sout-all --sout \'#gather:std{access=http,mux=ts,dst=:8080/ms0.mkv}\'&\"", username, ms_ip[0], ms_ip[1], ms_ip[2], ms_ip[3], (ms_port+1), input_src);
     printf("Starting: %s\n", stream_string);
@@ -225,27 +225,73 @@ char start_music(char stream_select, char input_option, char* input_src, unsigne
     send_media("pause", ms_ip);
     //send start stream to all outputs
     for(send_count=0;send_count<active_clients;send_count++){
-        send(client_sockets[send_count], "1%mc11%", sizeof("1%mc11%"), 0);
+        if(out_clients & (1<<send_count)) send(client_sockets[send_count], "1%mc11%", sizeof("1%mc11%"), 0);
     }
 }
 
 char update_music(char stream_select, char input_option, char* input_src, char out_clients, char client){
+    unsigned int media_option = 0;
+    char tmp_count = 0;
     if(input_option == 0){
         // stop selected stream
     }
     if(input_option == 2){
-        music_clients_ready[stream_select] = music_clients_ready[stream_select] + 1;
-        if(music_clients_ready[stream_select] >= music_clients[stream_select]){
+        music_clients_ready[stream_select] = music_clients_ready[stream_select] | (1 << client);
+        if(music_clients_ready[stream_select] == music_clients[stream_select]){
             send_media("play", ms_ip);
         }
     }
     if(input_option == 3){
-        #ifdef IS_SERVER
-            send_media("stop", ms_ip);
-            sleep(1);
-            send_media("shutdown", ms_ip);
-            //active_music_count = active_music_count - 1;
-        #endif
+        sscanf(input_src, "%u", &media_option);
+        printf("In Option 3: Got %d: Active %d: Out: %d\n", media_option, active_clients, out_clients);
+        if(media_option == 0){
+            #ifdef IS_SERVER
+                for(tmp_count=0;tmp_count<active_clients;tmp_count++){
+                    if(out_clients & (1<<tmp_count)) send(client_sockets[tmp_count], "1%mc1300%", sizeof("1%mc1300%"), 0);
+                }
+            #endif
+            #ifdef IS_CLIENT
+                system("echo \"on 0\" | cec-client -s&");
+            #endif
+        }
+        if(media_option == 1){
+            #ifdef IS_SERVER
+                for(tmp_count=0;tmp_count<active_clients;tmp_count++){
+                    if(out_clients & (1<<tmp_count)) send(client_sockets[tmp_count], "1%mc1301%", sizeof("1%mc1301%"), 0);
+                }
+            #endif
+            #ifdef IS_CLIENT
+                system("echo \"standby 0\" | cec-client -s&");
+            #endif
+        }
+        if(media_option == 2){
+            #ifdef IS_SERVER
+                for(tmp_count=0;tmp_count<active_clients;tmp_count++){
+                    if(out_clients & (1<<tmp_count)) send(client_sockets[tmp_count], "1%mc1302%", sizeof("1%mc1302%"), 0);
+                }
+            #endif
+            #ifdef IS_CLIENT
+                system("echo \"as\" | cec-client -s&");
+            #endif
+        }
+        if(media_option == 3){
+            #ifdef IS_SERVER
+                send_media("stop", ms_ip);
+                sleep(1);
+                send_media("shutdown", ms_ip);
+                //active_movie_count = active_movie_count - 1;
+            #endif
+        }
+        if(media_option == 4){
+            #ifdef IS_SERVER
+                send_media("pause", ms_ip);
+            #endif
+        }
+        if(media_option == 5){
+            #ifdef IS_SERVER
+                send_media("play", ms_ip);
+            #endif
+        }
     }
 }
 

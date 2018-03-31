@@ -1,6 +1,121 @@
 var directory_list;
 var dir_tree = [];
 var music_array = [];
+var active_clients = 0;
+var client_name = [];
+var status_data = 0;
+
+function init_music(){
+    read_status();
+    search_music();
+    setInterval(read_status, 20000);
+}
+
+function update_status(){
+    parse_status();
+    update_clients();
+}
+
+function read_status(){
+    var xmlhttp = 0;
+	var dir = "/";
+	var error_html;
+	if (window.XMLHttpRequest) {
+		xmlhttp = new XMLHttpRequest();
+	} else {
+		// code for IE6, IE5
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+    xmlhttp.open("POST", "read_status.php?q=" + dir, true);
+	xmlhttp.send();
+	xmlhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			status_data = this.responseText;
+            update_status();
+		}
+	}
+}
+
+function parse_status(){
+    var status_count = 0;
+    var status_length = 0;
+    var line_data = "";
+    var name = "";
+    active_clients = 0;
+    client_name = [];
+    status_length = status_data.length;
+    for(status_count=0;status_count<status_length;status_count++){
+        if(status_data.charAt(status_count) != "\n"){
+            line_data = line_data + status_data.charAt(status_count);
+        } else {
+            // finished reading line... process
+            if(line_data.startsWith("c")){
+                active_clients = active_clients + 1;
+                name = line_data.substr((line_data.indexOf(':')+1),line_data.length);
+                if(name.length > 0){
+                    client_name.push(name);
+                } else {
+                    name = "NoName" + active_clients;
+                    client_name.push(name);
+                }
+            } else {
+                // server or other
+            }
+            line_data = "";
+        }
+    }
+}
+
+function update_clients(){
+    var client_table;
+    var ccount = 0;
+    var new_client = 0;
+    var clength = 0;
+    client_table = document.getElementById("clients");
+    clength = client_table.children.length;
+    for(ccount=0;ccount<clength;ccount++){
+        client_table.removeChild(client_table.children[clength-ccount-1]);
+    }
+    for(ccount=0;ccount<active_clients;ccount++){
+        new_client = document.createElement("span");
+        new_client.id = "client" + ccount;
+        new_client.onclick = select_client;
+        new_client.innerText = client_name[ccount];
+        if(selected_clients & (1 << ccount)){
+            new_client.style.backgroundColor = "#00A000";
+            new_client.style.opacity = 0.4;
+        } else {
+            new_client.style.backgroundColor = "";
+            new_client.style.opacity = "";
+        }
+        client_table.appendChild(new_client);
+    }
+}
+
+var selected_clients = 0;
+function select_client(){
+    var this_number = 0;
+    var c_count = 0;
+    var parent = 0;
+    parent = this.parentNode;
+    c_count = parent.childElementCount;
+    while(this_number < c_count){
+        if(this === parent.children[this_number]){
+            break;
+        } else {
+            this_number = this_number + 1;
+        }
+    }
+    if(selected_clients & (1 << this_number)){
+        this.style.backgroundColor = "";
+        this.style.opacity = "";
+        selected_clients = selected_clients & ~(1 << this_number);
+    } else {
+        this.style.backgroundColor = "#00A000";
+        this.style.opacity = 0.4;
+        selected_clients = selected_clients | (1 << this_number);
+    }
+}
 
 function search_music(){
 	var xmlhttp = 0;
@@ -203,6 +318,12 @@ function start_music(){
 		//this.innerText = musiccall;
 		write_function(musiccall);
 	}
+}
+
+function update_media(option){
+    var updatecall = 0;
+    updatecall = "mc13" + selected_clients + option;
+    write_function(updatecall);
 }
 
 function string_to_dec(name){

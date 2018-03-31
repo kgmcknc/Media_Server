@@ -79,7 +79,7 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
         printf("Active: %d\n", active_movie_count);
         if(active_movie_count){
             printf("Update Stream Option\n");
-            update_movie(stream_select, input_option, input_src, client);
+            update_movie(stream_select, input_option, input_src, out_clients, client);
         } else {
             // can't do anything to streams... none going
             printf("Unknown Option\n");
@@ -106,7 +106,9 @@ char start_movie(char stream_select, char input_option, char* input_src, unsigne
     }
 }
 
-char update_movie(char stream_select, char input_option, char* input_src, char client){
+char update_movie(char stream_select, char input_option, char* input_src, char out_clients, char client){
+    unsigned int media_option = 0;
+    char tmp_count = 0;
     if(input_option == 0){
         // stop selected stream
     }
@@ -117,21 +119,64 @@ char update_movie(char stream_select, char input_option, char* input_src, char c
         }
     }
     if(input_option == 3){
-        #ifdef IS_SERVER
-            send_media("stop", ms_ip);
-            sleep(1);
-            send_media("shutdown", ms_ip);
-            //active_movie_count = active_movie_count - 1;
-        #endif
+        sscanf(input_src, "%u", &media_option);
+        if(media_option == 0){
+            #ifdef IS_SERVER
+                for(tmp_count=0;tmp_count<active_clients;tmp_count++){
+                    if(out_clients & (1<<tmp_count)) send(client_sockets[tmp_count], "1%mc0300%", sizeof("1%mc0300%"), 0);
+                }
+            #endif
+            #ifdef IS_CLIENT
+                system("echo \"on 0\" | cec-client -s&");
+            #endif
+        }
+        if(media_option == 1){
+            #ifdef IS_SERVER
+                for(tmp_count=0;tmp_count<active_clients;tmp_count++){
+                    if(out_clients & (1<<tmp_count)) send(client_sockets[tmp_count], "1%mc0301%", sizeof("1%mc0301%"), 0);
+                }
+            #endif
+            #ifdef IS_CLIENT
+                system("echo \"standby 0\" | cec-client -s&");
+            #endif
+        }
+        if(media_option == 2){
+            #ifdef IS_SERVER
+                for(tmp_count=0;tmp_count<active_clients;tmp_count++){
+                    if(out_clients & (1<<tmp_count)) send(client_sockets[tmp_count], "1%mc0302%", sizeof("1%mc0302%"), 0);
+                }
+            #endif
+            #ifdef IS_CLIENT
+                system("echo \"as\" | cec-client -s&");
+            #endif
+        }
+        if(media_option == 3){
+            #ifdef IS_SERVER
+                send_media("stop", ms_ip);
+                sleep(1);
+                send_media("shutdown", ms_ip);
+                //active_movie_count = active_movie_count - 1;
+            #endif
+        }
+        if(media_option == 4){
+            #ifdef IS_SERVER
+                send_media("pause", ms_ip);
+            #endif
+        }
+        if(media_option == 5){
+            #ifdef IS_SERVER
+                send_media("play", ms_ip);
+            #endif
+        }
     }
 }
 
 
-char music_control(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4], char client){
+char music_control(char stream_select, char input_option, char* input_src, unsigned int out_clients, unsigned int out_address[][4], char client){
     char music_text[MAX_STRING] = {0};
     char ps_id[8] = {0};
     sprintf(music_text, "\'/home/kyle/linux-main-share/MusicHD/%s\'", input_src);
-    printf("Music inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_count);
+    printf("Music inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_clients);
     grep_fp = popen("pgrep \"vlc\"", "r");
     if(grep_fp == NULL){
         printf("Failed to grep vlc...\n");
@@ -146,7 +191,7 @@ char music_control(char stream_select, char input_option, char* input_src, unsig
     if(input_option == 1){ // start stream
         if(active_music_count == 0){
             #ifdef IS_SERVER
-            start_music(stream_select, input_option, music_text, out_count, out_address);
+            start_music(stream_select, input_option, music_text, out_clients, out_address);
             #endif
             #ifdef IS_CLIENT
             start_listener(1, ms_ip);
@@ -157,7 +202,7 @@ char music_control(char stream_select, char input_option, char* input_src, unsig
         }
     } else {
         if(active_music_count){
-            update_music(stream_select, input_option, input_src, client);
+            update_music(stream_select, input_option, input_src, out_clients, client);
         } else {
             // can't do anything to streams... none going
             return 0;
@@ -183,7 +228,7 @@ char start_music(char stream_select, char input_option, char* input_src, unsigne
     }
 }
 
-char update_music(char stream_select, char input_option, char* input_src, char client){
+char update_music(char stream_select, char input_option, char* input_src, char out_clients, char client){
     if(input_option == 0){
         // stop selected stream
     }

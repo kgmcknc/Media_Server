@@ -77,14 +77,14 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
         }
     } else {
         printf("Active: %d\n", active_movie_count);
-        if(active_movie_count){
+        //if(active_movie_count){
             printf("Update Stream Option\n");
             update_movie(stream_select, input_option, input_src, out_clients, client);
-        } else {
+        //} else {
             // can't do anything to streams... none going
-            printf("Unknown Option\n");
-            return 0;
-        }
+        //    printf("Unknown Option\n");
+        //    return 0;
+        //}
     }
     return 0;
 }

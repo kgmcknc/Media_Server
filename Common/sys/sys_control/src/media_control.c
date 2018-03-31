@@ -99,7 +99,7 @@ char start_movie(char stream_select, char input_option, char* input_src, unsigne
     printf("Starting: %s\n", stream_string);
     system(stream_string);
     sleep(2);
-    send_media("pause", ms_ip);
+    if(out_clients > 0) send_media("pause", ms_ip);
     //send start stream to all outputs
     for(send_count=0;send_count<active_clients;send_count++){
         if(out_clients & (1<<send_count)) send(client_sockets[send_count], "1%mc01%", sizeof("1%mc01%"), 0);
@@ -222,7 +222,7 @@ char start_music(char stream_select, char input_option, char* input_src, unsigne
     printf("Starting: %s\n", stream_string);
     system(stream_string);
     sleep(2);
-    send_media("pause", ms_ip);
+    if(out_clients > 0) send_media("pause", ms_ip);
     //send start stream to all outputs
     for(send_count=0;send_count<active_clients;send_count++){
         if(out_clients & (1<<send_count)) send(client_sockets[send_count], "1%mc11%", sizeof("1%mc11%"), 0);

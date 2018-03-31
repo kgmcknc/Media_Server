@@ -212,7 +212,7 @@ char music_control(char stream_select, char input_option, char* input_src, unsig
     return 0;
 }
 
-char start_music(char stream_select, char input_option, char* input_src, unsigned int out_count, unsigned int out_address[][4]){
+char start_music(char stream_select, char input_option, char* input_src, unsigned int out_clients, unsigned int out_address[][4]){
     char send_count = 0;
     char stream_string[MAX_STRING] = {0};
     music_clients_ready[stream_select] = 0;

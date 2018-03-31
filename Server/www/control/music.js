@@ -314,7 +314,7 @@ function start_music(){
 		if(dir_tree.length > 1){
 			musiccall = musiccall + dir_tree[dir_tree.length-1];
 		}
-		musiccall = musiccall + music_array[music_num];
+		musiccall = musiccall + selected_clients + music_array[music_num];
 		//this.innerText = musiccall;
 		write_function(musiccall);
 	}

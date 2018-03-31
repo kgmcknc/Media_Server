@@ -120,6 +120,7 @@ char update_movie(char stream_select, char input_option, char* input_src, char o
     }
     if(input_option == 3){
         sscanf(input_src, "%u", &media_option);
+        printf("In Option 3: Got %d: Active %d: Out: %d\n", media_option, active_clients, out_clients);
         if(media_option == 0){
             #ifdef IS_SERVER
                 for(tmp_count=0;tmp_count<active_clients;tmp_count++){

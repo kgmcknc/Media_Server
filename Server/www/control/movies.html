@@ -15,14 +15,14 @@
 	</div>
 	control page:
 	<div class="controlbox">
-        <span id="poweron" onclick="write_function('mc0300')">Power On</span>
-        <span id="poweroff" onclick="write_function('mc0301')">Power Off</span>
-        <span id="stopvideo" onclick="write_function('mc0302')">Active Source</span>
-		<span id="stopvideo" onclick="write_function('mc0303')">Stop Movie</span>
-		<span id="pausevideo" onclick="write_function('mc0304')">Pause Movie</span>
-		<span id="resumevideo" onclick="write_function('mc0305')">Resume Movie</span>
-		<span id="rrvideo" onclick="write_function('mc035')">Rewind Movie</span>
-		<span id="ffvideo" onclick="write_function('mc036')">FastForward Movie</span>
+        <span id="poweron" onclick="update_media(0)">Power On</span>
+        <span id="poweroff" onclick="update_media(1)">Power Off</span>
+        <span id="stopvideo" onclick="update_media(2)">Active Source</span>
+		<span id="stopvideo" onclick="update_media(3)">Stop Movie</span>
+		<span id="pausevideo" onclick="update_media(4)">Pause Movie</span>
+		<span id="resumevideo" onclick="update_media(5)">Resume Movie</span>
+		<span id="rrvideo" onclick="update_media(6)">Rewind Movie</span>
+		<span id="ffvideo" onclick="update_media(7)">FastForward Movie</span>
 	</div>
     <div id="clients">
     

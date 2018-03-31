@@ -320,6 +320,12 @@ function start_movie(){
 	}
 }
 
+function update_media(option){
+    var updatecall = 0;
+    updatecall = "mc03" + selected_clients + option;
+    write_function(updatecall);
+}
+
 function string_to_dec(name){
 	var number = 0;
 	var tmp_char;

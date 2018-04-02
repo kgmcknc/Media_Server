@@ -187,7 +187,7 @@ void set_function(struct system_function* sf, char f_string[MAX_FUNCTION_STRING]
     sprintf(sf->string, "1%%%s%%", f_string);
 }
 
-int socket_handler(){
+int socket_handler(void){
     int s_count, r_count;
     int activity;
     int new_socket = 0;
@@ -322,15 +322,25 @@ int socket_handler(){
         if(FD_ISSET(unix_sockets[s_count], &all_sockets)){
             printf("Got Data On Unix:%d\n", s_count);
             num_read = read(unix_sockets[s_count], read_data, sizeof(read_data));
-            if(num_read){
+            if(num_read > 0){
                 // Got Data
                 read_data[num_read] = '\0';
                 process(0, s_count, read_data);
             } else {
-                // No Data... Closing Connection
-                printf("Closing Unix Socket: %d\n", s_count);
-                close(unix_sockets[s_count]);
-                unix_sockets[s_count] = 0;
+                if(num_read == 0){
+                    // No Data... Closing Connection
+                    printf("Closing Unix Socket: %d\n", s_count);
+                    close(unix_sockets[s_count]);
+                    unix_sockets[s_count] = 0;
+                } else {
+                    // Error... Closing Connection
+                    printf("Error On Unix Socket: %d\n", s_count);
+                    close(unix_sockets[s_count]);
+                    unix_sockets[s_count] = 0;
+                    while(1){
+                        sleep(30);
+                    }
+                }
             }
         }
     }
@@ -340,15 +350,25 @@ int socket_handler(){
         if(FD_ISSET(local_sockets[s_count], &all_sockets)){
             printf("Got Data On Local:%d\n", s_count);
             num_read = read(local_sockets[s_count], read_data, sizeof(read_data));
-            if(num_read){
+            if(num_read > 0){
                 // Got Data
                 read_data[num_read] = '\0';
                 process(1, s_count, read_data);
             } else {
-                // No Data... Closing Connection
-                printf("Closing Local Socket: %d\n", s_count);
-                close(local_sockets[s_count]);
-                local_sockets[s_count] = 0;
+                if(num_read == 0){
+                    // No Data... Closing Connection
+                    printf("Closing Local Socket: %d\n", s_count);
+                    close(local_sockets[s_count]);
+                    local_sockets[s_count] = 0;
+                } else {
+                    // Error... Closing Connection
+                    printf("Error On Local Socket: %d\n", s_count);
+                    close(local_sockets[s_count]);
+                    local_sockets[s_count] = 0;
+                    while(1){
+                        sleep(30);
+                    }
+                }
             }
         }
     }
@@ -358,15 +378,25 @@ int socket_handler(){
         if(FD_ISSET(client_sockets[s_count], &all_sockets)){
             printf("Got Data On Client:%d\n", s_count);
             num_read = read(client_sockets[s_count], read_data, sizeof(read_data));
-            if(num_read){
+            if(num_read > 0){
                 // Got Data
                 read_data[num_read] = '\0';
                 process(2, s_count, read_data);
             } else {
-                // No Data... Closing Connection
-                printf("Closing Client Socket: %d\n", s_count);
-                close(client_sockets[s_count]);
-                client_sockets[s_count] = 0;
+                if(num_read == 0){
+                    // No Data... Closing Connection
+                    printf("Closing Client Socket: %d\n", s_count);
+                    close(client_sockets[s_count]);
+                    client_sockets[s_count] = 0;
+                } else {
+                    // Error... Closing Connection
+                    printf("Error On Client Socket: %d\n", s_count);
+                    close(client_sockets[s_count]);
+                    client_sockets[s_count] = 0;
+                    while(1){
+                        sleep(30);
+                    }
+                }
             }
         }
     }

@@ -1,33 +1,34 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<link rel="stylesheet" type="text/css" href="../system.css">
-        <link rel="stylesheet" type="text/css" href="../movies.css">
+		<link rel="stylesheet" type="text/css" href="./system.css">
+        <link rel="stylesheet" type="text/css" href="./movies.css">
 	</head>
 	<body onload="init_movies()">
-	<div id="navbar" class="navbar">
-		<span><a href="../../index.html">Home</a></span>
-		<span><a href="./mshome.html">Media Server Home</a></span>
-		<span><a href="./control.html">Control</a></span>
-		<span><a href="./status.html">Status</a></span>
-		<span><a href="./movies.html">Movies</a></span>
-		<span><a href="./music.html">Music</a></span>
-	</div>
-	control page:
-	<div class="controlbox">
-        <span id="poweron" onclick="update_media(0)">Power On</span>
-        <span id="poweroff" onclick="update_media(1)">Power Off</span>
-        <span id="stopvideo" onclick="update_media(2)">Active Source</span>
-		<span id="stopvideo" onclick="update_media(3)">Stop Movie</span>
-		<span id="pausevideo" onclick="update_media(4)">Pause Movie</span>
-		<span id="resumevideo" onclick="update_media(5)">Resume Movie</span>
-		<span id="rrvideo" onclick="update_media(6)">Rewind Movie</span>
-		<span id="ffvideo" onclick="update_media(7)">FastForward Movie</span>
-	</div>
-    <div id="clients">
-    
+    <div id="mainbar" class="frame">
+	    <div id="navbar" class="navbar">
+		    <span><a href="../../index.html">Home</a></span>
+		    <span><a href="./mshome.html">Media Server Home</a></span>
+		    <span><a href="./control.html">Control</a></span>
+		    <span><a href="./status.html">Status</a></span>
+		    <span><a href="./movies.html">Movies</a></span>
+		    <span><a href="./music.html">Music</a></span>
+	    </div>
+	    <div class="frame controlbox">
+            <span id="poweron" onclick="update_media(0)">On</span>
+            <span id="poweroff" onclick="update_media(1)">Off</span>
+            <span id="stopvideo" onclick="update_media(2)">Active</span>
+		    <span id="stopvideo" onclick="update_media(3)">Stop</span>
+		    <span id="pausevideo" onclick="update_media(4)">Pause</span>
+		    <span id="resumevideo" onclick="update_media(5)">Resume</span>
+		    <span id="rrvideo" onclick="update_media(6)">RR</span>
+		    <span id="ffvideo" onclick="update_media(7)">FF</span>
+	    </div>
+        <div id="clients" class="frame clientbox">
+        
+        </div>
     </div>
-    <div id="movielist">
+    <div id="movielist" class="media_list">
         
     </div>
     <div id="playlists">

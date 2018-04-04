@@ -17,7 +17,7 @@ if ($q !== "") {
 		fclose($moviedirfile);
 		if ($dir != "") {
 			$dir = $dir . $q;
-			$dirlist = array_slice(scandir($dir), 2);
+			$dirlist = scandir($dir);
 			print_r($dirlist);
 		} else {
 			/*No Directory Set*/

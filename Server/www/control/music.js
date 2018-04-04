@@ -219,14 +219,17 @@ function update_page(){
 	var i = 0;
 	var music_name = 0;
 	var new_elem, new_text;
+    var saved_classes = 0;
 	
 	parse_dir_list();
 
 	musicbox = document.getElementById("musiclist");
+    saved_classes = musicbox.classList;
 	parent = musicbox.parentNode;
 	parent.removeChild(musicbox);
 	musicbox = document.createElement("div");
 	musicbox.id = "musiclist";
+    musicbox.classList.add(saved_classes);
 	parent.appendChild(musicbox);
 	musicbox = document.getElementById("musiclist");
 
@@ -294,7 +297,13 @@ function parse_dir_list(){
 			list_rp = list_rp + 1;
 		}
 		// add name to the array
-		if(tmp_name.length > 0) tmp_array.push(tmp_name);
+		if(tmp_name.length > 0){
+            if((tmp_name === ".") || (tmp_name === "..")){
+                // . and .. aren't valid... from dir search
+            } else {
+                tmp_array.push(tmp_name);
+            }
+        }
 	}
 	
 	music_array = tmp_array;
@@ -346,50 +355,76 @@ function string_to_dec(name){
 
 function open_item_options(){
     var new_div = 0;
+    var new_elem = 0;
+    var just_clear = 0;
+    var dropdowns;
+    dropdowns = document.getElementsByClassName("dropdown-content");
+    if(dropdowns.length > 1){
+        // problem -- too many, just clear all and set this
+    } else {
+        if((dropdowns.length == 1) && (this === dropdowns[0].parentNode)){
+            just_clear = 1;
+        }
+    }
     cleardropdowns();
-    new_elem = document.createElement("div");
-    new_elem.id = "item_dropdown";
-    new_elem.classList.add("dropdown-content");
-    new_div = document.createElement("div");
-    new_div.id = this.id;
-    new_div.onclick = start_music;
-    new_text = document.createTextNode("Play");
-    new_div.appendChild(new_text);
-    new_elem.appendChild(new_div);
-    new_div = document.createElement("div");
-    new_div.id = this.id;
-    new_div.onclick = add_to_list_end;
-    new_text = document.createTextNode("Add To Current Playlist");
-    new_div.appendChild(new_text);
-    new_elem.appendChild(new_div);
-    this.appendChild(new_elem);
+    if(!just_clear){
+        new_elem = document.createElement("div");
+        new_elem.id = "item_dropdown";
+        new_elem.classList.add("dropdown-content");
+        new_div = document.createElement("div");
+        new_div.id = this.id;
+        new_div.onclick = start_music;
+        new_text = document.createTextNode("Play");
+        new_div.appendChild(new_text);
+        new_elem.appendChild(new_div);
+        new_div = document.createElement("div");
+        new_div.id = this.id;
+        new_div.onclick = add_to_list_end;
+        new_text = document.createTextNode("Add To Current Playlist");
+        new_div.appendChild(new_text);
+        new_elem.appendChild(new_div);
+        this.appendChild(new_elem);
+    }
 }
 
 function open_folder_options(){
     var new_div = 0;
+    var new_elem = 0;
+    var just_clear = 0;
+    var dropdowns;
+    dropdowns = document.getElementsByClassName("dropdown-content");
+    if(dropdowns.length > 1){
+        // problem -- too many, just clear all and set this
+    } else {
+        if((dropdowns.length == 1) && (this === dropdowns[0].parentNode)){
+            just_clear = 1;
+        }
+    }
     cleardropdowns();
-    new_elem = document.createElement("div");
-    new_elem.id = "folder_dropdown";
-    new_elem.classList.add("dropdown-content");
-    new_div = document.createElement("div");
-    new_div.id = this.id;
-    new_div.onclick = enter_dir;
-    new_text = document.createTextNode("Enter Folder");
-    new_div.appendChild(new_text);
-    new_elem.appendChild(new_div);
-    new_div = document.createElement("div");
-    new_div.id = this.id;
-    new_div.onclick = start_music;
-    new_text = document.createTextNode("Play Folder");
-    new_div.appendChild(new_text);
-    new_elem.appendChild(new_div);
-    new_div = document.createElement("div");
-    new_div.id = this.id;
-    new_div.onclick = add_to_list_end;
-    new_text = document.createTextNode("Add Folder To Current Playlist");
-    new_div.appendChild(new_text);
-    new_elem.appendChild(new_div);
-    this.appendChild(new_elem);
+    if(!just_clear){
+        new_elem = document.createElement("div");
+        new_elem.id = "folder_dropdown";
+        new_elem.classList.add("dropdown-content");
+        new_div = document.createElement("div");
+        new_div.id = this.id;
+        new_div.onclick = enter_dir;
+        new_text = document.createTextNode("Enter Folder");
+        new_div.appendChild(new_text);
+        new_elem.appendChild(new_div);
+        new_div = document.createElement("div");
+        new_div.id = this.id;
+        new_div.onclick = start_music;
+        new_text = document.createTextNode("Play Folder");
+        new_div.appendChild(new_text);
+        new_elem.appendChild(new_div);
+        new_div = document.createElement("div");
+        new_div.id = this.id;
+        new_div.onclick = add_to_list_end;
+        new_text = document.createTextNode("Add Folder To Current Playlist");
+        new_div.appendChild(new_text);
+        new_elem.appendChild(new_div);
+        this.appendChild(new_elem);
+    }
 }
 
 window.onclick = function(event) {

@@ -5,26 +5,28 @@
         <link rel="stylesheet" type="text/css" href="./music.css">
 	</head>
 	<body onload="init_music()">
-	<div id="navbar" class="frame navbar">
-		<span><a href="../../index.html">Home</a></span>
-		<span><a href="./mshome.html">Media Server Home</a></span>
-		<span><a href="./control.html">Control</a></span>
-		<span><a href="./status.html">Status</a></span>
-		<span><a href="./movies.html">Movies</a></span>
-		<span><a href="./music.html">Music</a></span>
-	</div>
-	<div class="frame controlbox">
-        <span id="on" onclick="update_media(0)">On</span>
-        <span id="off" onclick="update_media(1)">Off</span>
-        <span id="active" onclick="update_media(2)">Active</span>
-		<span id="stop" onclick="update_media(3)">Stop</span>
-		<span id="pausemusic" onclick="update_media(4)">Pause</span>
-		<span id="resumemusic" onclick="update_media(5)">Resume</span>
-		<span id="rrmusic" onclick="update_media(6)">RR</span>
-		<span id="ffmusic" onclick="update_media(7)">FF</span>
-	</div>
-    <div id="clients" class="frame clientbox">
-    
+    <div id="mainbar" class="frame">
+	    <div id="navbar" class="navbar">
+		    <span><a href="../../index.html">Home</a></span>
+		    <span><a href="./mshome.html">Media Server Home</a></span>
+		    <span><a href="./control.html">Control</a></span>
+		    <span><a href="./status.html">Status</a></span>
+		    <span><a href="./movies.html">Movies</a></span>
+		    <span><a href="./music.html">Music</a></span>
+	    </div>
+	    <div class="controlbox">
+            <span id="on" onclick="update_media(0)">On</span>
+            <span id="off" onclick="update_media(1)">Off</span>
+            <span id="active" onclick="update_media(2)">Active</span>
+		    <span id="stop" onclick="update_media(3)">Stop</span>
+		    <span id="pausemusic" onclick="update_media(4)">Pause</span>
+		    <span id="resumemusic" onclick="update_media(5)">Resume</span>
+		    <span id="rrmusic" onclick="update_media(6)">RR</span>
+		    <span id="ffmusic" onclick="update_media(7)">FF</span>
+	    </div>
+        <div id="clients" class="clientbox">
+        
+        </div>
     </div>
 	<div id="musiclist" class="media_list">
 		

@@ -4,11 +4,82 @@ var movie_array = [];
 var active_clients = 0;
 var client_name = [];
 var status_data = 0;
+var top_toggle = 0;
 
 function init_movies(){
+    set_sizes();
     read_status();
     search_movies();
-    setInterval(read_status, 20000);
+    setInterval(read_status, 10000);
+}
+
+function set_sizes(){
+    var presets = 0;
+    var precount = 0;
+    //presets = getElementsByClassName("pre_setup");
+    //for(precount=0;precount<presets.length;precount++){
+        
+    //}
+}
+
+function set_media_type(type){
+
+}
+
+function toggle_drop(drop_box, menu_option){
+    var toggle_parent = 0;
+    var parent_count = 0;
+
+    toggle_parent = menu_option.parentNode;
+    for(parent_count=0;parent_count<toggle_parent.childElementCount;parent_count++){
+        if(menu_option === toggle_parent.children[parent_count]) break;
+    }
+
+    if(top_toggle & (1 << parent_count)){
+        top_toggle = top_toggle & ~(1 << parent_count);
+        drop_box.children[parent_count].classList.remove("show_nav_drop");
+        //for(parent_count=1;parent_count<nav_top.childElementCount;parent_count++){
+        //    menu_option.children[parent_count].classList.remove("show_nav_drop");
+        //}
+    } else {
+        close_top();
+        top_toggle = top_toggle | (1 << parent_count);
+        drop_box.children[parent_count].classList.add("show_nav_drop");
+        //for(parent_count=1;parent_count<nav_top.childElementCount;parent_count++){
+        //    menu_option.children[parent_count].classList.add("show_nav_drop");
+        //}
+    }
+}
+
+function toggle_side(drop_box, menu_option){
+    var toggle_parent = 0;
+    var parent_count = 0;
+    var toggle_select = 0;
+
+    toggle_parent = menu_option.parentNode;
+    for(parent_count=0;parent_count<toggle_parent.childElementCount;parent_count++){
+        if(menu_option === toggle_parent.children[parent_count]) break;
+    }
+
+    toggle_select = parent_count;
+
+    for(parent_count=0;parent_count<drop_box.childElementCount;parent_count++){
+        if(toggle_select == parent_count){
+            drop_box.children[parent_count].classList.add("show_nav_side");
+        } else {
+            drop_box.children[parent_count].classList.remove("show_nav_side");
+        }
+    }
+}
+
+function close_top(){
+    var nav_divs = document.getElementsByClassName("show_nav_drop");
+    var nav_cnt = 0;
+    var clen = nav_divs.length;
+    for(nav_cnt=0;nav_cnt<clen;nav_cnt++){
+        nav_divs[0].classList.remove("show_nav_drop");
+    }
+    top_toggle = 0;
 }
 
 function update_status(){
@@ -71,14 +142,15 @@ function update_clients(){
     var ccount = 0;
     var new_client = 0;
     var clength = 0;
-    client_table = document.getElementById("clients");
+    client_table = document.getElementById("clients_top_nav");
     clength = client_table.children.length;
-    for(ccount=0;ccount<clength;ccount++){
+    for(ccount=0;ccount<(clength);ccount++){
         client_table.removeChild(client_table.children[clength-ccount-1]);
     }
     for(ccount=0;ccount<active_clients;ccount++){
-        new_client = document.createElement("span");
+        new_client = document.createElement("div");
         new_client.id = "client" + ccount;
+        new_client.classList.add("nav_drop_content");
         new_client.onclick = select_client;
         new_client.innerText = client_name[ccount];
         if(selected_clients & (1 << ccount)){
@@ -220,6 +292,7 @@ function update_page(){
 	var movie_name = 0;
 	var new_elem, new_text;
     var saved_classes = 0;
+    var class_count = 0;
 	
 	parse_dir_list();
 
@@ -229,7 +302,9 @@ function update_page(){
 	parent.removeChild(moviebox);
 	moviebox = document.createElement("div");
 	moviebox.id = "movielist";
-    moviebox.classList.add(saved_classes);
+    for(class_count=0;class_count<saved_classes.length;class_count++){
+        moviebox.classList.add(saved_classes[class_count]);
+    }
 	parent.appendChild(moviebox);
 	moviebox = document.getElementById("movielist");
 
@@ -429,6 +504,9 @@ function open_folder_options(){
 window.onclick = function(event) {
     if(!event.target.matches('.dropbtn')){
         cleardropdowns();
+    }
+    if((!event.target.matches('.nav_box')) && (!event.target.matches('.nav_drop_content')) && (!event.target.matches('.show_nav_drop'))){
+        close_top();
     }
 }
 

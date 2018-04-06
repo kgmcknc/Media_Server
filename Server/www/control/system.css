@@ -1,38 +1,90 @@
 
-.controlbox {
-    padding: 8px;
-    font-size: 16px;
-    border: none;
-    cursor: pointer;
-    top: 30px;
-}
-
-.navbar {
-    padding: 8px;
-    font-size: 16px;
-    border: none;
-    cursor: pointer;
+.top_nav_menu {
+    position: relative;
+    overflow: hidden;
     top: 0;
+    width: 100%;
+    min-width: 300px;
+    background-color: red;
 }
 
-.clientbox {
+.top_nav {
+    width: 100%;
+    min-width: 300px;
+    background-color: red;
+    position: absolute;
+    z-index: 9;
+}
+
+.side_nav {
+    width: 100%;
+    min-width: 300px;
+    background-color: red;
+    position: absolute;
+    z-index: 8;
+}
+
+.nav_menu {
+    background-color:blue;
+    display: inline-block;
+    width: inherit;
+}
+
+.nav_menu:hover {
+    background-color:green;
+}
+
+.nav_box {
     padding: 8px;
     font-size: 16px;
+    float: left;
     border: none;
     cursor: pointer;
-    top: 60px;
+    width: 300px;
+}
+.nav_box::after {
+    clear: both;
 }
 
-.frame {
-    position: fixed;
-    height: 200px;
+.media_window {
+    width:100%;
+    z-index:4;
 }
 
 .media_list {
-    position: relative;
-    top: 100px;
+    display: block;
     height: 600px;
     overflow-x: hidden;
     overflow-y: auto;
 }
+
+.pre_setup {
+    
+}
+
+.nav_drop_top {
+    display: none;
+    z-index: 5;
+}
+
+.nav_drop_side {
+    display: none;
+    z-index: 4;
+}
+
+.nav_drop_content {
+    
+}
+
+.show_nav_drop {
+    display: block;
+}
+
+.show_nav_drop::after {
+}
+
+.show_nav_side {
+    display: block;
+}
+
 

@@ -29,10 +29,16 @@ function set_media_type(type){
 function toggle_drop(drop_box, menu_option){
     var toggle_parent = 0;
     var parent_count = 0;
+    var temp_count;
 
     toggle_parent = menu_option.parentNode;
-    for(parent_count=0;parent_count<toggle_parent.childElementCount;parent_count++){
-        if(menu_option === toggle_parent.children[parent_count]) break;
+    for(temp_count=0;temp_count<toggle_parent.childElementCount;temp_count++){
+        if(menu_option === toggle_parent.children[temp_count]){
+            toggle_parent.children[temp_count].classList.add("nav_box_active");
+            parent_count = temp_count;
+        } else {
+            toggle_parent.children[temp_count].classList.remove("nav_box_active");
+        }
     }
 
     if(top_toggle & (1 << parent_count)){
@@ -73,12 +79,16 @@ function toggle_side(drop_box, menu_option){
 }
 
 function close_top(){
-    var nav_divs = document.getElementsByClassName("show_nav_drop");
+    var nav_divs;
     var nav_cnt = 0;
-    var clen = nav_divs.length;
+    var clen;
+    
+    nav_divs = document.getElementsByClassName("show_nav_drop");
+    clen = nav_divs.length;
     for(nav_cnt=0;nav_cnt<clen;nav_cnt++){
         nav_divs[0].classList.remove("show_nav_drop");
     }
+    
     top_toggle = 0;
 }
 

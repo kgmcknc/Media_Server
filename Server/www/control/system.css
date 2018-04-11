@@ -57,6 +57,10 @@
     cursor: pointer;
     width: 200px;
 }
+.nav_box:hover {
+    background-color: yellow;
+    opacity: .7;
+}
 .nav_box::after {
     clear: both;
 }
@@ -93,6 +97,10 @@
 
 .nav_drop_content {
     
+}
+.nav_drop_content:hover {
+    background-color: purple;
+    opacity: .7;
 }
 
 .show_nav_drop {

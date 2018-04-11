@@ -52,6 +52,7 @@ function toggle_drop(drop_box, menu_option){
     if(top_toggle & (1 << parent_count)){
         top_toggle = top_toggle & ~(1 << parent_count);
         drop_box.children[parent_count].classList.remove("show_nav_drop");
+        toggle_parent.children[parent_count].classList.remove("nav_box_active");
         //for(parent_count=1;parent_count<nav_top.childElementCount;parent_count++){
         //    menu_option.children[parent_count].classList.remove("show_nav_drop");
         //}

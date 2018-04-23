@@ -437,6 +437,7 @@ function start_media(){
     }
 	var idname = this.id;
 	var media_num = 0;
+    mediacall = mediacall + selected_clients;
 
 	idname = idname.slice(base.length);
 	media_num = string_to_dec(idname);
@@ -445,7 +446,7 @@ function start_media(){
 		if(dir_tree.length > 1){
 			mediacall = mediacall + dir_tree[dir_tree.length-1];
 		}
-		mediacall = mediacall + selected_clients + media_array[media_num];
+		mediacall = mediacall + media_array[media_num];
 		//this.innerText = mediacall;
 		write_function(mediacall);
 	}

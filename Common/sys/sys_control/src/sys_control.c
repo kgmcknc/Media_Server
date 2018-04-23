@@ -337,9 +337,6 @@ int socket_handler(void){
                     printf("Error On Unix Socket: %d\n", s_count);
                     close(unix_sockets[s_count]);
                     unix_sockets[s_count] = 0;
-                    while(1){
-                        sleep(30);
-                    }
                 }
             }
         }
@@ -365,9 +362,6 @@ int socket_handler(void){
                     printf("Error On Local Socket: %d\n", s_count);
                     close(local_sockets[s_count]);
                     local_sockets[s_count] = 0;
-                    while(1){
-                        sleep(30);
-                    }
                 }
             }
         }
@@ -393,9 +387,6 @@ int socket_handler(void){
                     printf("Error On Client Socket: %d\n", s_count);
                     close(client_sockets[s_count]);
                     client_sockets[s_count] = 0;
-                    while(1){
-                        sleep(30);
-                    }
                 }
             }
         }

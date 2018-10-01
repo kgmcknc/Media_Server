@@ -6,6 +6,21 @@ var client_name = [];
 var status_data = 0;
 var top_toggle = 0;
 var media_type = 0;
+var mobile_display = 0;
+
+function load_media(){
+    resize();
+}
+
+function resize(){
+    var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    if(w < 1000){
+        mobile_display = 1;
+    } else {
+        mobile_display = 0;
+    }
+}
 
 function init_media(){
     set_sizes();

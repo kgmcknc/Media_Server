@@ -45,6 +45,40 @@ function set_media_type(type){
     }
 }
 
+function show_menu(menu_button, menu_data){
+    clear_menus(menu_button, menu_data);
+    if(menu_button.classList.contains("active_menu")){
+        menu_button.classList.remove("active_menu");
+    } else {
+        menu_button.classList.add("active_menu");
+    }
+    if(menu_data.classList.contains("active_menu")){
+        menu_data.classList.add("hide_menu_data");
+        menu_data.classList.remove("show_menu_data");
+        menu_data.classList.remove("active_menu");
+    } else {
+        menu_data.classList.add("show_menu_data");
+        menu_data.classList.remove("hide_menu_data");
+        menu_data.classList.add("active_menu");
+    }
+}
+function clear_menus(button, data){
+    var menus = document.getElementsByClassName("active_menu");
+    var menu_count;
+    var menu_length = menus.length;
+    for(menu_count=menu_length;menu_count>0;menu_count--){
+        if((menus[menu_count-1] === button) || (menus[menu_count-1] === data)){
+            // ignore what's being processed
+        } else {
+            if(menus[menu_count-1].classList.contains("show_menu_data")){
+                menus[menu_count-1].classList.add("hide_menu_data");
+                menus[menu_count-1].classList.remove("show_menu_data");
+            }
+            menus[menu_count-1].classList.remove("active_menu");
+        }
+    }
+}
+
 function toggle_drop(drop_box, menu_option){
     var toggle_parent = 0;
     var parent_count = 0;
@@ -172,7 +206,7 @@ function update_clients(){
     var ccount = 0;
     var new_client = 0;
     var clength = 0;
-    client_table = document.getElementById("clients_top_nav");
+    client_table = document.getElementById("client_list_menu");
     clength = client_table.children.length;
     for(ccount=0;ccount<(clength);ccount++){
         client_table.removeChild(client_table.children[clength-ccount-1]);
@@ -565,6 +599,9 @@ function open_folder_options(){
 }
 
 window.onclick = function(event) {
+    if(!(event.target.classList.contains("media_side_nav") || event.target.classList.contains("media_side_nav"))){
+        clear_menus(0,0);
+    }
     if(!event.target.matches('.dropbtn')){
         cleardropdowns();
     }

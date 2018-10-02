@@ -135,6 +135,23 @@ html, body{
     flex-direction: column;
     color: white;
 }
+.media_side_nav > div:hover {
+    background-color: #808080;
+}
+
+.menu_data {
+    position: absolute;
+    z-index: 9;
+}
+.active_menu {
+    background-color: #808080;
+}
+.show_menu_data {
+    display: block;
+}
+.hide_menu_data {
+    display: none;
+}
 
 .media_top_nav {
     display: flex;
@@ -149,10 +166,12 @@ html, body{
 .media_view_d {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     width: 100%;
 }
 
+.side_menu {
+
+}
 .media_font {
 	color: white;
 }

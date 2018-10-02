@@ -600,7 +600,7 @@ function open_folder_options(){
 
 window.onclick = function(event) {
     if(!(event.target.classList.contains("media_side_nav") || event.target.classList.contains("media_side_nav"))){
-        clear_menus(0,0);
+        //clear_menus(0,0);
     }
     if(!event.target.matches('.dropbtn')){
         cleardropdowns();

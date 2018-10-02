@@ -141,16 +141,20 @@ html, body{
 
 .menu_data {
     position: absolute;
+    -webkit-transition: width 2s;
+    transition: width 2s;
     z-index: 9;
 }
 .active_menu {
     background-color: #808080;
 }
 .show_menu_data {
-    display: block;
+    width: 20%;
+    opacity: 1;
 }
 .hide_menu_data {
-    display: none;
+    width: 0px;
+    opacity: 0;
 }
 
 .media_top_nav {

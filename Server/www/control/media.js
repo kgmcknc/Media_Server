@@ -8,10 +8,6 @@ var top_toggle = 0;
 var media_type = 0;
 var mobile_display = 0;
 
-function load_media(){
-    resize();
-}
-
 function resize(){
     var w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
     var h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
@@ -23,7 +19,7 @@ function resize(){
 }
 
 function init_media(){
-    set_sizes();
+    resize();
     read_status();
     search_media();
     setInterval(read_status, 10000);

@@ -83,12 +83,15 @@ html, body{
 }
 
 .media_window {
+	display: flex;
+	flex-direction: column;
     width:100%;
     z-index:4;
 }
 
 .media_list {
-    display: block;
+	display: flex;
+	flex-direction: column;
     height: 800px;
     overflow-x: hidden;
     overflow-y: auto;
@@ -96,35 +99,6 @@ html, body{
 
 .pre_setup {
     
-}
-
-.nav_drop_top {
-    display: none;
-    z-index: 5;
-}
-
-.nav_drop_side {
-    display: none;
-    z-index: 4;
-}
-
-.nav_drop_content {
-    
-}
-.nav_drop_content:hover {
-    background-color: purple;
-    opacity: .7;
-}
-
-.show_nav_drop {
-    display: block;
-}
-
-.show_nav_drop::after {
-}
-
-.show_nav_side {
-    display: block;
 }
 
 .my_home {
@@ -171,13 +145,18 @@ html, body{
     max-height: 25px;
     color: white;
 }
-.media_top_nav:hover {
-    color: blue;
-}
 
 .media_view_d {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     width: 100%;
 }
 
+.media_font {
+	color: white;
+}
+
+.media_font > div:hover {
+	color: black;
+}

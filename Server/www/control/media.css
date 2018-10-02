@@ -30,6 +30,30 @@
 }
 
 .show {
-    display:block;
+    display: block;
 }
 
+.top_nav_menu_flex {
+	display: flex;
+	flex-wrap: nowrap;
+	flex-direction: row;
+}
+.top_nav_menu_flex > div {
+	width: 100%;
+}
+.top_nav_drop_down div {
+	display: none;
+	background-color: #444444;
+	flex-direction: column;
+}
+.top_nav_drop_down:hover div {
+	display: block;
+}
+
+.media {
+	background-color: #105080;
+}
+
+.media > div:hover {
+	background-color: #3080A0;
+}

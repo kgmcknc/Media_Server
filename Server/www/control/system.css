@@ -134,6 +134,7 @@ html, body{
     width: 20%;
     max-width: 250px;
     height: 100%;
+    z-index: 7;
 }
 
 .media_side_nav_buttons {
@@ -141,7 +142,6 @@ html, body{
 	height: 100%;
 	color: white;
 	background-color: #000000;
-	z-index: 7;
 }
 .media_side_nav_buttons > div:hover {
 	background-color: #808080;
@@ -153,20 +153,18 @@ html, body{
     overflow: hidden;
     -webkit-transition: left 2s;
     transition: left 2s;
-    width: 100%;
-    max-width: 250px;
-    z-index: 6;
 }
 
 .active_menu {
     background-color: #808080;
 }
 .show_menu_data {
-    left: 20%;
-    left-max: 250px;
+    left: 0px;
+    z-index: 6;
 }
 .hide_menu_data {
-    left: 0px;
+    left: -20%;
+    z-index: -1;
 }
 
 .media_top_nav {

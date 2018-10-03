@@ -4,13 +4,13 @@
 		<link rel="stylesheet" type="text/css" href="./system.css">
         <link rel="stylesheet" type="text/css" href="./media.css">
 	</head>
-	<body onload="init_media()" onresize="resize()">
+	<body onload="init_media()" onresize="resize(0)">
         <div id="my_home_view" class="my_home_view">
             <div id="top_banner" class="media_banner_d">Media Server</div>
             <div id="main_page" class="media_main_d">
 				<div id="side_nav" class="media_side_nav media_font">
                     <div class="media_side_nav_container">
-                        <div class="side_nav_button">ICON</div>
+                        <div id="side_toggle" class="mobile_display side_nav_button" onclick="handle_side_menu(1)">ICON</div>
                         <div class="media_side_nav_buttons">
                             <div id="side_browse" class="side_nav_button" onclick="show_menu(side_browse, side_browse_data)">Browse</div>
                             <div id="side_control" class="side_nav_button" onclick="show_menu(side_control, side_control_data)">Control</div>
@@ -52,7 +52,7 @@
                     </div>
 				</div>
 				<div id="media_main" class="media_view_d">
-					<div id="top_nav" class="media_top_nav media_font">
+					<div id="top_nav" class="mobile_display media_top_nav media_font">
 						<div id="mn_0" onclick="toggle_side(media_nav, mn_0)">Media</div>
 						<div id="mn_1" onclick="toggle_side(media_nav, mn_1)">Playlists</div>
 						<div id="mn_1" onclick="toggle_side(media_nav, mn_1)">Player</div>

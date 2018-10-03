@@ -23,7 +23,7 @@ var webpage = {
 };
 
 
-function resize(){
+function resize(init){
     var side = document.getElementById("side_nav");
     var main = document.getElementById("media_main");
     var width = 0;
@@ -35,13 +35,60 @@ function resize(){
         webpage.mobile_display = 0;
     }
     width = webpage.side_nav_width() + "px"
-    set_menu_width(width);
     side.style.width = width;
     main.style.left = width;
+    set_menu_width(width);
+    set_frame_type();
+    if(init){
+        handle_side_menu(2);
+        handle_top_menu(2);
+    } else {
+        handle_side_menu(0);
+        handle_top_menu(0);
+    }
+}
+function set_frame_type(){
+    var dynamic_item = document.getElementsByClassName("mobile_display");
+    var item_count;
+    var item_length = dynamic_item.length;
+    for(item_count=item_length;item_count>0;item_count--){
+        if(webpage.mobile_display) {
+            dynamic_item[item_count-1].style.display = "";
+        } else {
+            dynamic_item[item_count-1].style.display = "none";
+        }
+    }
+}
+function handle_side_menu(clicked){
+    var side_bar = document.getElementsByClassName("media_side_nav_buttons");
+    var menu_toggle = document.getElementById("side_toggle");
+    if(webpage.mobile_display){
+        if(clicked){
+            if((clicked == 2) || menu_toggle.classList.contains("active_toggle")){
+                menu_toggle.classList.remove("active_toggle");
+                side_bar[0].style.left = "-" + webpage.side_nav_max_width + "px";
+            } else {
+                menu_toggle.classList.add("active_toggle");
+                side_bar[0].style.left = "0px";
+            }
+        } else {
+            
+        }
+    } else {
+        menu_toggle.classList.remove("active_toggle");
+        side_bar[0].style.left = "0px";
+    }
+}
+function handle_top_menu(clicked){
+    if(webpage.mobile_display){
+        
+    } else {
+        
+    }
 }
 
 function init_media(){
-    resize();
+    resize(1);
     read_status();
     search_media();
     setInterval(read_status, 10000);
@@ -77,7 +124,7 @@ function show_menu(menu_button, menu_data){
     if(menu_data.classList.contains("active_menu")){
         menu_data.classList.remove("active_menu");
         menu_data.style.transition = "";
-        menu_data.style.left = "0px";
+        menu_data.style.left = "-" + webpage.side_nav_max_width + "px";
     } else {
         menu_data.classList.add("active_menu");
         menu_data.style.transition = "";
@@ -93,7 +140,7 @@ function clear_menus(button, data){
             // ignore what's being processed
         } else {
             menus[menu_count-1].style.transition = "";
-            menus[menu_count-1].style.left = "0px";
+            menus[menu_count-1].style.left = "-" + webpage.side_nav_max_width + "px";
             menus[menu_count-1].classList.remove("active_menu");
         }
     }
@@ -104,9 +151,12 @@ function set_menu_width(size){
     var menu_length = menus.length;
     for(menu_count=menu_length;menu_count>0;menu_count--){
         menus[menu_count-1].style.width = size;
+        menus[menu_count-1].style.left = "-" + webpage.side_nav_max_width + "px";
         if(menus[menu_count-1].classList.contains("active_menu")){
             menus[menu_count-1].style.transition = "left 0s";
             menus[menu_count-1].style.left = size;
+        } else {
+            menus[menu_count-1].style.transition = "";
         }
     }
 }

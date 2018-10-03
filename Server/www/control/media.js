@@ -72,7 +72,11 @@ function handle_side_menu(clicked){
                 side_bar[0].style.left = "0px";
             }
         } else {
-            
+            if(menu_toggle.classList.contains("active_toggle")){
+                side_bar[0].style.left = "0px";
+            } else {
+                side_bar[0].style.left = "-" + webpage.side_nav_max_width + "px";
+            }
         }
     } else {
         menu_toggle.classList.remove("active_toggle");

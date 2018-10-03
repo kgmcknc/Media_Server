@@ -8,60 +8,64 @@
         <div id="my_home_view" class="my_home_view">
             <div id="top_banner" class="media_banner_d">Media Server</div>
             <div id="main_page" class="media_main_d">
-                <div class="media_side_nav media_font">
-                    <div>ICON</div>
-                    <div id="side_browse" onclick="show_menu(side_browse, side_browse_data)">Browse</div>
-                    <div id="side_control" onclick="show_menu(side_control, side_control_data)">Control</div>
-                    <div id="side_clients" onclick="show_menu(side_clients, side_clients_data)">Clients</div>
-                    <div id="side_type" onclick="show_menu(side_type, side_type_data)">Type</div>
-                    <div id="side_view" onclick="show_menu(side_view, side_view_data)">View</div>
-                </div>
-                <div id="media_main" class="media_view_d">
-                    <div id="top_nav" class="media_top_nav media_font">
-                        <div id="mn_0" onclick="toggle_side(media_nav, mn_0)">Media</div>
-                        <div id="mn_1" onclick="toggle_side(media_nav, mn_1)">Playlists</div>
-                        <div id="mn_1" onclick="toggle_side(media_nav, mn_1)">Player</div>
-                    </div>
-                    <div id="media_page">
-                        <div class="menu_data hide_menu_data" id="side_browse_data">
-                            <div><a href="../../index.html">Home</a></div>
-                            <div><a href="./mshome.html">Media Server Home</a></div>
-                            <div><a href="./control.html">Control</a></div>
-                            <div><a href="./status.html">Status</a></div>
-                            <div><a href="./media.html">Media</a></div>
-                        </div>
-                        <div class="menu_data hide_menu_data" id="side_control_data">
-                            <div id="poweron" onclick="update_media(0)">On</div>
-                            <div id="poweroff" onclick="update_media(1)">Off</div>
-                            <div id="stopvideo" onclick="update_media(2)">Active</div>
-                            <div id="stopvideo" onclick="update_media(3)">Stop</div>
-                            <div id="pausevideo" onclick="update_media(4)">Pause</div>
-                            <div id="resumevideo" onclick="update_media(5)">Resume</div>
-                            <div id="rrvideo" onclick="update_media(6)">FF</div>
-                            <div id="ffvideo" onclick="update_media(7)">RW</div>
-                            <div id="ffvideo" onclick="update_media(8)">FSTEP</div>
-                            <div id="ffvideo" onclick="update_media(9)">BSTEP</div>
-                        </div>
-                        <div class="menu_data hide_menu_data" id="side_clients_data">
-                            <div id="client_list_menu">
-                            </div>
-                        </div>
-                        <div class="menu_data hide_menu_data" id="side_type_data">
-                            <div id="movie_type" onclick="set_media_type(0)">Movie</div>
-                            <div id="music_type" onclick="set_media_type(1)">Music</div>
-                        </div>
-                        <div class="menu_data hide_menu_data" id="side_view_data">
-                            <div id="view1">view1</div>
-                            <div id="view2">view2</div>
-                        </div>
-                        <div id="medialist" class="media_list">
-                            
-                        </div>
-                        <div id="playlists" class="media_window">
-                            
-                        </div>
-                    </div>
-                </div>
+				<div class="media_side_nav media_font">
+					<div class="media_side_nav_buttons">
+						<div>ICON</div>
+						<div id="side_browse" onclick="show_menu(side_browse, side_browse_data)">Browse</div>
+						<div id="side_control" onclick="show_menu(side_control, side_control_data)">Control</div>
+						<div id="side_clients" onclick="show_menu(side_clients, side_clients_data)">Clients</div>
+						<div id="side_type" onclick="show_menu(side_type, side_type_data)">Type</div>
+						<div id="side_view" onclick="show_menu(side_view, side_view_data)">View</div>
+					</div>
+				</div>
+				<div id="media_main" class="media_view_d">
+					<div>
+						<div class="menu_data hide_menu_data" id="side_browse_data">
+							<div><a href="../../index.html">Home</a></div>
+							<div><a href="./mshome.html">Media Server Home</a></div>
+							<div><a href="./control.html">Control</a></div>
+							<div><a href="./status.html">Status</a></div>
+							<div><a href="./media.html">Media</a></div>
+						</div>
+						<div class="menu_data hide_menu_data" id="side_control_data">
+							<div id="poweron" onclick="update_media(0)">On</div>
+							<div id="poweroff" onclick="update_media(1)">Off</div>
+							<div id="stopvideo" onclick="update_media(2)">Active</div>
+							<div id="stopvideo" onclick="update_media(3)">Stop</div>
+							<div id="pausevideo" onclick="update_media(4)">Pause</div>
+							<div id="resumevideo" onclick="update_media(5)">Resume</div>
+							<div id="rrvideo" onclick="update_media(6)">FF</div>
+							<div id="ffvideo" onclick="update_media(7)">RW</div>
+							<div id="ffvideo" onclick="update_media(8)">FSTEP</div>
+							<div id="ffvideo" onclick="update_media(9)">BSTEP</div>
+						</div>
+						<div class="menu_data hide_menu_data" id="side_clients_data">
+							<div id="client_list_menu">
+							</div>
+						</div>
+						<div class="menu_data hide_menu_data" id="side_type_data">
+							<div id="movie_type" onclick="set_media_type(0)">Movie</div>
+							<div id="music_type" onclick="set_media_type(1)">Music</div>
+						</div>
+						<div class="menu_data hide_menu_data" id="side_view_data">
+							<div id="view1">view1</div>
+							<div id="view2">view2</div>
+						</div>
+					</div>
+					<div id="top_nav" class="media_top_nav media_font">
+						<div id="mn_0" onclick="toggle_side(media_nav, mn_0)">Media</div>
+						<div id="mn_1" onclick="toggle_side(media_nav, mn_1)">Playlists</div>
+						<div id="mn_1" onclick="toggle_side(media_nav, mn_1)">Player</div>
+					</div>
+					<div id="media_page">
+						<div id="medialist" class="media_list">
+							
+						</div>
+						<div id="playlists" class="media_window">
+							
+						</div>
+					</div>
+				</div>s
             </div>
         </div>
         <script src="control.js"></script>

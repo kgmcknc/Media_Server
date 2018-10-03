@@ -27,7 +27,8 @@ html, body{
     min-width: 200px;
     font-size: 40px;
     background-color: red;
-    position: absolute;
+    position: fixed;
+    overflow: hidden;
     z-index: 9;
 }
 
@@ -45,7 +46,8 @@ html, body{
     width: 100%;
     min-width: 200px;
     font-size: 40px;
-    position: absolute;
+    position: fixed;
+    overflow: hidden;
     z-index: 8;
 }
 
@@ -106,55 +108,65 @@ html, body{
 }
 
 .my_home_view {
-    display: flex;
-    flex-wrap: nowrap;
-    flex-direction: column;
+    position: absolute;
     width: 100%;
     height: 100%;
     background-color: #102020;
+    overflow: hidden;
 }
 
 .media_banner_d {
     color: white;
     padding: 4px 10px 2px 20%;
-    max-height: 25px;
+    max-height: 5%;
     background-image: linear-gradient(to right,#808080,#102020);
 }
 
 .media_main_d {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
+	display: flex;
+	flex-direction: row;
+	position: relative;
+    width: 100%;
     height: 100%;
 }
 
 .media_side_nav {
-    display: flex;
     width: 20%;
     max-width: 250px;
-    flex-direction: column;
-    color: white;
+    height: 100%;
 }
-.media_side_nav > div:hover {
-    background-color: #808080;
+
+.media_side_nav_buttons {
+	width: 100%;
+	height: 100%;
+	color: white;
+	background-color: #000000;
+	z-index: 7;
+}
+.media_side_nav_buttons > div:hover {
+	background-color: #808080;
 }
 
 .menu_data {
     position: absolute;
-    -webkit-transition: width 2s;
-    transition: width 2s;
-    z-index: 9;
+    top: 0px;
+    overflow: hidden;
+    -webkit-transition: left 2s;
+    transition: left 2s;
+    width: 100%;
+    max-width: 250px;
+    z-index: 6;
 }
+
 .active_menu {
     background-color: #808080;
 }
 .show_menu_data {
-    width: 20%;
-    opacity: 1;
+    left: 20%;
+    left-max: 250px;
 }
 .hide_menu_data {
-    width: 0px;
-    opacity: 0;
+    left: 0px;
 }
 
 .media_top_nav {
@@ -168,9 +180,8 @@ html, body{
 }
 
 .media_view_d {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
+	height: 100%;
+	width: 100%;
 }
 
 .side_menu {
@@ -181,5 +192,5 @@ html, body{
 }
 
 .media_font > div:hover {
-	color: black;
+	color: blue;
 }

@@ -11,13 +11,19 @@ var webpage = {
     mobile_display: 0,
     screen_width: 0,
     screen_height: 0,
-    side_nav_max_width: 150,
-    side_nav_percent: 0.2,
+    dynamic_widths: [150, 400],
+    dynamic_percents: [0.2, 0.45],
+    side_nav_max_width: function() {
+		return this.dynamic_widths[this.mobile_display];
+	},
+    side_nav_percent: function() {
+		return this.dynamic_percents[this.mobile_display];
+	},
     side_nav_width: function() {
-        if((this.screen_width*this.side_nav_percent) > this.side_nav_max_width){
-            return this.side_nav_max_width;
+        if((this.screen_width*this.side_nav_percent()) > this.side_nav_max_width()){
+            return this.side_nav_max_width();
         } else {
-            return this.screen_width*this.side_nav_percent;
+            return this.screen_width*this.side_nav_percent();
         }
     }
 };
@@ -66,7 +72,7 @@ function handle_side_menu(clicked){
         if(clicked){
             if((clicked == 2) || menu_toggle.classList.contains("active_toggle")){
                 menu_toggle.classList.remove("active_toggle");
-                side_bar[0].style.left = "-" + webpage.side_nav_max_width + "px";
+                side_bar[0].style.left = "-" + webpage.side_nav_max_width() + "px";
             } else {
                 menu_toggle.classList.add("active_toggle");
                 side_bar[0].style.left = "0px";
@@ -75,7 +81,7 @@ function handle_side_menu(clicked){
             if(menu_toggle.classList.contains("active_toggle")){
                 side_bar[0].style.left = "0px";
             } else {
-                side_bar[0].style.left = "-" + webpage.side_nav_max_width + "px";
+                side_bar[0].style.left = "-" + webpage.side_nav_max_width() + "px";
             }
         }
     } else {
@@ -128,7 +134,7 @@ function show_menu(menu_button, menu_data){
     if(menu_data.classList.contains("active_menu")){
         menu_data.classList.remove("active_menu");
         menu_data.style.transition = "";
-        menu_data.style.left = "-" + webpage.side_nav_max_width + "px";
+        menu_data.style.left = "-" + webpage.side_nav_max_width() + "px";
     } else {
         menu_data.classList.add("active_menu");
         menu_data.style.transition = "";
@@ -144,7 +150,7 @@ function clear_menus(button, data){
             // ignore what's being processed
         } else {
             menus[menu_count-1].style.transition = "";
-            menus[menu_count-1].style.left = "-" + webpage.side_nav_max_width + "px";
+            menus[menu_count-1].style.left = "-" + webpage.side_nav_max_width() + "px";
             menus[menu_count-1].classList.remove("active_menu");
         }
     }
@@ -155,7 +161,7 @@ function set_menu_width(size){
     var menu_length = menus.length;
     for(menu_count=menu_length;menu_count>0;menu_count--){
         menus[menu_count-1].style.width = size;
-        menus[menu_count-1].style.left = "-" + webpage.side_nav_max_width + "px";
+        menus[menu_count-1].style.left = "-" + webpage.side_nav_max_width() + "px";
         if(menus[menu_count-1].classList.contains("active_menu")){
             menus[menu_count-1].style.transition = "left 0s";
             menus[menu_count-1].style.left = size;
@@ -686,7 +692,7 @@ function open_folder_options(){
 
 window.onclick = function(event) {
     var tests;
-    if(!(event.target.classList.contains("active_menu"))){//|| event.target.classList.contains("active_menu"))){
+    if(!((event.target.classList.contains("active_menu")) || (event.target.classList.contains("side_menu_data")))){//|| event.target.classList.contains("active_menu"))){
         clear_menus(0,0);
     }
     if(!event.target.matches('.dropbtn')){

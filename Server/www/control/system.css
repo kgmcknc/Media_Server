@@ -140,6 +140,8 @@ html, body{
 	height: 100%;
     z-index: 6;
 	background-color: #000000;
+    -webkit-transition: left 0.4s;
+    transition: left 0.4s;
 }
 .media_side_nav_buttons {
     position: absolute;
@@ -170,6 +172,9 @@ html, body{
 .active_menu {
     background-color: #808080;
 }
+.menu_data {
+
+}
 .active_toggle {
 
 }
@@ -187,7 +192,6 @@ html, body{
     justify-content: space-between;
     width: 100%;
     max-width: 600px;
-    max-height: 25px;
     color: white;
 }
 

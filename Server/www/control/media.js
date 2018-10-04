@@ -44,6 +44,7 @@ function resize(init){
     side.style.width = width;
     main.style.left = width;
     set_menu_width(width);
+    set_font_size();
     set_frame_type();
     if(init){
         handle_side_menu(2);
@@ -65,14 +66,44 @@ function set_frame_type(){
         }
     }
 }
+function set_font_size(){
+    var font_groups = document.getElementsByClassName("media_font");
+    var font_count;
+    var font_length = font_groups.length;
+    for(font_count=font_length;font_count>0;font_count--){
+        if(webpage.mobile_display){
+            font_groups[font_count-1].style.fontSize = "300%";
+        } else {
+            font_groups[font_count-1].style.fontSize = "";
+        }
+    }
+}
+function set_menu_width(size){
+    var menus = document.getElementsByClassName("side_menu_data");
+    var menu_count;
+    var menu_length = menus.length;
+    for(menu_count=menu_length;menu_count>0;menu_count--){
+        menus[menu_count-1].style.width = size;
+        menus[menu_count-1].style.left = "-" + webpage.side_nav_max_width() + "px";
+        if(menus[menu_count-1].classList.contains("active_menu")){
+            menus[menu_count-1].style.transition = "left 0s";
+            menus[menu_count-1].style.left = size;
+        } else {
+            menus[menu_count-1].style.transition = "";
+        }
+    }
+}
 function handle_side_menu(clicked){
-    var side_bar = document.getElementsByClassName("media_side_nav_buttons");
+    var side_bar = document.getElementsByClassName("media_side_nav_container");
     var menu_toggle = document.getElementById("side_toggle");
     if(webpage.mobile_display){
         if(clicked){
             if((clicked == 2) || menu_toggle.classList.contains("active_toggle")){
                 menu_toggle.classList.remove("active_toggle");
                 side_bar[0].style.left = "-" + webpage.side_nav_max_width() + "px";
+                if(clicked == 1){
+                    clear_menus(0,0,0);
+                }
             } else {
                 menu_toggle.classList.add("active_toggle");
                 side_bar[0].style.left = "0px";
@@ -125,7 +156,7 @@ function set_media_type(type){
 }
 
 function show_menu(menu_button, menu_data){
-    clear_menus(menu_button, menu_data);
+    clear_menus(menu_button, menu_data, 0);
     if(menu_button.classList.contains("active_menu")){
         menu_button.classList.remove("active_menu");
     } else {
@@ -141,7 +172,7 @@ function show_menu(menu_button, menu_data){
         menu_data.style.left = webpage.side_nav_width() + "px";
     }
 }
-function clear_menus(button, data){
+function clear_menus(button, data, target){
     var menus = document.getElementsByClassName("active_menu");
     var menu_count;
     var menu_length = menus.length;
@@ -154,20 +185,8 @@ function clear_menus(button, data){
             menus[menu_count-1].classList.remove("active_menu");
         }
     }
-}
-function set_menu_width(size){
-    var menus = document.getElementsByClassName("side_menu_data");
-    var menu_count;
-    var menu_length = menus.length;
-    for(menu_count=menu_length;menu_count>0;menu_count--){
-        menus[menu_count-1].style.width = size;
-        menus[menu_count-1].style.left = "-" + webpage.side_nav_max_width() + "px";
-        if(menus[menu_count-1].classList.contains("active_menu")){
-            menus[menu_count-1].style.transition = "left 0s";
-            menus[menu_count-1].style.left = size;
-        } else {
-            menus[menu_count-1].style.transition = "";
-        }
+    if(!button && !data && webpage.mobile_display){
+        handle_side_menu(2);
     }
 }
 
@@ -307,6 +326,7 @@ function update_clients(){
         new_client = document.createElement("div");
         new_client.id = "client" + ccount;
         new_client.classList.add("nav_drop_content");
+        new_client.classList.add("menu_data");
         new_client.onclick = select_client;
         new_client.innerText = client_name[ccount];
         if(selected_clients & (1 << ccount)){
@@ -692,8 +712,14 @@ function open_folder_options(){
 
 window.onclick = function(event) {
     var tests;
-    if(!((event.target.classList.contains("active_menu")) || (event.target.classList.contains("side_menu_data")))){//|| event.target.classList.contains("active_menu"))){
-        clear_menus(0,0);
+    if(!((event.target.classList.contains("side_nav_button")) || 
+        (event.target.classList.contains("media_side_nav_buttons")) || 
+        (event.target.classList.contains("side_menu_data")) || 
+        (event.target.classList.contains("menu_data")) || 
+        (event.target.classList.contains("media_side_nav_container")) ||
+        (event.target.id == "side_toggle")
+        )){//|| event.target.classList.contains("active_menu"))){
+        clear_menus(0,0, event.target);
     }
     if(!event.target.matches('.dropbtn')){
         cleardropdowns();

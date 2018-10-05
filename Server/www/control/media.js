@@ -13,6 +13,7 @@ var webpage = {
     screen_height: 0,
     dynamic_widths: [150, 400],
     dynamic_percents: [0.2, 0.45],
+    dynamic_fonts: ["", "400%"],
     side_nav_max_width: function() {
 		return this.dynamic_widths[this.mobile_display];
 	},
@@ -71,11 +72,7 @@ function set_font_size(){
     var font_count;
     var font_length = font_groups.length;
     for(font_count=font_length;font_count>0;font_count--){
-        if(webpage.mobile_display){
-            font_groups[font_count-1].style.fontSize = "300%";
-        } else {
-            font_groups[font_count-1].style.fontSize = "";
-        }
+		font_groups[font_count-1].style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
     }
 }
 function set_menu_width(size){
@@ -94,9 +91,13 @@ function set_menu_width(size){
     }
 }
 function handle_side_menu(clicked){
-    var side_bar = document.getElementsByClassName("media_side_nav_container");
+    var side_bar = document.getElementsByClassName("media_side_nav");
+    var main = document.getElementById("media_main");
     var menu_toggle = document.getElementById("side_toggle");
+    var width = webpage.side_nav_width() + "px";
+    
     if(webpage.mobile_display){
+		main.style.left = "0px";
         if(clicked){
             if((clicked == 2) || menu_toggle.classList.contains("active_toggle")){
                 menu_toggle.classList.remove("active_toggle");
@@ -117,6 +118,7 @@ function handle_side_menu(clicked){
         }
     } else {
         menu_toggle.classList.remove("active_toggle");
+        main.style.left = width;
         side_bar[0].style.left = "0px";
     }
 }
@@ -515,6 +517,8 @@ function update_page(){
 		tmp_id = "Prev_Dir";
 		new_elem.id = tmp_id;
 		new_elem.onclick = exit_dir;
+		new_elem.classList.add("dropbtn");
+		new_elem.style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
 		new_text = document.createTextNode("Previous Directory");
 		new_elem.appendChild(new_text);
 		mediabox.appendChild(new_elem);
@@ -527,12 +531,14 @@ function update_page(){
 			new_elem.id = tmp_id;
 			new_elem.onclick = open_item_options;
             new_elem.classList.add("dropbtn");
+            new_elem.style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
 			media_name = media_name.slice(0, (media_name.lastIndexOf(".")));
 		} else {
 			tmp_id = "media" + String(count);
 			new_elem.id = tmp_id;
 			new_elem.onclick = open_folder_options;
             new_elem.classList.add("dropbtn");
+            new_elem.style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
 			media_name = media_name;
 		}
 		new_text = document.createTextNode(media_name);

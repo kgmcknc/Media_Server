@@ -5,6 +5,7 @@
     position: relative;
     border: none;
     cursor: pointer;
+    background-color: #204020;
 }
 
 .dropbtn:hover, .dropbtn:focus {

@@ -10,9 +10,9 @@
             <div id="main_page" class="media_main_d">
                 <div id="top_nav" class="mobile_display media_top_nav media_font">
                     <div id="side_toggle" class="mobile_display" onclick="handle_side_menu(1)">ICON</div>
-                    <div id="mn_0" onclick="toggle_side(media_nav, mn_0)">Media</div>
-                    <div id="mn_1" onclick="toggle_side(media_nav, mn_1)">Playlists</div>
-                    <div id="mn_1" onclick="toggle_side(media_nav, mn_1)">Player</div>
+                    <div id="mn_0" onclick="view_main(media_page, medialist)">Media</div>
+                    <div id="mn_1" onclick="view_main(media_page, playlists)">Playlists</div>
+                    <div id="mn_1" onclick="view_main(media_page, player)">Player</div>
                 </div>
 				<div id="side_nav" class="media_side_nav media_font">
                     <div class="media_side_nav_container">
@@ -58,10 +58,13 @@
 				</div>
 				<div id="media_main" class="media_view_d">
 					<div id="media_page" style="height: 100%">
-						<div id="medialist" class="media_list">
+						<div id="medialist" class="media_list" style="display: block">
 							
 						</div>
-						<div id="playlists" class="media_window">
+						<div id="playlists" class="media_window" style="display: none">
+							
+						</div>
+						<div id="player" class="media_window" style="display: none">
 							
 						</div>
 					</div>

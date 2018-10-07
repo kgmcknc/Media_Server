@@ -69,6 +69,7 @@ sys_status_file="/usr/share/media_server/sys_control/sys_status.kmf"
 sys_names_file="/usr/share/media_server/sys_control/sys_names.kmf"
 sys_moviedir_file="/usr/share/media_server/sys_control/moviectrl/moviedir.kmf"
 sys_musicdir_file="/usr/share/media_server/sys_control/musicctrl/musicdir.kmf"
+sys_playlistdir_file="/usr/share/media_server/sys_control/playlistdir.kmf"
 www_deploy_dir="/var/www/html/media_server"
 rx_fifo="/var/www/html/media_server/control/web_control/rxwebpipe"
 tx_fifo="/var/www/html/media_server/control/web_control/txwebpipe"
@@ -210,6 +211,12 @@ if [ "$deploy_server" -eq 1 ] ; then
 		echo "MovieDir Config File Already Exists"
 	else 
 		touch $sys_musicdir_file
+	fi
+
+	if [ -e $sys_playlistdir_file ] ; then
+		echo "PlaylistDir Config File Already Exists"
+	else
+		touch $sys_playlistdir_file
 	fi
 fi
 

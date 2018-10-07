@@ -86,9 +86,7 @@ html, body{
 }
 
 .media_window {
-	display: flex;
-	flex-direction: column;
-    width:100%;
+	position: absolute;
     z-index:4;
 }
 

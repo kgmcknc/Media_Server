@@ -1,6 +1,9 @@
 var directory_list;
+var playlist_list;
 var dir_tree = [];
 var media_array = [];
+var playlist_array = [];
+var playlist_data = [];
 var active_clients = 0;
 var client_name = [];
 var status_data = 0;
@@ -9,6 +12,7 @@ var media_type = 0;
 
 var webpage = {
     mobile_display: 0,
+    state_change: 0,
     screen_width: 0,
     screen_height: 0,
     dynamic_widths: [150, 400],
@@ -29,7 +33,6 @@ var webpage = {
     }
 };
 
-
 function resize(init){
     var side = document.getElementById("side_nav");
     var main = document.getElementById("media_main");
@@ -37,8 +40,10 @@ function resize(init){
     webpage.screen_width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
     webpage.screen_height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
     if(webpage.screen_width < 1000){
+		if(webpage.mobile_display == 0) webpage.state_change = 1;
         webpage.mobile_display = 1;
     } else {
+		if(webpage.mobile_display == 1) webpage.state_change = 1;
         webpage.mobile_display = 0;
     }
     width = webpage.side_nav_width() + "px"
@@ -47,6 +52,7 @@ function resize(init){
     set_menu_width(width);
     set_font_size();
     set_frame_type();
+    organize_main();
     if(init){
         handle_side_menu(2);
         handle_top_menu(2);
@@ -134,6 +140,7 @@ function init_media(){
     resize(1);
     read_status();
     search_media();
+    search_playlists();
     setInterval(read_status, 10000);
 }
 
@@ -154,6 +161,7 @@ function set_media_type(type){
         dir_tree = [];
         media_array = [];
         search_media();
+        search_playlists();
     }
 }
 
@@ -224,25 +232,65 @@ function toggle_drop(drop_box, menu_option){
     }
 }
 
-function toggle_side(drop_box, menu_option){
-    var toggle_parent = 0;
-    var parent_count = 0;
-    var toggle_select = 0;
+function view_main(group, page){
+	var child_count = 0;
+	var group_length = 0;
+	
+	group_length = group.children.length;
+	for(child_count=0;child_count<group_length;child_count++){
+		if(group.children[child_count] == page){
+			group.children[child_count].style.display = "block";
+		} else {
+			group.children[child_count].style.display = "none";
+		}
+	}
+}
 
-    toggle_parent = menu_option.parentNode;
-    for(parent_count=0;parent_count<toggle_parent.childElementCount;parent_count++){
-        if(menu_option === toggle_parent.children[parent_count]) break;
-    }
-
-    toggle_select = parent_count;
-
-    for(parent_count=0;parent_count<drop_box.childElementCount;parent_count++){
-        if(toggle_select == parent_count){
-            drop_box.children[parent_count].classList.add("show_nav_side");
-        } else {
-            drop_box.children[parent_count].classList.remove("show_nav_side");
-        }
-    }
+function organize_main(){
+	var group = document.getElementById("media_page");
+	var child_count = 0;
+	var group_length = 0;
+	
+	if(webpage.mobile_display){
+		group_length = group.children.length;
+		for(child_count=0;child_count<group_length;child_count++){
+			group.children[child_count].style.width = "100%";
+			group.children[child_count].style.height = "100%";
+			group.children[child_count].style.top = "0px";
+			group.children[child_count].style.left = "0px";
+			if(webpage.state_change){
+				if(child_count){
+					group.children[child_count].style.display = "none";
+				} else {
+					group.children[child_count].style.display = "block";
+				}
+			}
+		}
+		webpage.state_change = 0;
+	} else {
+		group_length = group.children.length;
+		for(child_count=0;child_count<group_length;child_count++){
+			group.children[child_count].style.display = "block";
+			if(child_count == 0){
+				group.children[child_count].style.width = "50%";
+				group.children[child_count].style.height = "75%";
+				group.children[child_count].style.top = "0px";
+				group.children[child_count].style.left = "0px";
+			}
+			if(child_count == 1){
+				group.children[child_count].style.width = "50%";
+				group.children[child_count].style.height = "75%";
+				group.children[child_count].style.top = "0px";
+				group.children[child_count].style.left = "50%";
+			}
+			if(child_count == 2){
+				group.children[child_count].style.width = "100%";
+				group.children[child_count].style.height = "25%";
+				group.children[child_count].style.top = "75%";
+				group.children[child_count].style.left = "0px";
+			}
+		}
+	}
 }
 
 function close_top(){
@@ -403,7 +451,7 @@ function search_media(){
                     }
 				} else {
 					dir_tree.push(dir);
-					update_page();
+					update_media_list();
 				}
 			}
 		}
@@ -443,7 +491,7 @@ function enter_dir(){
 			if (this.readyState == 4 && this.status == 200) {
 				directory_list = this.responseText;
 				dir_tree.push(dir);
-				update_page();
+				update_media_list();
 			}
 		}
 	}
@@ -479,13 +527,14 @@ function exit_dir(){
 		if (this.readyState == 4 && this.status == 200) {
 			directory_list = this.responseText;
 			if(dir_tree.length) dir_tree.pop();
-			update_page();
+			update_media_list();
 		}
 	}
 }
 
-function update_page(){
+function update_media_list(){
 	var mediabox = 0;
+	var media_length = 0;
 	var parent = 0;
 	var count = 0;
 	var array_length = 0;
@@ -499,17 +548,11 @@ function update_page(){
 	parse_dir_list();
 
 	mediabox = document.getElementById("medialist");
-    saved_classes = mediabox.classList;
-	parent = mediabox.parentNode;
-	parent.removeChild(mediabox);
-	mediabox = document.createElement("div");
-	mediabox.id = "medialist";
-    for(class_count=0;class_count<saved_classes.length;class_count++){
-        mediabox.classList.add(saved_classes[class_count]);
-    }
-	parent.appendChild(mediabox);
-	mediabox = document.getElementById("medialist");
-
+	media_length = mediabox.children.length;
+	for(count=media_length;count>0;count--){
+		mediabox.removeChild(mediabox.children[count-1]);
+	}
+   
 	array_length = media_array.length;
 	count = 0;
 	if(dir_tree.length > 1){
@@ -526,7 +569,7 @@ function update_page(){
 	while(count < array_length){
 		new_elem = document.createElement("div");
 		media_name = media_array[count];
-		if(media_name.lastIndexOf(".") > 0){ // FIX THIS CHECK! FAILS ON FOLDER NAME WITH DOT
+		if((media_name.lastIndexOf(".") > 0) && ((media_name.length - media_name.lastIndexOf(".")) <= 4)){
 			tmp_id = "media" + String(count);
 			new_elem.id = tmp_id;
 			new_elem.onclick = open_item_options;
@@ -748,4 +791,225 @@ function cleardropdowns(){
 
 function add_to_list_end(){
    alert("not implemented");
+}
+
+function update_playlist_list(){
+	var mediabox = 0;
+	var media_length = 0;
+	var parent = 0;
+	var array_length = 0;
+	var tmp_id = 0;
+	var i = 0;
+	var playlist_name = 0;
+	var new_elem, new_text;
+    var saved_classes = 0;
+    var class_count = 0;
+	var page = document.getElementById("playlists");
+	var count;
+	var child_count;
+	
+	child_count = page.children.length;
+	for(count=child_count;count>0;count--){
+		page.removeChild(page.children[count-1]);
+	}
+	
+	parse_playlist_list();
+	
+	array_length = playlist_array.length;
+	count = 0;
+	
+	while(count < array_length){
+		new_elem = document.createElement("div");
+		playlist_name = playlist_array[count];
+		tmp_id = "playlist" + String(count);
+		new_elem.id = tmp_id;
+		new_elem.onclick = open_playlist;
+		new_elem.classList.add("dropbtn");
+		new_elem.style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
+		if((playlist_name.lastIndexOf(".") == playlist_name.length) || ((playlist_name.length - playlist_name.lastIndexOf(".")) > 3)){
+			playlist_name = playlist_name;
+		} else {
+			playlist_name = playlist_name.slice(0, (playlist_name.lastIndexOf(".")));
+		}
+		new_text = document.createTextNode(playlist_name);
+		new_elem.appendChild(new_text);
+		page.appendChild(new_elem);
+		count = count + 1;
+	}
+}
+
+function display_playlist(data){
+	var count;
+	var array_length;
+	var child_count;
+	var page = document.getElementById("playlists");
+	
+	child_count = page.children.length;
+	for(count=child_count;count>0;count--){
+		page.removeChild(page.children[count-1]);
+	}
+	
+	parse_playlist_data(data);
+	
+	new_elem = document.createElement("div");
+	tmp_id = "ListView";
+	new_elem.id = tmp_id;
+	new_elem.onclick = search_playlists;
+	new_elem.classList.add("dropbtn");
+	new_elem.style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
+	new_text = document.createTextNode("View Playlists");
+	new_elem.appendChild(new_text);
+	page.appendChild(new_elem);
+	
+	array_length = playlist_data.length;
+	count = 0;
+	while(count < array_length){
+		new_elem = document.createElement("div");
+		playlist_name = playlist_data[count];
+		tmp_id = "item" + String(count);
+		new_elem.id = tmp_id;
+		new_elem.onclick = open_item_options;
+		new_elem.classList.add("dropbtn");
+		new_elem.style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
+		if((playlist_name.lastIndexOf(".") == playlist_name.length) || ((playlist_name.length - playlist_name.lastIndexOf(".")) > 3)){
+			playlist_name = playlist_name;
+		} else {
+			playlist_name = playlist_name.slice(0, (playlist_name.lastIndexOf(".")));
+		}
+		new_text = document.createTextNode(playlist_name);
+		new_elem.appendChild(new_text);
+		page.appendChild(new_elem);
+		count = count + 1;
+	}
+}
+
+function search_playlists(){
+	var xmlhttp = 0;
+	var error_html;
+	if (window.XMLHttpRequest) {
+		xmlhttp = new XMLHttpRequest();
+	} else {
+		// code for IE6, IE5
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+    xmlhttp.open("POST", "playlistsearch.php?q=" + "", true);
+	xmlhttp.send();
+	xmlhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			playlist_list = this.responseText;
+			if(playlist_list == 0) {
+				error_html = document.getElementById("playlists");
+				error_html.innerHTML = "Could Not Open Playlist Dir File";
+			} else {
+				if(playlist_list == 1) {
+					error_html = document.getElementById("playlists");
+					error_html.innerHTML = "No Playlist Directory Set";
+				} else {
+					update_playlist_list();
+				}
+			}
+		}
+	}
+}
+
+function open_playlist(){
+	var xmlhttp = 0;
+	var error_html;
+	var name;
+	if (window.XMLHttpRequest) {
+		xmlhttp = new XMLHttpRequest();
+	} else {
+		// code for IE6, IE5
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	name = this.innerHTML;
+    xmlhttp.open("POST", "readplaylist.php?q=" + name, true);
+	xmlhttp.send();
+	xmlhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			if(playlist_list == 0) {
+				error_html = document.getElementById("playlists");
+				error_html.innerHTML = "Could Not Open Playlist File";
+			} else {
+				if(playlist_list == 1) {
+					error_html = document.getElementById("playlists");
+					error_html.innerHTML = "No Playlist Directory Set";
+				} else {
+					display_playlist(this.responseText);
+				}
+			}
+		}
+	}
+}
+
+function parse_playlist_list(){
+	var tmp_array = [];
+	var tmp_name = 0;
+	var list_rp = 0;
+	var listlen = 0;
+	var i = 0;
+
+	listlen = playlist_list.length;
+	while(list_rp < listlen){
+		// get to index, slice off before
+		list_rp = playlist_list.indexOf(" => ");
+		if(list_rp < 0) break;
+		playlist_list = playlist_list.slice(list_rp + 4);
+
+		// new length... reset pointer
+		listlen = playlist_list.length;
+		list_rp = 0;
+		
+		// copy first character of media name and increment pointer
+		if((list_rp < listlen) && (playlist_list.charAt(list_rp) != "\n"))
+			tmp_name = playlist_list.charAt(list_rp);
+		list_rp = list_rp + 1;
+
+		// get rest of name and add to tmp_name
+		while((list_rp < listlen) && (playlist_list.charAt(list_rp) != "\n")){
+			tmp_name = tmp_name + playlist_list.charAt(list_rp);
+			list_rp = list_rp + 1;
+		}
+		// add name to the array
+		if(tmp_name.length > 0){
+            if((tmp_name === ".") || (tmp_name === "..")){
+                // . and .. aren't valid... from dir search
+            } else {
+                tmp_array.push(tmp_name);
+            }
+        }
+	}
+	
+	playlist_array = tmp_array;
+}
+
+
+function parse_playlist_data(data){
+	var tmp_array = [];
+	var tmp_name = "";
+	var list_rp = 0;
+	var listlen = 0;
+	var i = 0;
+
+	listlen = data.length;
+	while(list_rp < listlen){
+		// skip past new line
+		list_rp = list_rp + 1;
+		// copy first character of media name and increment pointer
+		if((list_rp < listlen) && (data.charAt(list_rp) != "\n"))
+			tmp_name = data.charAt(list_rp);
+		list_rp = list_rp + 1;
+
+		// get rest of name and add to tmp_name
+		while((list_rp < listlen) && (data.charAt(list_rp) != "\n")){
+			tmp_name = tmp_name + data.charAt(list_rp);
+			list_rp = list_rp + 1;
+		}
+		// add name to the array
+		if(tmp_name.length > 0){
+			tmp_array.push(tmp_name);
+        }
+	}
+	
+	playlist_data = tmp_array;
 }

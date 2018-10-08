@@ -2,13 +2,18 @@ var directory_list;
 var playlist_list;
 var dir_tree = [];
 var media_array = [];
-var playlist_array = [];
+var playlist_array = ["New Playlist"];
 var playlist_data = [];
 var active_clients = 0;
 var client_name = [];
 var status_data = 0;
 var top_toggle = 0;
 var media_type = 0;
+var selected_playlist = 0;
+var current_playlist = [];
+var playing_playlist = [];
+var new_playlist = [];
+var playlist_dropdown_open = 0;
 
 var webpage = {
     mobile_display: 0,
@@ -140,7 +145,7 @@ function init_media(){
     resize(1);
     read_status();
     search_media();
-    search_playlists();
+    select_playlist();
     setInterval(read_status, 10000);
 }
 
@@ -161,7 +166,6 @@ function set_media_type(type){
         dir_tree = [];
         media_array = [];
         search_media();
-        search_playlists();
     }
 }
 
@@ -804,7 +808,7 @@ function update_playlist_list(){
 	var new_elem, new_text;
     var saved_classes = 0;
     var class_count = 0;
-	var page = document.getElementById("playlists");
+	var page = document.getElementById("playlist_dropdown");
 	var count;
 	var child_count;
 	
@@ -814,35 +818,14 @@ function update_playlist_list(){
 	}
 	
 	parse_playlist_list();
-	
-	array_length = playlist_array.length;
-	count = 0;
-	
-	while(count < array_length){
-		new_elem = document.createElement("div");
-		playlist_name = playlist_array[count];
-		tmp_id = "playlist" + String(count);
-		new_elem.id = tmp_id;
-		new_elem.onclick = open_playlist;
-		new_elem.classList.add("dropbtn");
-		new_elem.style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
-		if((playlist_name.lastIndexOf(".") == playlist_name.length) || ((playlist_name.length - playlist_name.lastIndexOf(".")) > 3)){
-			playlist_name = playlist_name;
-		} else {
-			playlist_name = playlist_name.slice(0, (playlist_name.lastIndexOf(".")));
-		}
-		new_text = document.createTextNode(playlist_name);
-		new_elem.appendChild(new_text);
-		page.appendChild(new_elem);
-		count = count + 1;
-	}
+	show_playlists();
 }
 
 function display_playlist(data){
 	var count;
 	var array_length;
 	var child_count;
-	var page = document.getElementById("playlists");
+	var page = document.getElementById("playlist_data");
 	
 	child_count = page.children.length;
 	for(count=child_count;count>0;count--){
@@ -851,7 +834,7 @@ function display_playlist(data){
 	
 	parse_playlist_data(data);
 	
-	new_elem = document.createElement("div");
+	/*new_elem = document.createElement("div");
 	tmp_id = "ListView";
 	new_elem.id = tmp_id;
 	new_elem.onclick = search_playlists;
@@ -860,7 +843,7 @@ function display_playlist(data){
 	new_text = document.createTextNode("View Playlists");
 	new_elem.appendChild(new_text);
 	page.appendChild(new_elem);
-	
+	*/
 	array_length = playlist_data.length;
 	count = 0;
 	while(count < array_length){
@@ -912,7 +895,7 @@ function search_playlists(){
 	}
 }
 
-function open_playlist(){
+function open_playlist(playlist_name){
 	var xmlhttp = 0;
 	var error_html;
 	var name;
@@ -922,7 +905,7 @@ function open_playlist(){
 		// code for IE6, IE5
 		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
 	}
-	name = this.innerHTML;
+	name = playlist_name;
     xmlhttp.open("POST", "readplaylist.php?q=" + name, true);
 	xmlhttp.send();
 	xmlhttp.onreadystatechange = function() {
@@ -950,6 +933,7 @@ function parse_playlist_list(){
 	var i = 0;
 
 	listlen = playlist_list.length;
+	tmp_array.push("New Playlist");
 	while(list_rp < listlen){
 		// get to index, slice off before
 		list_rp = playlist_list.indexOf(" => ");
@@ -1012,4 +996,73 @@ function parse_playlist_data(data){
 	}
 	
 	playlist_data = tmp_array;
+}
+
+function show_playlists(){
+	var playlist_dropdown = document.getElementById("playlist_dropdown");
+	var child_count;
+	var child_length;
+	child_length = playlist_dropdown.children.length;
+	for(child_count=child_length;child_count>0;child_count--){
+		playlist_dropdown.removeChild(playlist_dropdown.children[child_count-1]);
+	}
+	
+	array_length = playlist_array.length;
+	count = 0;
+	
+	while(count < array_length){
+		new_elem = document.createElement("div");
+		playlist_name = playlist_array[count];
+		tmp_id = "playlist" + String(count);
+		new_elem.id = tmp_id;
+		new_elem.onclick = select_playlist;
+		new_elem.classList.add("dropbtn");
+		new_elem.style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
+		if((playlist_name.lastIndexOf(".") == playlist_name.length) || ((playlist_name.length - playlist_name.lastIndexOf(".")) > 3)){
+			playlist_name = playlist_name;
+		} else {
+			playlist_name = playlist_name.slice(0, (playlist_name.lastIndexOf(".")));
+		}
+		new_text = document.createTextNode(playlist_name);
+		new_elem.appendChild(new_text);
+		playlist_dropdown.appendChild(new_elem);
+		count = count + 1;
+	}
+	playlist_dropdown_open = 1;
+}
+
+function select_playlist(){
+	var dropdown = document.getElementById("playlist_dropdown");
+	var selected = this;
+	var playlist_name;
+	var new_elem;
+	var tmp_id;
+	
+	child_length = dropdown.children.length;
+	for(child_count=child_length;child_count>0;child_count--){
+		if(playlist_dropdown.children[child_count-1] === this){
+			selected_playlist = child_count-1;
+		}
+		playlist_dropdown.removeChild(playlist_dropdown.children[child_count-1]);
+	}
+	
+	new_elem = document.createElement("div");
+	playlist_name = playlist_array[selected_playlist];
+	tmp_id = "playlist" + String(selected_playlist);
+	new_elem.id = tmp_id;
+	new_elem.onclick = search_playlists;
+	new_elem.classList.add("dropbtn");
+	new_elem.style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
+	if((playlist_name.lastIndexOf(".") == playlist_name.length) || ((playlist_name.length - playlist_name.lastIndexOf(".")) > 3)){
+		playlist_name = playlist_name;
+	} else {
+		playlist_name = playlist_name.slice(0, (playlist_name.lastIndexOf(".")));
+	}
+	new_text = document.createTextNode(playlist_name);
+	new_elem.appendChild(new_text);
+	dropdown.appendChild(new_elem);
+	
+	if(selected_playlist > 0){
+		open_playlist(selected.innerHTML);
+	}
 }

@@ -201,7 +201,7 @@ int socket_handler(void){
     printf("Active Clients: %d\n", active_clients);
     
 #ifdef IS_CLIENT
-    if(active_clients == 0){i
+    if(active_clients == 0){
         new_socket = connect_client_socket(ms_ip, ms_port);
         if(new_socket >= 0){
             client_sockets[active_clients] = new_socket;

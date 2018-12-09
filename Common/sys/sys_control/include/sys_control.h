@@ -45,6 +45,7 @@
 #define NAME_PATH "/usr/share/media_server/sys_control/sys_names.kmf"
 #define MOVIEDIR_PATH "/usr/share/media_server/sys_control/moviectrl/moviedir.kmf"
 #define MUSICDIR_PATH "/usr/share/media_server/sys_control/musicctrl/musicdir.kmf"
+#define PLAYLISTDIR_PATH "/usr/share/media_server/sys_control/playlistdir.kmf"
 #define RX_PATH "/var/www/html/media_server/control/web_control/rxwebpipe"
 //#define WEB_PATH "/var/www/html/media_server/control/web_control/txwebpipe"
 

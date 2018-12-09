@@ -33,11 +33,19 @@ void start_listener(char type, unsigned int in_address[4]){
         // start listener
         if(type == 0){
             // video
+<<<<<<< HEAD
             sprintf(start_string, "omxplayer -o hdmi http://%u.%u.%u.%u:8080/ms0.mkv -b --timeout 1500&", in_address[0], in_address[1], in_address[2], in_address[3]);
         }
         if(type == 1){
             // audio
             sprintf(start_string, "omxplayer -o hdmi http://%u.%u.%u.%u:8080/ms0.mkv -b --timeout 1500&", in_address[0], in_address[1], in_address[2], in_address[3]);
+=======
+            sprintf(start_string, "omxplayer -o hdmi -b --no-keys --timeout -1 http://%u.%u.%u.%u:8080/ms0.mkv?buffer_size 12000000B&", in_address[0], in_address[1], in_address[2], in_address[3]);
+        }
+        if(type == 1){
+            // audio
+            sprintf(start_string, "omxplayer -o hdmi -b --no-keys --timeout -1 http://%u.%u.%u.%u:8080/ms0.mkv?buffer_size 12000000B&", in_address[0], in_address[1], in_address[2], in_address[3]);
+>>>>>>> 5fb4282ba29d0f3c8552667487404a2126cb5466
         }
         system(start_string);
         if(type == 0) send(client_sockets[0], "1%mc02%", sizeof("1%mc02%"), 0);
@@ -169,9 +177,28 @@ char update_movie(char stream_select, char input_option, char* input_src, char o
                 send_media("play", ms_ip);
             #endif
         }
+        if(media_option == 6){
+            #ifdef IS_SERVER
+                send_media("fastforward", ms_ip);
+            #endif
+        }
+        if(media_option == 7){
+            #ifdef IS_SERVER
+                send_media("rewind", ms_ip);
+            #endif
+        }
+        if(media_option == 8){
+            #ifdef IS_SERVER
+                send_media("key key-jump+long", ms_ip);
+            #endif
+        }
+        if(media_option == 9){
+            #ifdef IS_SERVER
+                send_media("key key-jump-long", ms_ip);
+            #endif
+        }
     }
 }
-
 
 char music_control(char stream_select, char input_option, char* input_src, unsigned int out_clients, unsigned int out_address[][4], char client){
     char music_text[MAX_STRING] = {0};
@@ -290,6 +317,16 @@ char update_music(char stream_select, char input_option, char* input_src, char o
         if(media_option == 5){
             #ifdef IS_SERVER
                 send_media("play", ms_ip);
+            #endif
+        }
+        if(media_option == 6){
+            #ifdef IS_SERVER
+                send_media("fastforward", ms_ip);
+            #endif
+        }
+        if(media_option == 7){
+            #ifdef IS_SERVER
+                send_media("rewind", ms_ip);
             #endif
         }
     }

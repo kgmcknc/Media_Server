@@ -375,6 +375,39 @@ void configure_system(void){
 	            }
             }
         }
+        if(user_option == 'l'){
+            handled = 1;
+            dir_fp = fopen(PLAYLISTDIR_PATH, "r");
+            if(dir_fp == NULL){
+                printf("Couldn't Open Playlist Directory File...");
+            } else {
+                if(fscanf(dir_fp, "%s", &directory[0])){
+                    printf("Current Playlist Directory Is Set To: %s", &directory[0]);
+                } else {
+                    printf("\nPlaylist Directory Is Not Currently Set\n");
+                }
+                fclose(dir_fp);
+                printf("\nSet New Playlist Directory from root or enter 0 to Go Back\n");
+                printf("New Playlist Directory: ");
+                scanf("%s%c", &directory[0], &empty);
+                if(directory[0] == '0'){
+                    printf("\nGot 0, Going Back to Menu\n");
+                }else{
+                    printf("\nGot %s For Playlist Directory\n", &directory[0]);
+                    string_count = strlen(directory);
+                    if(directory[string_count - 1] == '/'){
+                        directory[string_count - 1] = '\0';
+                    }
+                    dir_fp = fopen(PLAYLISTDIR_PATH, "w");
+                    if(dir_fp == NULL){
+                        printf("Couldn't Open Playlist Dir\n");
+                    } else {
+                        fprintf(dir_fp, "%s", &directory[0]);
+                        fclose(dir_fp);
+                    }
+	            }
+            }
+        }
         #endif
         #ifdef IS_CLIENT
         if(user_option == 'n'){
@@ -467,6 +500,7 @@ void print_config_menu(void){
     printf("\no  Re-Order Attached Clients  \n");
     printf("\nt  Set Movie Directory        \n");
     printf("\nb  Set Music Directory        \n");
+    printf("\nl  Set Playlist Directory     \n");
     #endif
     #ifdef IS_CLIENT
     printf("\ni  Set/Change IP Address:     \n");

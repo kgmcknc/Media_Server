@@ -1,3 +1,17 @@
+html, body{
+    margin: 0;
+
+    padding: 0;
+
+    min-width: 100%;
+    width: 100%;
+    max-width: 100%;
+
+    min-height: 100%;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+}
 
 .top_nav_menu {
     position: relative;
@@ -14,7 +28,8 @@
     min-width: 200px;
     font-size: 40px;
     background-color: red;
-    position: absolute;
+    position: fixed;
+    overflow: hidden;
     z-index: 9;
 }
 
@@ -32,7 +47,8 @@
     width: 100%;
     min-width: 200px;
     font-size: 40px;
-    position: absolute;
+    position: fixed;
+    overflow: hidden;
     z-index: 8;
 }
 
@@ -70,13 +86,14 @@
 }
 
 .media_window {
-    width:100%;
+	position: absolute;
     z-index:4;
 }
 
 .media_list {
-    display: block;
-    height: 800px;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
     overflow-x: hidden;
     overflow-y: auto;
 }
@@ -85,33 +102,111 @@
     
 }
 
-.nav_drop_top {
-    display: none;
-    z-index: 5;
-}
-
-.nav_drop_side {
-    display: none;
-    z-index: 4;
-}
-
-.nav_drop_content {
+.my_home {
     
 }
-.nav_drop_content:hover {
-    background-color: purple;
-    opacity: .7;
+
+.my_home_view {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #102020;
+    overflow: hidden;
 }
 
-.show_nav_drop {
-    display: block;
+.media_banner_d {
+    color: white;
+    padding: 4px 10px 2px 20%;
+    max-height: 5%;
+    background-image: linear-gradient(to right,#808080,#102020);
 }
 
-.show_nav_drop::after {
+.media_main_d {
+	position: absolute;
+    width: 100%;
+    height: 95%;
 }
 
-.show_nav_side {
-    display: block;
+.media_side_nav {
+    position: absolute;
+    height: 100%;
+    z-index: 7;
 }
 
+.media_side_nav_container {
+    position: absolute;
+	width: 100%;
+	height: 100%;
+    z-index: 6;
+	background-color: #000000;
+    -webkit-transition: left 0.4s;
+    transition: left 0.4s;
+}
+.media_side_nav_buttons {
+    position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: #000000;
+}
+.side_nav_button {
+    width: 100%;
+    color: white;
+}
+.side_nav_button:hover {
+	background-color: #808080;
+    color: black;
+}
 
+.side_menu_data {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    overflow: hidden;
+    z-index: 5;
+    background-color: #808080;
+    -webkit-transition: left 0.4s;
+    transition: left 0.4s;
+}
+
+.active_menu {
+    background-color: #808080;
+}
+.menu_data {
+
+}
+.active_toggle {
+
+}
+
+.mobile_display {
+    
+}
+.desktop_display {
+    
+}
+
+.media_top_nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    color: white;
+}
+
+.media_view_d {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+	height: 100%;
+}
+
+.side_menu {
+
+}
+.media_font {
+	color: white;
+}
+
+.media_font > div:hover {
+	color: blue;
+}

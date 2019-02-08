@@ -559,6 +559,19 @@ function update_media_list(){
    
 	array_length = media_array.length;
 	count = 0;
+	
+	// make search bar
+	new_elem = document.createElement("INPUT");
+	tmp_id = "media_search_bar";
+	new_elem.id = tmp_id;
+	new_elem.classList.add("dropbtn");
+	new_elem.style.fontSize = webpage.dynamic_fonts[webpage.mobile_display];
+	new_elem.style.width = "100%";
+	new_elem.type = "search";
+	new_elem.oninput = update_media_search;
+	new_elem.placeholder = "Search";
+	mediabox.appendChild(new_elem);
+	
 	if(dir_tree.length > 1){
 		new_elem = document.createElement("div");
 		tmp_id = "Prev_Dir";
@@ -592,6 +605,35 @@ function update_media_list(){
 		new_elem.appendChild(new_text);
 		mediabox.appendChild(new_elem);
 		count = count + 1;
+	}
+}
+
+function update_media_search(){
+	var mediabox = 0;
+	var media_length = 0;
+	var search_text = "";
+	var count = 0;
+	var start = 1;
+	
+	mediabox = document.getElementById("medialist");
+	media_length = mediabox.children.length;
+	search_text = document.getElementById("media_search_bar").value;
+	
+	if(media_length > 1){
+		if(mediabox.children[1].id == "Prev_Dir") start++;
+	}
+	if(search_text.length > 0){
+		for(count=start;count<media_length;count++){
+			if(mediabox.children[count].innerText.toLowerCase().includes(search_text.toLowerCase())){
+				mediabox.children[count].style.display = "";
+			} else {
+				mediabox.children[count].style.display = "none";
+			}
+		}
+	} else {
+		for(count=start;count<media_length;count++){
+			mediabox.children[count].style.display = "";
+		}
 	}
 }
 

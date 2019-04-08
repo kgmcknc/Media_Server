@@ -47,8 +47,23 @@ void start_listener(char type, unsigned int in_address[4]){
 
 char movie_control(char stream_select, char input_option, char* input_src, unsigned int out_clients, unsigned int out_address[][4], char client){
     char movie_text[MAX_STRING] = {0};
+    char shift_string[MAX_STRING] = {0};
     char ps_id[8] = {0};
-    sprintf(movie_text, "\'/home/kyle/linux-main-share/MovieHD/%s\'", input_src);
+    char string_count = strlen(input_src);
+    char temp_count = 0;
+    char shift_count = 0;
+    while(temp_count < string_count){
+        if(input_src[temp_count] == 39){ // single quote
+		shift_string[temp_count] = 39; // forward slash...
+		shift_string[temp_count+1] = 92; // forward slash...
+		shift_string[temp_count+2] = 39; // forward slash...
+		shift_count = shift_count + 3;
+	}
+        shift_string[temp_count + shift_count] = input_src[temp_count];
+        temp_count = temp_count + 1;
+    }
+    strcpy(input_src, shift_string);
+    sprintf(movie_text, "\'/home/kyle/linux-main-share/MovieHD%s\'", input_src);
     printf("Movie inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_clients);
     grep_fp = popen("pgrep \"vlc\"", "r");
     if(grep_fp == NULL){
@@ -194,7 +209,22 @@ char update_movie(char stream_select, char input_option, char* input_src, char o
 
 char music_control(char stream_select, char input_option, char* input_src, unsigned int out_clients, unsigned int out_address[][4], char client){
     char music_text[MAX_STRING] = {0};
+    char shift_string[MAX_STRING] = {0};
     char ps_id[8] = {0};
+    char string_count = strlen(input_src);
+    char temp_count = 0;
+    char shift_count = 0;
+    while(temp_count < string_count){
+        if(input_src[temp_count] == 39){ // single quote
+		shift_string[temp_count] = 39; // forward slash...
+		shift_string[temp_count+1] = 92; // forward slash...
+		shift_string[temp_count+2] = 39; // forward slash...
+		shift_count = shift_count + 3;
+	}
+        shift_string[temp_count + shift_count] = input_src[temp_count];
+        temp_count = temp_count + 1;
+    }
+    strcpy(input_src, shift_string);
     sprintf(music_text, "\'/home/kyle/linux-main-share/MusicHD/%s\'", input_src);
     printf("Music inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_clients);
     grep_fp = popen("pgrep \"vlc\"", "r");

@@ -63,7 +63,7 @@ char movie_control(char stream_select, char input_option, char* input_src, unsig
         temp_count = temp_count + 1;
     }
     strcpy(input_src, shift_string);
-    sprintf(movie_text, "\'/home/kyle/linux-main-share/MovieHD%s\'", input_src);
+    sprintf(movie_text, "\'/home/kyle/linux-main-share/MovieHD/%s\'", input_src);
     printf("Movie inputs: %d, %d, %s, %u\n", stream_select, input_option, input_src, out_clients);
     grep_fp = popen("pgrep \"vlc\"", "r");
     if(grep_fp == NULL){

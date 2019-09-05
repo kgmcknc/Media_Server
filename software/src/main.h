@@ -81,6 +81,7 @@ struct system_function{
     char string[MAX_FUNCTION_STRING];
 };
 
+void send_broadcast_packet(void);
 void server_listener(void);
 void get_rx(int com_socket);
 void process(char type, char client, char f_string[MAX_FUNCTION_STRING]);

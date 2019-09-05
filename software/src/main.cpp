@@ -4,6 +4,7 @@
 #include "sys_functions.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 void updatewebstate(FILE* out_file);
 void init_webstate(FILE* out_file);
@@ -63,8 +64,8 @@ struct system_function sf_heartbeat;
 
 int main(int argc, char **argv) {
 
-    printf("\n\n----- Starting Kyle's System -----\n\n");
-    
+    printf("\n\n----- Starting Media Server -----\n\n");
+    /*
     user_fp = popen("ls /home/", "r");
     if(user_fp == NULL){
         printf("Failed to get User...\n");
@@ -131,6 +132,7 @@ int main(int argc, char **argv) {
 #ifndef USE_HEARTBEAT
     heartbeat_fork = 1;
 #endif
+
     if(heartbeat_fork == 0){
         int heartbeat_socket_c;
         printf("\n---- Inside Heartbeat Child ----\n");
@@ -142,13 +144,42 @@ int main(int argc, char **argv) {
     } else {
         printf("\n---- Inside Parent Server ----\n");
         server_system();
-    }
-    
+    }*/
+    send_broadcast_packet();
     // kill all child processes
-    kill(heartbeat_fork, SIGKILL);
-    fclose(config_file);
+    //kill(heartbeat_fork, SIGKILL);
+    //fclose(config_file);
     printf("\n---- Exitting System ----\n");
     exit(EXIT_SUCCESS);
+}
+
+void send_broadcast_packet(void){
+    int com_fd;
+    int com_socket, com_len, com_opt = 1;
+    struct sockaddr_in com_addr;
+    struct sockaddr_in Recv_addr;  
+    com_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if(com_fd == 0){
+        printf("Main Socket Was 0\n");
+        //return -1;
+    }
+    if(setsockopt(com_fd, SOL_SOCKET, SO_BROADCAST, (char *) &com_opt, sizeof(com_opt))){
+        printf("Main Socket Opt Failed\n");
+        //return -1;
+    }
+    memset(&com_addr, 0, sizeof(com_addr));
+    com_addr.sin_family = AF_INET;
+    com_addr.sin_addr.s_addr = INADDR_BROADCAST;//INADDR_ANY;
+    //com_addr.sin_addr.s_addr = inet_addr("192.168.255.255");
+    com_addr.sin_port = 65400;
+
+    char my_message[] = "testudpbroadcast";
+
+    printf("sending message\n");
+    int retval = sendto(com_fd,my_message,strlen(my_message)+1,0,(sockaddr *)&com_addr,sizeof(com_addr));
+    int error = errno;
+    close(com_fd);
+    printf("status: %d, %d\n", retval, error);
 }
 
 void server_system(void){

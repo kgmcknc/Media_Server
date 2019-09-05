@@ -145,7 +145,8 @@ int main(int argc, char **argv) {
         printf("\n---- Inside Parent Server ----\n");
         server_system();
     }*/
-    send_broadcast_packet();
+    //send_broadcast_packet();
+    receive_broadcast_packet();
     // kill all child processes
     //kill(heartbeat_fork, SIGKILL);
     //fclose(config_file);
@@ -180,6 +181,36 @@ void send_broadcast_packet(void){
     int error = errno;
     close(com_fd);
     printf("status: %d, %d\n", retval, error);
+}
+
+void receive_broadcast_packet(void){
+    int com_fd;
+    int com_socket, com_len, com_opt = 1;
+    struct sockaddr_in com_addr;
+    struct sockaddr_in Recv_addr;  
+    com_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    unsigned int len = sizeof(struct sockaddr_in);
+    if(com_fd == 0){
+        printf("Main Socket Was 0\n");
+        //return -1;
+    }
+    if(setsockopt(com_fd, SOL_SOCKET, SO_BROADCAST, (char *) &com_opt, sizeof(com_opt))){
+        printf("Main Socket Opt Failed\n");
+        //return -1;
+    }
+    memset(&com_addr, 0, sizeof(com_addr));
+    com_addr.sin_family = AF_INET;
+    com_addr.sin_addr.s_addr = INADDR_BROADCAST;//INADDR_ANY;
+    //com_addr.sin_addr.s_addr = inet_addr("192.168.255.255");
+    com_addr.sin_port = 65400;
+    bind(com_fd,(sockaddr*)&com_addr, sizeof (com_addr));
+    int rx_len = 100;
+    char my_message[100];
+    printf("receiving message\n");
+    int retval = recvfrom(com_fd,my_message,rx_len,0,(sockaddr *)&com_addr,&len);
+    int error = errno;
+    close(com_fd);
+    printf("status: %d, %d, Message: %s\n", retval, error, my_message);
 }
 
 void server_system(void){

@@ -146,7 +146,8 @@ int main(int argc, char **argv) {
         server_system();
     }*/
     //send_broadcast_packet();
-    receive_broadcast_packet();
+    //receive_broadcast_packet();
+    receive_get_request();
     // kill all child processes
     //kill(heartbeat_fork, SIGKILL);
     //fclose(config_file);
@@ -170,9 +171,9 @@ void send_broadcast_packet(void){
     }
     memset(&com_addr, 0, sizeof(com_addr));
     com_addr.sin_family = AF_INET;
-    com_addr.sin_addr.s_addr = INADDR_BROADCAST;//INADDR_ANY;
+    com_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);//INADDR_ANY;
     //com_addr.sin_addr.s_addr = inet_addr("192.168.255.255");
-    com_addr.sin_port = 65400;
+    com_addr.sin_port = htons(65400);
 
     char my_message[] = "testudpbroadcast";
 
@@ -200,15 +201,55 @@ void receive_broadcast_packet(void){
     }
     memset(&com_addr, 0, sizeof(com_addr));
     com_addr.sin_family = AF_INET;
-    com_addr.sin_addr.s_addr = INADDR_BROADCAST;//INADDR_ANY;
+    com_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);//INADDR_ANY;
     //com_addr.sin_addr.s_addr = inet_addr("192.168.255.255");
-    com_addr.sin_port = 65400;
+    com_addr.sin_port = htons(65400);
     bind(com_fd,(sockaddr*)&com_addr, sizeof (com_addr));
     int rx_len = 100;
     char my_message[100];
     printf("receiving message\n");
     int retval = recvfrom(com_fd,my_message,rx_len,0,(sockaddr *)&com_addr,&len);
     int error = errno;
+    close(com_fd);
+    printf("status: %d, %d, Message: %s\n", retval, error, my_message);
+}
+
+void receive_get_request(void){
+    int com_fd, message;
+    int com_socket, com_len, com_opt = 1;
+    struct sockaddr_in com_addr;
+    struct sockaddr_in web_addr;  
+    com_fd = socket(AF_INET, SOCK_STREAM, 0);
+    unsigned int len = sizeof(struct sockaddr_in);
+    if(com_fd <= 0){
+        printf("Main Socket Was less or zero\n");
+        //return -1;
+    }
+    /*if(setsockopt(com_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *) &com_opt, sizeof(com_opt))){
+        printf("Main Socket Opt Failed\n");
+        //return -1;
+    }*/
+    memset(&com_addr, 0, sizeof(com_addr));
+    com_addr.sin_family = AF_INET;
+    com_addr.sin_addr.s_addr = htonl(INADDR_ANY);//INADDR_ANY;
+    //com_addr.sin_addr.s_addr = inet_addr("192.168.1.33");
+    com_addr.sin_port = htons(65005);
+    int test = bind(com_fd,(sockaddr*)&com_addr, sizeof (com_addr));
+    int list = listen(com_fd, 1024);
+    int rx_len = 100;
+    char my_message[100];
+    printf("receiving get\n");
+    message = accept(com_fd, NULL, NULL);
+    int retval = recvfrom(message,my_message,rx_len,0,(sockaddr *)&com_addr,&len);
+    int error = errno;
+    //char response[] = "HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\nContent-Length: 44\r\nConnection: close\r\nContent-Type: text/html\r\nX-Pad: avoid browser bug\r\n\r\n<html><body><h1>It works!</h1></body></html>\r\n";
+    char response[] = "HTTP/1.0 404 NOT FOUND\r\nContent-Length: 17\r\nContent-Type: text/html\r\n\r\ntwentyisonetoomanytt\r\n";
+    socklen_t sa_len = sizeof(web_addr);
+    getsockname(message,(sockaddr *) &web_addr,&sa_len);
+    retval = sendto(message,response,strlen(response)+1,0,(sockaddr *)&web_addr,sizeof(web_addr));
+    //retval = write(message,response,strlen(response)+1);
+    sleep(3);
+    close(message);
     close(com_fd);
     printf("status: %d, %d, Message: %s\n", retval, error, my_message);
 }

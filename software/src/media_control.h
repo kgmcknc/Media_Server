@@ -10,6 +10,7 @@
 
 #define MOVIE_MAX 1
 #define MUSIC_MAX 4
+#define MAX_INPUT_STRING 128
 
 char movie_control(char stream_select, char input_option, char* input_src, unsigned int out_clients, unsigned int out_address[][4], char client);
 char music_control(char stream_select, char input_option, char* input_src, unsigned int out_clients, unsigned int out_address[][4], char client);

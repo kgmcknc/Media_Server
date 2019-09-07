@@ -1,138 +1,111 @@
 
 #include "main.h"
-#include "sys_config.h"
-#include "sys_functions.h"
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
+#include <stdint.h>
 
-void updatewebstate(FILE* out_file);
-void init_webstate(FILE* out_file);
+#include <signal.h>
+#include <string.h>
+// #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+ 
+// #include <unistd.h>
+// #include <sys/socket.h>
+// #include <netinet/in.h>
+// #include <arpa/inet.h>
+// #include <sys/un.h>
+// #include <sys/time.h>
+//#include <wiringPi.h>
 
-char filestring[MAX_STRING] = {0};
-char funcstring[MAX_STRING] = {0};
-char fvalid = 0;
-int flength = 0;
-char valid_config = 0;
-long int file_length = 0;
-
-char usertmp[MAX_STRING] = {0};
-char username[MAX_STRING] = {0};
-unsigned int ms_port = 0;
-unsigned int ms_ip[4] = {0};
-char ms_name[MAX_NAME_LENGTH];
-char client_count = 0;
-unsigned int client_ips[MAX_CLIENTS][4] = {{0}};
-char client_state[MAX_CLIENTS] = {0};
-unsigned int client_id[MAX_CLIENTS] = {0};
-char client_names[MAX_CLIENTS][MAX_NAME_LENGTH] = {0};
-char user_option = 0;
-char restart_heartbeat = 1;
-
-char restart_listener = 0;
-pid_t listener;
-
-FILE* main_rx;
-FILE* main_tx;
 pid_t heartbeat_fork;
 
-FILE* user_fp;
 FILE* config_file;
-FILE* status_file;
-FILE* name_file;
-FILE* grep_fp;
-
-int sys_sockets[MAX_SYS_SOCKETS] = {0};
-int unix_sockets[MAX_UNIX_SOCKETS] = {0};
-int local_sockets[MAX_LOCAL_SOCKETS] = {0};
-int client_sockets[MAX_INET_SOCKETS] = {0};
-
-char exit_server = 0;
-char active_clients = 0;
-char active_unix = 0;
-char active_local = 0;
-char active_system = 0;
-
-int main_socket;
-int local_socket;
-int web_socket;
-
-fd_set all_sockets;
-int max_fds;
-
-struct system_function sf_heartbeat;
 
 int main(int argc, char **argv) {
+    system_config_struct system_config = SYS_CONFIG_DEFAULT;
+    uint8_t reload_configuration = 0;
 
     printf("\n\n----- Starting Media Server -----\n\n");
-    /*
-    user_fp = popen("ls /home/", "r");
-    if(user_fp == NULL){
-        printf("Failed to get User...\n");
-        exit(1);
-    } else {
-        fgets(usertmp, sizeof(usertmp)-1, user_fp);
-        strncpy(username, usertmp, (strlen(usertmp)-1));
-        printf("\n\n----- Got %s As User -----\n\n", username);
-    }
-    pclose(user_fp);
-    
-    name_file = fopen(NAME_PATH, "r+b");
-    if(name_file != NULL){
-        printf("\n\n----- Successfully Opened Name File -----\n\n");
-    } else {
-        printf("\n\n----- Failed To Open Name File, Exiting -----\n\n");
-        exit(EXIT_FAILURE);
-    }
-    fclose(name_file);
     
     config_file = fopen(CONFIG_PATH, "r+b");
     if(config_file != NULL){
         printf("\n\n----- Successfully Opened Config File -----\n\n");
     } else {
-        printf("\n\n----- Failed To Open Config File, Exiting -----\n\n");
-        exit(EXIT_FAILURE);
+        printf("\n\n----- Failed To Open Config File      -----\n\n");
+        printf("\n\n----- ReWriting Default Config File   -----\n\n");
+        create_config_file(config_file, system_config);
     }
     rewind(config_file);
 
     if(argc > 1) {
         printf("\n\n----- Checking Input Argument -----\n\n");
         if(strcmp(argv[1], "Config") || strcmp(argv[1], "config")) {
-                 printf("\n\n----- Running System Config -----\n\n");
-        configure_system();
+                printf("\n\n----- Running System Config -----\n\n");
+                configure_system(config_file, &system_config);
         } else {
-            printf("\n\n----- Unknown Argument... Exiting -----\n\n");
+            printf("\n\n----- Argument wasn't \"Config\"  -----\n\n");
+            printf("\n\n----- Exiting Media Server        -----\n\n");
+            fclose(config_file);
             exit(EXIT_FAILURE);
         }
     }
-
-    printf("\n\n----- Checking Configuration Settings -----\n\n");
-    check_config(config_file);
-    #ifdef IS_SERVER
-        printf("\n\n----- Running as Server -----\n\n");
-    #endif
-    #ifdef IS_CLIENT
-        printf("\n\n----- Running as Client -----\n\n");
-    #endif
-
-    status_file = fopen(STATUS_PATH, "r+b");
-    if(status_file != NULL){
-        printf("\n\n----- Successfully Opened Status File -----\n\n");
-    } else {
-        printf("\n\n----- Failed To Open Status File, Exiting -----\n\n");
-        exit(EXIT_FAILURE);
-    }
-    fclose(status_file);
     
-    system_setup();
+    do{
+        printf("\n\n----- Checking Configuration Settings -----\n\n");
+        load_config(config_file, &system_config);
+        fclose(config_file);
+        if(system_config.is_server){
+            printf("\n\n----- Running as Server -----\n\n");
 
-#ifdef USE_HEARTBEAT
+            // set interrupt for handling program abort or close
+            // execute system shutdown on sigterm
+            signal(SIGTERM, &safe_server_shutdown);
+            signal(SIGINT, &safe_server_shutdown);
+
+            // start server
+            reload_configuration = run_server(system_config);
+        } else {
+            printf("\n\n----- Running as Client -----\n\n");
+
+            // set interrupt for handling program abort or close
+            // execute system shutdown on sigterm
+            signal(SIGTERM, &safe_client_shutdown);
+            signal(SIGINT, &safe_client_shutdown);
+
+            // start client
+            reload_configuration = run_client(system_config);
+        }
+
+        // if we get here we broke out of system...
+        if(system_config.is_server){
+            safe_server_shutdown(0);
+        } else {
+            safe_client_shutdown(0);
+        }
+    } while(reload_configuration);
+    
+    printf("\n---- Exitting Media Server ----\n");
+    exit(EXIT_SUCCESS);
+}
+
+void safe_server_shutdown(int sig){
+    // kill all child processes
+    kill(heartbeat_fork, SIGKILL);
+    while(waitpid(-1, NULL, WNOHANG) > 0);
+}
+
+void safe_client_shutdown(int sig){
+    while(waitpid(-1, NULL, WNOHANG) > 0);
+}
+
+uint8_t run_server(struct system_config_struct system_config){
+    //system_setup();
+/*
     heartbeat_fork = fork();
-#endif
-#ifndef USE_HEARTBEAT
-    heartbeat_fork = 1;
-#endif
-
     if(heartbeat_fork == 0){
         int heartbeat_socket_c;
         printf("\n---- Inside Heartbeat Child ----\n");
@@ -144,17 +117,15 @@ int main(int argc, char **argv) {
     } else {
         printf("\n---- Inside Parent Server ----\n");
         server_system();
-    }*/
-    //send_broadcast_packet();
-    //receive_broadcast_packet();
-    receive_get_request();
-    // kill all child processes
-    //kill(heartbeat_fork, SIGKILL);
-    //fclose(config_file);
-    printf("\n---- Exitting System ----\n");
-    exit(EXIT_SUCCESS);
+    }
+    */
+    return 0;
 }
 
+uint8_t run_client(struct system_config_struct system_config){
+    return 0;
+}
+/*
 void send_broadcast_packet(void){
     int com_fd;
     int com_socket, com_len, com_opt = 1;
@@ -225,10 +196,10 @@ void receive_get_request(void){
         printf("Main Socket Was less or zero\n");
         //return -1;
     }
-    /*if(setsockopt(com_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *) &com_opt, sizeof(com_opt))){
-        printf("Main Socket Opt Failed\n");
-        //return -1;
-    }*/
+    //if(setsockopt(com_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *) &com_opt, sizeof(com_opt))){
+    //    printf("Main Socket Opt Failed\n");
+    //    //return -1;
+    //}
     memset(&com_addr, 0, sizeof(com_addr));
     com_addr.sin_family = AF_INET;
     com_addr.sin_addr.s_addr = htonl(INADDR_ANY);//INADDR_ANY;
@@ -567,10 +538,10 @@ int create_unix_socket(const char path[MAX_FILE_STRING]){
         printf("Parent Socket Was 0\n");
         return -1;
     }
-    /*if(setsockopt(com_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *) &com_opt, sizeof(com_opt))){
-        printf("Parent Socket Opt Failed\n");
-        return -1;
-    }*/
+    //if(setsockopt(com_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *) &com_opt, sizeof(com_opt))){
+    //    printf("Parent Socket Opt Failed\n");
+    //    return -1;
+    //}
     memset(&com_addr, 0, sizeof(com_addr));
     com_addr.sun_family = AF_UNIX;
     strncpy(com_addr.sun_path, path, sizeof(com_addr.sun_path)-1);
@@ -673,3 +644,4 @@ void process(char type, char client, char f_string[MAX_FUNCTION_STRING]){
     check_function(client, f_string);
 }
 
+*/

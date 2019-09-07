@@ -1,8 +1,33 @@
+#ifndef SRC_CONFIG_H_
+#define SRC_CONFIG_H_
 
-void configure_system(void);
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
+
+#define CONFIG_PATH "./media_server.conf"
+#define TIMEOUT_TIME 20
+
+struct system_config_struct {
+    uint8_t  is_server;
+    int32_t  device_id;
+    uint32_t server_ip_addr;
+    uint16_t server_tcp_port;
+};
+
+#define SYS_CONFIG_DEFAULT  {\
+    0,    /* uint8_t   - is_server        - Client By Default    */ \
+    -1,   /* int32_t   - device_id        - Set By Server        */ \
+    0,    /* uint32_t  - server_ip_addr   - it gets loaded       */ \
+	28500 /* uint16_t  - server_tcp_port  - Randomly selected..  */ \
+};
+
+void create_config_file(FILE* config_file, system_config_struct system_config);
+void configure_system(FILE* config_file, system_config_struct* system_config);
+void load_config(FILE* config_file, system_config_struct* system_config);
 void print_config_menu(void);
-char check_config(FILE* config_file);
-void initial_config(FILE* config_file);
+
+/*void initial_config(FILE* config_file);
 char check_file_size(FILE* config_file);
 char read_file_size(FILE* config_file, long int* config_data, long int offset);
 char write_file_size(FILE* config_file, long int* config_data, long int offset);
@@ -51,4 +76,5 @@ void send_to(unsigned char input_string[MAX_INPUT_STRING], unsigned int address[
 #define KMF_COM_PORT 11
 #define KMF_S_IP 13
 #define KMF_CLIENT_COUNT 18
-
+*/
+#endif /* SRC_CONFIG_H_ */

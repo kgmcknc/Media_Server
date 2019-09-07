@@ -23,6 +23,7 @@ struct system_config_struct {
 };
 
 void create_config_file(FILE* config_file, system_config_struct system_config);
+void get_this_ip(char* ip_addr);
 void configure_system(FILE* config_file, system_config_struct* system_config);
 void load_config(FILE* config_file, system_config_struct* system_config);
 void print_config_menu(void);

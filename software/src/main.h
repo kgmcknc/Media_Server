@@ -9,8 +9,8 @@ uint8_t run_server(struct system_config_struct system_config);
 uint8_t run_client(struct system_config_struct system_config);
 void safe_server_shutdown(int sig);
 void safe_client_shutdown(int sig);
-/*
 void send_broadcast_packet(void);
+/*
 void receive_broadcast_packet(void);
 void receive_get_request(void);
 void server_listener(void);

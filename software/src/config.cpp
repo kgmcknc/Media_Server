@@ -1,11 +1,104 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include "config.h"
 #include "sys_functions.h"
+#include <ifaddrs.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+void get_this_ip(char* ip)
+{
+    struct ifaddrs *ifaddr, *ifa;
+    int family, s, n;
+    char host[NI_MAXHOST];
+    char print_data = 0;
+
+    if (getifaddrs(&ifaddr) == -1) {
+        perror("getifaddrs");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Walk through linked list, maintaining head pointer so we
+        can free list later */
+
+    for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++) {
+        if (ifa->ifa_addr == NULL)
+            continue;
+
+        family = ifa->ifa_addr->sa_family;
+
+        /* Display interface name and family (including symbolic
+            form of the latter for the common families) */
+        if(print_data){
+            printf("%-8s %s (%d)\n",
+                    ifa->ifa_name,
+                    (family == AF_PACKET) ? "AF_PACKET" :
+                    (family == AF_INET) ? "AF_INET" :
+                    (family == AF_INET6) ? "AF_INET6" : "???",
+                    family);
+        }
+        /* For an AF_INET* interface address, display the address */
+
+        if (family == AF_INET || family == AF_INET6) {
+            s = getnameinfo(ifa->ifa_addr,
+                    (family == AF_INET) ? sizeof(struct sockaddr_in) :
+                                            sizeof(struct sockaddr_in6),
+                    host, NI_MAXHOST,
+                    NULL, 0, NI_NUMERICHOST);
+            if (s != 0) {
+                printf("getnameinfo() failed: %s\n", gai_strerror(s));
+                exit(EXIT_FAILURE);
+            }
+            if(print_data){
+                printf("\t\taddress: <%s>\n", host);
+            }
+            // see if this looks like valid ip... rough check
+            int p=0;
+            for(int i=0;i<16;i++){
+                if(host[i] == 0){
+                    break;
+                }
+                if(host[i] == '.'){
+                    p++;
+                }
+                if(i>=3){
+                    if(p>0){
+                        if(strncmp(host, "127", 3) == 0){
+                            // don't want local
+                        } else {
+                            strcpy(ip,host);
+                        }
+                        break;
+                    }
+                }
+            }
+
+        } else if (family == AF_PACKET && ifa->ifa_data != NULL) {
+           /* struct rtnl_link_stats *stats = (struct rtnl_link_stats*) ifa->ifa_data;
+            if(print_data){
+                printf("\t\ttx_packets = %10u; rx_packets = %10u\n"
+                        "\t\ttx_bytes   = %10u; rx_bytes   = %10u\n",
+                        stats->tx_packets, stats->rx_packets,
+                        stats->tx_bytes, stats->rx_bytes);
+            }*/
+        }
+    }
+
+    freeifaddrs(ifaddr);
+    
+}
 
 void create_config_file(FILE* config_file, system_config_struct system_config){
     config_file = fopen(CONFIG_PATH, "ab");
+    char this_ip[16] = "0";
     if(config_file != NULL){
         fprintf(config_file, "// Media Server C Code Config File\n");
         fprintf(config_file, "\n");
@@ -17,7 +110,8 @@ void create_config_file(FILE* config_file, system_config_struct system_config){
         fprintf(config_file, "device_id -1\n");
         fprintf(config_file, "\n");
         fprintf(config_file, "// server_ip_addr will get set by c code if you are connected to the internet... or you can overwrite it with format xxx.xxx.xxx.xxx if you want..?\n");
-        fprintf(config_file, "server_ip_addr 0\n");
+        get_this_ip(&this_ip[0]);
+        fprintf(config_file, "server_ip_addr %s\n", this_ip);
         fprintf(config_file, "\n");
         fprintf(config_file, "// server_tcp_port will get set by c code to default 28500 (randomly picked) or you can overwrite it if you want\n");
         fprintf(config_file, "server_tcp_port 0\n");

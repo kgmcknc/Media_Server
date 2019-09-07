@@ -13,10 +13,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
  
-// #include <unistd.h>
-// #include <sys/socket.h>
-// #include <netinet/in.h>
-// #include <arpa/inet.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 // #include <sys/un.h>
 // #include <sys/time.h>
 //#include <wiringPi.h>
@@ -34,12 +34,12 @@ int main(int argc, char **argv) {
     config_file = fopen(CONFIG_PATH, "r+b");
     if(config_file != NULL){
         printf("\n\n----- Successfully Opened Config File -----\n\n");
+        fclose(config_file);
     } else {
         printf("\n\n----- Failed To Open Config File      -----\n\n");
         printf("\n\n----- ReWriting Default Config File   -----\n\n");
         create_config_file(config_file, system_config);
     }
-    rewind(config_file);
 
     if(argc > 1) {
         printf("\n\n----- Checking Input Argument -----\n\n");
@@ -49,7 +49,6 @@ int main(int argc, char **argv) {
         } else {
             printf("\n\n----- Argument wasn't \"Config\"  -----\n\n");
             printf("\n\n----- Exiting Media Server        -----\n\n");
-            fclose(config_file);
             exit(EXIT_FAILURE);
         }
     }
@@ -57,7 +56,6 @@ int main(int argc, char **argv) {
     do{
         printf("\n\n----- Checking Configuration Settings -----\n\n");
         load_config(config_file, &system_config);
-        fclose(config_file);
         if(system_config.is_server){
             printf("\n\n----- Running as Server -----\n\n");
 
@@ -125,12 +123,12 @@ uint8_t run_server(struct system_config_struct system_config){
 uint8_t run_client(struct system_config_struct system_config){
     return 0;
 }
-/*
+
 void send_broadcast_packet(void){
     int com_fd;
     int com_socket, com_len, com_opt = 1;
     struct sockaddr_in com_addr;
-    struct sockaddr_in Recv_addr;  
+    struct sockaddr_in Recv_addr;
     com_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if(com_fd == 0){
         printf("Main Socket Was 0\n");
@@ -150,11 +148,10 @@ void send_broadcast_packet(void){
 
     printf("sending message\n");
     int retval = sendto(com_fd,my_message,strlen(my_message)+1,0,(sockaddr *)&com_addr,sizeof(com_addr));
-    int error = errno;
     close(com_fd);
-    printf("status: %d, %d\n", retval, error);
+    printf("status: %d, %d\n", retval);
 }
-
+/*
 void receive_broadcast_packet(void){
     int com_fd;
     int com_socket, com_len, com_opt = 1;

@@ -214,8 +214,10 @@ void config_to_string(struct system_config_struct* config, char* string){
     struct in_addr ip_address;
     ip_address.s_addr = config->server_ip_addr;
     ip_string = inet_ntoa(ip_address);
-    sprintf(string, "Media_Server System:\r\nVersion: %d.%d\r\nIs_Server: %d, Device_ID: %d\r\nDevice_IP: %s,Device_Port: %d",
-                    &config->major_version, &config->minor_version, &config->is_server, &config->device_id, &ip_string[0], &config->server_tcp_port);
+    sprintf(string, "Media_Server System:\r\nVersion: %u.%u\r\nIs_Server: %u, Device_ID: %d\r\nDevice_IP: %s,Device_Port: %u",
+                    config->major_version, config->minor_version, config->is_server,
+                    config->device_id, ip_string, config->server_tcp_port);
+    printf("Broadcast String: %s\n", string);
 }
 
 void string_to_config(char* string, struct system_config_struct* config){
@@ -223,6 +225,11 @@ void string_to_config(char* string, struct system_config_struct* config){
     sscanf(string, "Media_Server System:\r\nVersion: %d.%d\r\nIs_Server: %d, Device_ID: %d\r\nDevice_IP: %s,Device_Port: %d", 
         &config->major_version, &config->minor_version, &config->is_server, &config->device_id, &ip_string[0], &config->server_tcp_port);
     config->server_ip_addr = (uint32_t) inet_addr(&ip_string[0]);
+    printf("Version: %d.%d\n", config->major_version, config->minor_version);
+    printf("Is Server: %d\n", config->is_server);
+    printf("Device Id: %d\n", config->device_id);
+    printf("Device IP: %d\n", config->server_ip_addr);
+    printf("Device Port: %d\n", config->server_tcp_port);
 }
 
 // just need to write config to string and string to config functions and then could update the packet validation to search for first line in packet

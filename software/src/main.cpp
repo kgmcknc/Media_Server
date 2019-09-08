@@ -135,7 +135,7 @@ uint8_t run_server(struct system_config_struct system_config){
 uint8_t run_client(struct system_config_struct system_config){
     uint8_t reconfigure = 0;
     char packet_data[MAX_BROADCAST_PACKET];
-    receive_broadcast_packet(&packet_data[0]);
+    receive_broadcast_packet(UDP_BROADCAST_PORT, &packet_data[0]);
     printf("received: %s", packet_data);
     // wait for broadcast with server address...
     // receive broadcast and then connect to server

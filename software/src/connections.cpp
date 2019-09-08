@@ -24,12 +24,12 @@ void heartbeat(struct system_config_struct* system_config){
     while(CONTINUE_HEARTBEAT){
         sleep(HEARTBEAT_PERIOD_SEC);
         char packet[] = "test_packetssss";
-        send_broadcast_packet(system_config, &packet[0], 16);
+        send_broadcast_packet(UDP_BROADCAST_PORT, &packet[0], 16);
         printf("\n---- Sent Heartbeat Command ----\n");
     }
 }
 
-int send_broadcast_packet(struct system_config_struct* system_config, char* packet_data, uint16_t data_length){
+int send_broadcast_packet(uint16_t broadcast_port, char* packet_data, uint16_t data_length){
     int conn_fd;
     int conn_socket;
     int conn_opt = 1;
@@ -48,15 +48,14 @@ int send_broadcast_packet(struct system_config_struct* system_config, char* pack
     memset(&conn_addr, 0, sizeof(conn_addr));
     conn_addr.sin_family = AF_INET;
     conn_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
-    //com_addr.sin_addr.s_addr = inet_addr("192.168.255.255");
-    conn_addr.sin_port = htons(system_config->server_tcp_port);
+    conn_addr.sin_port = htons(broadcast_port);
 
     retval = sendto(conn_fd,packet_data,data_length,0,(sockaddr *)&conn_addr,sizeof(conn_addr));
     close(conn_fd);
     return retval;
 }
 
-uint16_t receive_broadcast_packet(char* packet_data){
+uint16_t receive_broadcast_packet(uint16_t broadcast_port, char* packet_data){
     int conn_fd;
     int conn_opt = 1;
     struct sockaddr_in conn_addr;
@@ -78,7 +77,7 @@ uint16_t receive_broadcast_packet(char* packet_data){
     memset(&conn_addr, 0, sizeof(conn_addr));
     conn_addr.sin_family = AF_INET;
     conn_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
-    conn_addr.sin_port = htons(40000);
+    conn_addr.sin_port = htons(broadcast_port);
     bind(conn_fd,(sockaddr*)&conn_addr, sizeof (conn_addr));
     
     receive_length = recvfrom(conn_fd,packet_data,rx_len,0,(sockaddr *)&conn_addr,&len);

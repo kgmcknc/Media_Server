@@ -199,6 +199,10 @@ void load_config(struct system_config_struct* system_config){
     if(!loaded_port){
         system_config->server_tcp_port = DEFAULT_TCP_PORT;
     }
+    
+    if(system_config->server_tcp_port == 0){
+        system_config->server_tcp_port = DEFAULT_TCP_PORT;
+    }
     fclose(config_file);
 }
 

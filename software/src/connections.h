@@ -1,4 +1,18 @@
 
+#ifndef SRC_CONNECTIONS_H_
+#define SRC_CONNECTIONS_H_
+
+#include <stdint.h>
+#include "config.h"
+
+#define CONTINUE_HEARTBEAT 1
+#define HEARTBEAT_PERIOD_SEC 10
+#define MAX_BROADCAST_PACKET 512
+
+void heartbeat(struct system_config_struct* system_config);
+int send_broadcast_packet(struct system_config_struct* system_config, char* packet_data, uint16_t data_length);
+uint16_t receive_broadcast_packet(char* packet_data);
+
 // #include <stdio.h>
 // #include <stdlib.h>
 // #include <fcntl.h>
@@ -33,3 +47,5 @@
 // #define USE_TIMEOUT 1
 // #define NO_TIMEOUT 0
 // #define USE_HEARTBEAT 1
+
+#endif //SRC_CONNECTIONS_H_

@@ -9,6 +9,8 @@ uint8_t run_server(struct system_config_struct system_config);
 uint8_t run_client(struct system_config_struct system_config);
 void safe_server_shutdown(int sig);
 void safe_client_shutdown(int sig);
+void server_shutdown(void);
+void client_shutdown(void);
 void send_broadcast_packet(void);
 /*
 void receive_broadcast_packet(void);
@@ -18,7 +20,6 @@ void get_rx(int com_socket);
 void process(char type, char client, char f_string[MAX_FUNCTION_STRING]);
 void process_function(char client);
 void server_system(void);
-void heartbeat(int hb_socket);
 int create_unix_socket(const char path[MAX_FILE_STRING]);
 int connect_unix_socket(const char path[MAX_FILE_STRING]);
 int create_main_socket(unsigned int port);

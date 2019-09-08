@@ -1,6 +1,7 @@
 
 #include "main.h"
 #include "config.h"
+#include "connections.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,14 +39,14 @@ int main(int argc, char **argv) {
     } else {
         printf("\n\n----- Failed To Open Config File      -----\n\n");
         printf("\n\n----- ReWriting Default Config File   -----\n\n");
-        create_config_file(config_file, system_config);
+        create_config_file(system_config);
     }
 
     if(argc > 1) {
         printf("\n\n----- Checking Input Argument -----\n\n");
         if(strcmp(argv[1], "Config") || strcmp(argv[1], "config")) {
                 printf("\n\n----- Running System Config -----\n\n");
-                configure_system(config_file, &system_config);
+                configure_system(&system_config);
         } else {
             printf("\n\n----- Argument wasn't \"Config\"  -----\n\n");
             printf("\n\n----- Exiting Media Server        -----\n\n");
@@ -55,7 +56,7 @@ int main(int argc, char **argv) {
     
     do{
         printf("\n\n----- Checking Configuration Settings -----\n\n");
-        load_config(config_file, &system_config);
+        load_config(&system_config);
         if(system_config.is_server){
             printf("\n\n----- Running as Server -----\n\n");
 
@@ -80,9 +81,9 @@ int main(int argc, char **argv) {
 
         // if we get here we broke out of system...
         if(system_config.is_server){
-            safe_server_shutdown(0);
+            server_shutdown();
         } else {
-            safe_client_shutdown(0);
+            client_shutdown();
         }
     } while(reload_configuration);
     
@@ -90,97 +91,67 @@ int main(int argc, char **argv) {
     exit(EXIT_SUCCESS);
 }
 
-void safe_server_shutdown(int sig){
+void server_shutdown(void){
     // kill all child processes
     kill(heartbeat_fork, SIGKILL);
     while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
-void safe_client_shutdown(int sig){
+void client_shutdown(void){
     while(waitpid(-1, NULL, WNOHANG) > 0);
+}
+
+void safe_server_shutdown(int sig){
+    server_shutdown();
+    exit(EXIT_FAILURE);
+}
+
+void safe_client_shutdown(int sig){
+    client_shutdown();
+    exit(EXIT_FAILURE);
 }
 
 uint8_t run_server(struct system_config_struct system_config){
     //system_setup();
-/*
+    uint8_t reconfigure = 0;
+
     heartbeat_fork = fork();
     if(heartbeat_fork == 0){
-        int heartbeat_socket_c;
         printf("\n---- Inside Heartbeat Child ----\n");
         sleep(2);
-        heartbeat_socket_c = connect_unix_socket(HEARTBEAT_PATH);
-        heartbeat(heartbeat_socket_c);
+        heartbeat(&system_config);
         printf("\n---- Exitting Heartbeat Child ----\n");
         exit(EXIT_SUCCESS);
     } else {
         printf("\n---- Inside Parent Server ----\n");
-        server_system();
+        while(!reconfigure){
+            
+        }
     }
-    */
-    return 0;
+    
+    return reconfigure;
 }
 
 uint8_t run_client(struct system_config_struct system_config){
-    return 0;
-}
+    uint8_t reconfigure = 0;
+    char packet_data[MAX_BROADCAST_PACKET];
+    receive_broadcast_packet(&packet_data[0]);
+    printf("received: %s", packet_data);
+    // wait for broadcast with server address...
+    // receive broadcast and then connect to server
+    // then run until socket is broken
 
-void send_broadcast_packet(void){
-    int com_fd;
-    int com_socket, com_len, com_opt = 1;
-    struct sockaddr_in com_addr;
-    struct sockaddr_in Recv_addr;
-    com_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if(com_fd == 0){
-        printf("Main Socket Was 0\n");
-        //return -1;
-    }
-    if(setsockopt(com_fd, SOL_SOCKET, SO_BROADCAST, (char *) &com_opt, sizeof(com_opt))){
-        printf("Main Socket Opt Failed\n");
-        //return -1;
-    }
-    memset(&com_addr, 0, sizeof(com_addr));
-    com_addr.sin_family = AF_INET;
-    com_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);//INADDR_ANY;
-    //com_addr.sin_addr.s_addr = inet_addr("192.168.255.255");
-    com_addr.sin_port = htons(65400);
+        // set up sockets to receive input from web or from server
 
-    char my_message[] = "testudpbroadcast";
+        // wait for incomming message (maybe with timeout)
 
-    printf("sending message\n");
-    int retval = sendto(com_fd,my_message,strlen(my_message)+1,0,(sockaddr *)&com_addr,sizeof(com_addr));
-    close(com_fd);
-    printf("status: %d, %d\n", retval);
+        // parse and handle incoming data message
+
+        // handle other messages (not from input, like finished song or something)
+
+    return reconfigure;
 }
 /*
-void receive_broadcast_packet(void){
-    int com_fd;
-    int com_socket, com_len, com_opt = 1;
-    struct sockaddr_in com_addr;
-    struct sockaddr_in Recv_addr;  
-    com_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    unsigned int len = sizeof(struct sockaddr_in);
-    if(com_fd == 0){
-        printf("Main Socket Was 0\n");
-        //return -1;
-    }
-    if(setsockopt(com_fd, SOL_SOCKET, SO_BROADCAST, (char *) &com_opt, sizeof(com_opt))){
-        printf("Main Socket Opt Failed\n");
-        //return -1;
-    }
-    memset(&com_addr, 0, sizeof(com_addr));
-    com_addr.sin_family = AF_INET;
-    com_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);//INADDR_ANY;
-    //com_addr.sin_addr.s_addr = inet_addr("192.168.255.255");
-    com_addr.sin_port = htons(65400);
-    bind(com_fd,(sockaddr*)&com_addr, sizeof (com_addr));
-    int rx_len = 100;
-    char my_message[100];
-    printf("receiving message\n");
-    int retval = recvfrom(com_fd,my_message,rx_len,0,(sockaddr *)&com_addr,&len);
-    int error = errno;
-    close(com_fd);
-    printf("status: %d, %d, Message: %s\n", retval, error, my_message);
-}
 
 void receive_get_request(void){
     int com_fd, message;
@@ -248,10 +219,6 @@ void server_system(void){
 
 void system_setup(void){
     function_setup();
-}
-
-void function_setup(void){
-    set_function(&sf_heartbeat, "sendheartbeat");
 }
 
 void set_function(struct system_function* sf, const char f_string[MAX_FUNCTION_STRING]){
@@ -515,15 +482,6 @@ void get_rx(int com_socket){
     memset(rx_data, '\0', sizeof(rx_data));
     read(com_socket, rx_data, 400);
     printf("Server Read: %s\n", rx_data);
-}
-
-void heartbeat(int hb_socket){
-    char system_heartbeat = RUNNING;
-    while(system_heartbeat == RUNNING){
-        sleep(HB_PERIOD);
-        send(hb_socket, sf_heartbeat.string, sizeof(sf_heartbeat.string), 0);
-        printf("\n---- Sent Heartbeat Command ----\n");
-    }
 }
 
 int create_unix_socket(const char path[MAX_FILE_STRING]){

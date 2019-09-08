@@ -1,4 +1,90 @@
 
+#include "config.h"
+#include "connections.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+#include <string.h>
+// #include <fcntl.h>
+//#include <sys/stat.h>
+//#include <sys/types.h>
+//#include <sys/wait.h>
+ 
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+// #include <sys/un.h>
+// #include <sys/time.h>
+//#include <wiringPi.h>
+
+void heartbeat(struct system_config_struct* system_config){
+    while(CONTINUE_HEARTBEAT){
+        sleep(HEARTBEAT_PERIOD_SEC);
+        char packet[] = "test_packetssss";
+        send_broadcast_packet(system_config, &packet[0], 16);
+        printf("\n---- Sent Heartbeat Command ----\n");
+    }
+}
+
+int send_broadcast_packet(struct system_config_struct* system_config, char* packet_data, uint16_t data_length){
+    int conn_fd;
+    int conn_socket;
+    int conn_opt = 1;
+    struct sockaddr_in conn_addr;
+    int retval;
+
+    conn_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if(conn_fd == 0){
+        printf("Main Socket Was 0\n");
+        return -1;
+    }
+    if(setsockopt(conn_fd, SOL_SOCKET, SO_BROADCAST, (char *) &conn_opt, sizeof(conn_opt))){
+        printf("Main Socket Opt Failed\n");
+        return -1;
+    }
+    memset(&conn_addr, 0, sizeof(conn_addr));
+    conn_addr.sin_family = AF_INET;
+    conn_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+    //com_addr.sin_addr.s_addr = inet_addr("192.168.255.255");
+    conn_addr.sin_port = htons(system_config->server_tcp_port);
+
+    retval = sendto(conn_fd,packet_data,data_length,0,(sockaddr *)&conn_addr,sizeof(conn_addr));
+    close(conn_fd);
+    return retval;
+}
+
+uint16_t receive_broadcast_packet(char* packet_data){
+    int conn_fd;
+    int conn_opt = 1;
+    struct sockaddr_in conn_addr;
+    unsigned int len = sizeof(struct sockaddr_in);
+    uint16_t receive_length;
+    int rx_len = MAX_BROADCAST_PACKET;
+
+    conn_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    
+    if(conn_fd == 0){
+        printf("Main Socket Was 0\n");
+        //return -1;
+    }
+    if(setsockopt(conn_fd, SOL_SOCKET, SO_BROADCAST, (char *) &conn_opt, sizeof(conn_opt))){
+        printf("Main Socket Opt Failed\n");
+        //return -1;
+    }
+
+    memset(&conn_addr, 0, sizeof(conn_addr));
+    conn_addr.sin_family = AF_INET;
+    conn_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+    conn_addr.sin_port = htons(40000);
+    bind(conn_fd,(sockaddr*)&conn_addr, sizeof (conn_addr));
+    
+    receive_length = recvfrom(conn_fd,packet_data,rx_len,0,(sockaddr *)&conn_addr,&len);
+    close(conn_fd);
+    return receive_length;
+}
 // #include "main.h"
 // #include "sys_config.h"
 // #include "sys_functions.h"

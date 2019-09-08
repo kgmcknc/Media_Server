@@ -96,7 +96,8 @@ void get_this_ip(char* ip)
     
 }
 
-void create_config_file(FILE* config_file, system_config_struct system_config){
+void create_config_file(struct system_config_struct system_config){
+    FILE* config_file;
     config_file = fopen(CONFIG_PATH, "ab");
     char this_ip[16] = "0";
     if(config_file != NULL){
@@ -122,95 +123,86 @@ void create_config_file(FILE* config_file, system_config_struct system_config){
     }
 }
 
-void load_config(FILE* config_file, system_config_struct* system_config){
-    printf("system loaded\n");
-    /*char cfg_data[TMP_DATA_SIZE] = {0}; // max temp data - 40 bytes
-    int cfg_cnt = 0;
-    char file_end = 0;
-    unsigned int port = 0;
-    unsigned int ip[4] = {0};
-    long int size = 0;
-    char tmp_valid = 1;
-    printf("Checking Config Data\n");
-    rewind(config_file);
-    while(!file_end && (cfg_cnt < MAX_CONFIG_FILE)){
-        fgetc(config_file);
-        file_end = feof(config_file);
-        cfg_cnt = cfg_cnt + 1;
-    }
-    file_length = cfg_cnt;
-    rewind(config_file);
+void load_config(struct system_config_struct* system_config){
+    FILE* config_file;
+    char* continue_reading = 0;
+    char config_file_data[MAX_CONFIG_LINE_SIZE];
+    uint8_t loaded_type = 0, loaded_id = 0, loaded_ip = 0, loaded_port = 0;
+
+    config_file = fopen(CONFIG_PATH, "r+b");
     
-    if(cfg_cnt < MIN_CONFIG_SIZE){
-        printf("\nConfig File Was Too Short! Need to Re-Configure!\n");
-        check_file_size(config_file);
-        initial_config(config_file);
-        valid_config = 0;
-        return 1;
-    } else {
-        if(!read_file_size(config_file, &size, KMF_FILE_SIZE)){
-           printf("Failed File Size\n");
-        }
-        if(size){
-           file_length = size;
-        } else {
-           printf("File Size: %u\n", ((int) size));
-           tmp_valid = 0;
-           //return 1;
-        }        
-        if(!read_config_data(config_file, &cfg_data[0], KMF_BASE, 3)){
-           printf("config data: %s\n", cfg_data);
-           tmp_valid = 0;
-           //return 1;
-        }
-        if(strcmp(&cfg_data[0], "kmf")){
-           printf("failed on kmf\n");
-           //return 1;//printf("config data: %s\n", cfg_data);
-           tmp_valid = 0;
-        }
-        if(!read_port(config_file, &port, KMF_COM_PORT)){
-           printf("config port: %d\n", port);
-           //return 1;
-           tmp_valid = 0;
-        }
-        if(!port){
-           printf("failed on port\n");
-           //return 1;
-           tmp_valid = 0;
-        }
-        if(!read_ip_address(config_file, &ip[0], KMF_S_IP)){
-           printf("ip: %u.%u.%u.%u\n", ip[0], ip[1], ip[2], ip[3]);
-           //return 1;
-           tmp_valid = 0;
-        }
-        if(!ip[0] || !ip[1] || !ip[2] || !ip[3]){
-           printf("ip: %u.%u.%u.%u\n", ip[0], ip[1], ip[2], ip[3]);
-           printf("failed on ip\n");
-           tmp_valid = 0;
-           //return 1;
-        }
-#ifdef IS_SERVER
-        read_name(&ms_name[0], 0);
-#endif
-#ifdef IS_CLIENT
-        read_name(&client_names[0][0], 0);
-#endif
+    memset(&config_file_data[0], 0, MAX_CONFIG_LINE_SIZE);
+
+    do{
+        // read line from file
+        continue_reading = fgets(&config_file_data[0], MAX_CONFIG_LINE_SIZE, config_file);
+        // process line
+        char* comment_pointer;
+        char* data_pointer;
+
+        // look for comment "//"
+        comment_pointer = strstr(&config_file_data[0], "//");
         
-        valid_config = tmp_valid;
-        if(valid_config){
-           printf("Config Data Was Valid\n");
-           update_system(config_file);
-           restart_listener = 1;
-           return 0;
-        } else {
-           printf("Config Data Wasn't Valid\n");
-           restart_listener = 0;
-           return 1;
+        // look for "is_server";
+        data_pointer = strstr(&config_file_data[0], "is_server");
+        if(data_pointer){
+            if(data_pointer > comment_pointer){
+                sscanf(data_pointer, "is_server %d", &system_config->is_server);
+                loaded_type = 1;
+            }
         }
-    }*/
+        // look for "device_id";
+        data_pointer = strstr(&config_file_data[0], "device_id");
+        if(data_pointer){
+            if(data_pointer > comment_pointer){
+                sscanf(data_pointer, "device_id %d", &system_config->device_id);
+                loaded_id = 1;
+            }
+        }
+        // look for "server_ip_addr";
+        data_pointer = strstr(&config_file_data[0], "server_ip_addr");
+        if(data_pointer){
+            if(data_pointer > comment_pointer){
+                char this_ip[16];
+                sscanf(data_pointer, "server_ip_addr %s", &this_ip[0]);
+                inet_aton(&this_ip[0], (struct in_addr *) &system_config->server_ip_addr);
+                loaded_ip = 1;
+            }
+        }
+        // look for "server_tcp_port";
+        data_pointer = strstr(&config_file_data[0], "server_tcp_port");
+        if(data_pointer){
+            if(data_pointer > comment_pointer){
+                sscanf(data_pointer, "server_tcp_port %d", &system_config->server_tcp_port);
+                loaded_port = 1;
+            }
+        }
+
+    }while(continue_reading); // read end of file, stop
+
+    // load anything we didn't find from file
+    if(!loaded_type){
+        system_config->is_server = 0; // default to client if not specified
+    }
+    if(!loaded_id){
+        if(system_config->is_server){
+            system_config->device_id = 0; // id is zero for servers
+        } else {
+            system_config->device_id = -1; // set to -1 to mark that it has not yet been given an id
+        }
+    }
+    if(!loaded_ip){
+        char this_ip[16];
+        get_this_ip(&this_ip[0]);
+        inet_aton(&this_ip[0], (struct in_addr *) &system_config->server_ip_addr);
+    }
+    if(!loaded_port){
+        system_config->server_tcp_port = DEFAULT_TCP_PORT;
+    }
+    fclose(config_file);
 }
 
-void configure_system(FILE* config_file, system_config_struct* system_config){
+void configure_system(struct system_config_struct* system_config){
     #ifdef IS_SERVER
     int tmp_count = 0;
     unsigned int tmp_data = 0;

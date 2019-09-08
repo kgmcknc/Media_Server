@@ -7,6 +7,9 @@
 
 #define CONFIG_PATH "./media_server.conf"
 #define TIMEOUT_TIME 20
+#define MAX_CONFIG_LINE_SIZE 256
+
+#define DEFAULT_TCP_PORT (uint16_t) 28500
 
 struct system_config_struct {
     uint8_t  is_server;
@@ -19,13 +22,13 @@ struct system_config_struct {
     0,    /* uint8_t   - is_server        - Client By Default    */ \
     -1,   /* int32_t   - device_id        - Set By Server        */ \
     0,    /* uint32_t  - server_ip_addr   - it gets loaded       */ \
-	28500 /* uint16_t  - server_tcp_port  - Randomly selected..  */ \
+	DEFAULT_TCP_PORT /* uint16_t  - server_tcp_port  - Randomly selected..  */ \
 };
 
-void create_config_file(FILE* config_file, system_config_struct system_config);
+void create_config_file(struct system_config_struct system_config);
 void get_this_ip(char* ip_addr);
-void configure_system(FILE* config_file, system_config_struct* system_config);
-void load_config(FILE* config_file, system_config_struct* system_config);
+void configure_system(struct system_config_struct* system_config);
+void load_config(struct system_config_struct* system_config);
 void print_config_menu(void);
 
 /*void initial_config(FILE* config_file);

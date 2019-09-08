@@ -9,10 +9,13 @@
 #define HEARTBEAT_PERIOD_SEC 10
 #define MAX_BROADCAST_PACKET 512
 #define UDP_BROADCAST_PORT 1900
+#define UDP_TRANSFER_LENGTH 128
 
 void heartbeat(struct system_config_struct* system_config);
 int send_broadcast_packet(uint16_t broadcast_port, char* packet_data, uint16_t data_length);
 uint16_t receive_broadcast_packet(uint16_t broadcast_port, char* packet_data);
+void listen_for_devices(struct system_config_struct* system_config, struct system_config_struct* new_device);
+uint8_t validate_packet(char* packet_data, uint16_t packet_length);
 
 // #include <stdio.h>
 // #include <stdlib.h>

@@ -4,14 +4,18 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "version.h"
 
 #define CONFIG_PATH "./media_server.conf"
 #define TIMEOUT_TIME 20
 #define MAX_CONFIG_LINE_SIZE 256
+#define MAX_DEVICE_NAME 256
 
 #define DEFAULT_TCP_PORT (uint16_t) 28500
 
 struct system_config_struct {
+    uint8_t  major_version;
+    uint8_t  minor_version;
     uint8_t  is_server;
     int32_t  device_id;
     uint32_t server_ip_addr;
@@ -19,10 +23,19 @@ struct system_config_struct {
 };
 
 #define SYS_CONFIG_DEFAULT  {\
-    0,    /* uint8_t   - is_server        - Client By Default    */ \
-    -1,   /* int32_t   - device_id        - Set By Server        */ \
-    0,    /* uint32_t  - server_ip_addr   - it gets loaded       */ \
+    SERVER_MAJOR_VERSION,   /* uint8_t   - major_version    - Current Version      */ \
+    SERVER_MINOR_VERSION,   /* uint8_t   - minor_version    - Current Version      */ \
+    0,               /* uint8_t   - is_server        - Client By Default    */ \
+    -1,              /* int32_t   - device_id        - Set By Server        */ \
+    0,               /* uint32_t  - server_ip_addr   - it gets loaded       */ \
 	DEFAULT_TCP_PORT /* uint16_t  - server_tcp_port  - Randomly selected..  */ \
+};
+
+struct device_info_struct {
+    struct system_config_struct config;
+    char name[MAX_DEVICE_NAME];
+    uint8_t is_connected;
+    uint8_t is_playing;
 };
 
 void create_config_file(struct system_config_struct system_config);
@@ -30,6 +43,8 @@ void get_this_ip(char* ip_addr);
 void configure_system(struct system_config_struct* system_config);
 void load_config(struct system_config_struct* system_config);
 void print_config_menu(void);
+void config_to_string(struct system_config_struct* config, char* string);
+void string_to_config(char* string, struct system_config_struct* config);
 
 /*void initial_config(FILE* config_file);
 char check_file_size(FILE* config_file);

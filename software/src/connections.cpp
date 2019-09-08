@@ -21,10 +21,12 @@
 //#include <wiringPi.h>
 
 void heartbeat(struct system_config_struct* system_config){
+    char packet_data[MAX_BROADCAST_PACKET];
+    config_to_string(system_config, &packet_data[0]);
+
     while(CONTINUE_HEARTBEAT){
         sleep(HEARTBEAT_PERIOD_SEC);
-        char packet[] = "test_packetssss";
-        send_broadcast_packet(UDP_BROADCAST_PORT, &packet[0], 16);
+        send_broadcast_packet(UDP_BROADCAST_PORT, &packet_data[0], UDP_TRANSFER_LENGTH);
         printf("\n---- Sent Heartbeat Command ----\n");
     }
 }
@@ -84,6 +86,31 @@ uint16_t receive_broadcast_packet(uint16_t broadcast_port, char* packet_data){
     close(conn_fd);
     return receive_length;
 }
+
+void listen_for_devices(struct system_config_struct* system_config, struct system_config_struct* new_device){
+    char packet_data[MAX_BROADCAST_PACKET];
+    uint16_t received_length;
+    uint8_t found_media_server = 0;
+
+    while(!found_media_server){
+        received_length = receive_broadcast_packet(UDP_BROADCAST_PORT, &packet_data[0]);
+        if(validate_packet(&packet_data[0], received_length)){
+            string_to_config(&packet_data[0], new_device);
+            found_media_server = (new_device->server_ip_addr != system_config->server_ip_addr);
+        }
+    }
+}
+
+uint8_t validate_packet(char* packet_data, uint16_t packet_length){
+    uint8_t valid_packet_length = 0;
+    uint8_t valid_packet_data = 0;
+    uint8_t valid_packet = 0;
+    valid_packet_length = (packet_length == UDP_TRANSFER_LENGTH);
+    valid_packet_data = (strstr(packet_data, "Media_Server System:") > 0);
+    valid_packet = valid_packet_length & valid_packet_data;
+    return valid_packet;
+}
+
 // #include "main.h"
 // #include "sys_config.h"
 // #include "sys_functions.h"

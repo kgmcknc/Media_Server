@@ -4,6 +4,7 @@
 #include <string.h>
 #include "config.h"
 #include "sys_functions.h"
+#include "version.h"
 #include <ifaddrs.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -133,6 +134,8 @@ void load_config(struct system_config_struct* system_config){
     
     memset(&config_file_data[0], 0, MAX_CONFIG_LINE_SIZE);
 
+    system_config->major_version = SERVER_MAJOR_VERSION;
+    system_config->minor_version = SERVER_MINOR_VERSION;
     do{
         // read line from file
         continue_reading = fgets(&config_file_data[0], MAX_CONFIG_LINE_SIZE, config_file);
@@ -199,12 +202,30 @@ void load_config(struct system_config_struct* system_config){
     if(!loaded_port){
         system_config->server_tcp_port = DEFAULT_TCP_PORT;
     }
-    
+
     if(system_config->server_tcp_port == 0){
         system_config->server_tcp_port = DEFAULT_TCP_PORT;
     }
     fclose(config_file);
 }
+
+void config_to_string(struct system_config_struct* config, char* string){
+    char* ip_string;
+    struct in_addr ip_address;
+    ip_address.s_addr = config->server_ip_addr;
+    ip_string = inet_ntoa(ip_address);
+    sprintf(string, "Media_Server System:\r\nVersion: %d.%d\r\nIs_Server: %d, Device_ID: %d\r\nDevice_IP: %s,Device_Port: %d",
+                    &config->major_version, &config->minor_version, &config->is_server, &config->device_id, &ip_string[0], &config->server_tcp_port);
+}
+
+void string_to_config(char* string, struct system_config_struct* config){
+    char ip_string[16];
+    sscanf(string, "Media_Server System:\r\nVersion: %d.%d\r\nIs_Server: %d, Device_ID: %d\r\nDevice_IP: %s,Device_Port: %d", 
+        &config->major_version, &config->minor_version, &config->is_server, &config->device_id, &ip_string[0], &config->server_tcp_port);
+    config->server_ip_addr = (uint32_t) inet_addr(&ip_string[0]);
+}
+
+// just need to write config to string and string to config functions and then could update the packet validation to search for first line in packet
 
 void configure_system(struct system_config_struct* system_config){
     #ifdef IS_SERVER

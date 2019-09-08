@@ -1,6 +1,7 @@
 
 #include "main.h"
 #include "config.h"
+#include "version.h"
 #include "connections.h"
 
 #include <stdio.h>
@@ -23,6 +24,7 @@
 //#include <wiringPi.h>
 
 pid_t heartbeat_fork;
+pid_t device_discovery_fork;
 
 FILE* config_file;
 
@@ -59,32 +61,30 @@ int main(int argc, char **argv) {
         load_config(&system_config);
         if(system_config.is_server){
             printf("\n\n----- Running as Server -----\n\n");
-
-            // set interrupt for handling program abort or close
-            // execute system shutdown on sigterm
-            signal(SIGTERM, &safe_server_shutdown);
-            signal(SIGINT, &safe_server_shutdown);
-
-            // start server
-            reload_configuration = run_server(system_config);
         } else {
             printf("\n\n----- Running as Client -----\n\n");
+        }
+        // set interrupt for handling program abort or close
+        // execute system shutdown on sigterm
+        signal(SIGTERM, &safe_server_shutdown);
+        signal(SIGINT, &safe_server_shutdown);
 
-            // set interrupt for handling program abort or close
-            // execute system shutdown on sigterm
-            signal(SIGTERM, &safe_client_shutdown);
-            signal(SIGINT, &safe_client_shutdown);
-
-            // start client
-            reload_configuration = run_client(system_config);
+        // start device discovery broadcasting
+        heartbeat_fork = fork();
+        if(heartbeat_fork == 0){
+            printf("\n---- Inside Heartbeat Child ----\n");
+            heartbeat(&system_config);
+            printf("\n---- Exitting Heartbeat Child ----\n");
+            exit(EXIT_SUCCESS);
+        } else {
+            printf("\n---- Inside Parent Server ----\n");
+            // start server
+            reload_configuration = run_server(system_config);
         }
 
         // if we get here we broke out of system...
-        if(system_config.is_server){
-            server_shutdown();
-        } else {
-            client_shutdown();
-        }
+        server_shutdown();
+        // we will reconfigure and restart unless it errored or quit
     } while(reload_configuration);
     
     printf("\n---- Exitting Media Server ----\n");
@@ -97,46 +97,33 @@ void server_shutdown(void){
     while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
-void client_shutdown(void){
-    while(waitpid(-1, NULL, WNOHANG) > 0);
-}
-
 void safe_server_shutdown(int sig){
     server_shutdown();
     exit(EXIT_FAILURE);
 }
 
-void safe_client_shutdown(int sig){
-    client_shutdown();
-    exit(EXIT_FAILURE);
-}
-
 uint8_t run_server(struct system_config_struct system_config){
-    //system_setup();
     uint8_t reconfigure = 0;
+    uint8_t connected = 0;
+    system_config_struct new_device;
 
-    heartbeat_fork = fork();
-    if(heartbeat_fork == 0){
-        printf("\n---- Inside Heartbeat Child ----\n");
-        sleep(2);
-        heartbeat(&system_config);
-        printf("\n---- Exitting Heartbeat Child ----\n");
-        exit(EXIT_SUCCESS);
-    } else {
-        printf("\n---- Inside Parent Server ----\n");
-        while(!reconfigure){
-            
+    while(!reconfigure){
+        device_discovery_fork = fork();
+        if(device_discovery_fork == 0){
+            // inside child listening for broadcast packet
+            listen_for_devices(&system_config, &new_device);
+            exit(EXIT_SUCCESS);
+        } else {
+            // inside parent waiting for stuff to process
+            while(waitpid(device_discovery_fork, NULL, WNOHANG) == 0){
+                
+                // kill process if reconfiguring
+                //kill(device_discovery_fork, SIGKILL);
+            }
+            printf("finished getting packet in parent\n");
         }
     }
-    
-    return reconfigure;
-}
 
-uint8_t run_client(struct system_config_struct system_config){
-    uint8_t reconfigure = 0;
-    char packet_data[MAX_BROADCAST_PACKET];
-    receive_broadcast_packet(UDP_BROADCAST_PORT, &packet_data[0]);
-    printf("received: %s", packet_data);
     // wait for broadcast with server address...
     // receive broadcast and then connect to server
     // then run until socket is broken
@@ -151,6 +138,7 @@ uint8_t run_client(struct system_config_struct system_config){
 
     return reconfigure;
 }
+
 /*
 
 void receive_get_request(void){

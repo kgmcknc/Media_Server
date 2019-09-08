@@ -10,6 +10,7 @@
 *.geany
 *.gch
 *.cnfg
+*.conf
 !./interface/default.cnfg
 *.kmf
 *.code-workspace

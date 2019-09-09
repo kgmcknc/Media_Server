@@ -5,9 +5,9 @@
 #include <stdint.h>
 #include "config.h"
 
-uint8_t run_server(struct system_config_struct system_config);
-void safe_server_shutdown(int sig);
-void server_shutdown(void);
+uint8_t main_process(struct system_config_struct* system_config);
+void safe_shutdown(int sig);
+void shutdown(void);
 
 /*
 void receive_broadcast_packet(void);

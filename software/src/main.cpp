@@ -66,8 +66,8 @@ int main(int argc, char **argv) {
         }
         // set interrupt for handling program abort or close
         // execute system shutdown on sigterm
-        signal(SIGTERM, &safe_server_shutdown);
-        signal(SIGINT, &safe_server_shutdown);
+        signal(SIGTERM, &safe_shutdown);
+        signal(SIGINT, &safe_shutdown);
 
         // start device discovery broadcasting
         heartbeat_fork = fork();
@@ -79,11 +79,11 @@ int main(int argc, char **argv) {
         } else {
             printf("\n---- Inside Parent Server ----\n");
             // start server
-            reload_configuration = run_server(system_config);
+            reload_configuration = main_process(&system_config);
         }
 
         // if we get here we broke out of system...
-        server_shutdown();
+        shutdown();
         // we will reconfigure and restart unless it errored or quit
     } while(reload_configuration);
     
@@ -91,50 +91,71 @@ int main(int argc, char **argv) {
     exit(EXIT_SUCCESS);
 }
 
-void server_shutdown(void){
+void shutdown(void){
     // kill all child processes
     kill(heartbeat_fork, SIGKILL);
     while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
-void safe_server_shutdown(int sig){
-    server_shutdown();
+void safe_shutdown(int sig){
+    shutdown();
     exit(EXIT_FAILURE);
 }
 
-uint8_t run_server(struct system_config_struct system_config){
+uint8_t main_process(struct system_config_struct* system_config){
     uint8_t reconfigure = 0;
     uint8_t connected = 0;
-    system_config_struct new_device;
+    struct system_config_struct new_device;
+    int pipefd[2];
+
+    // open local web/control socket
 
     while(!reconfigure){
+        // we return here after every new broadcast packet we get from a device other than ourselves
+        if (pipe(pipefd) == -1) {
+            perror("pipe");
+            //exit(EXIT_FAILURE);
+        }
         device_discovery_fork = fork();
         if(device_discovery_fork == 0){
             // inside child listening for broadcast packet
-            listen_for_devices(&system_config, &new_device);
+            close(pipefd[0]); // won't read in child
+            listen_for_devices(system_config, &new_device);
+            write(pipefd[1], &new_device, sizeof(struct system_config_struct)); // write new device data into pipe
+            close(pipefd[1]);
+            // pass new device to parent
             exit(EXIT_SUCCESS);
         } else {
             // inside parent waiting for stuff to process
             while(waitpid(device_discovery_fork, NULL, WNOHANG) == 0){
+                // maybe do timeout for
                 
-                // kill process if reconfiguring
-                //kill(device_discovery_fork, SIGKILL);
+                
+                //kill process if reconfiguring
+                if(reconfigure){
+                    kill(device_discovery_fork, SIGKILL);
+                }
             }
-            printf("finished getting packet in parent\n");
+            // receive new device from child
+            read(pipefd[0], &new_device, sizeof(struct system_config_struct));
+            // now we have new device in parent... close read
+            close(pipefd[0]);
+            
+            if(system_config->is_server){
+                // we are server, see if packet is another server (bad) or a client (good)
+                // if client packet, check to see if it's not in available client table
+                    // if so, add it to available client table
+                // if client packet and already in table, find location in table and update status bit
+            } else {
+                // we are client, see if packet is another client (bad) or a server (good)
+                // if server packet, check to see if it's not in available server table
+                    // if so, add it to available server table
+            }
         }
+
     }
 
-    // wait for broadcast with server address...
-    // receive broadcast and then connect to server
-    // then run until socket is broken
-
-        // set up sockets to receive input from web or from server
-
-        // wait for incomming message (maybe with timeout)
-
-        // parse and handle incoming data message
-
-        // handle other messages (not from input, like finished song or something)
+    // close local web/control socket
 
     return reconfigure;
 }

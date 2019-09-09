@@ -7,7 +7,6 @@
 #include "version.h"
 
 #define CONFIG_PATH "./media_server.conf"
-#define TIMEOUT_TIME 20
 #define MAX_CONFIG_LINE_SIZE 256
 #define MAX_DEVICE_NAME 256
 
@@ -36,6 +35,10 @@ struct device_info_struct {
     char name[MAX_DEVICE_NAME];
     uint8_t is_connected;
     uint8_t is_playing;
+};
+
+struct system_struct {
+    uint8_t is_connected;
 };
 
 void create_config_file(struct system_config_struct system_config);

@@ -99,7 +99,6 @@ void listen_for_devices(struct system_config_struct* system_config, struct syste
             found_media_server = (new_device->server_ip_addr != system_config->server_ip_addr);
         }
     }
-    printf("found new device\n");
 }
 
 uint8_t validate_packet(char* packet_data, uint16_t packet_length){

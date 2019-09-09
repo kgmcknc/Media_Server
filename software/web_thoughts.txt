@@ -1,0 +1,5 @@
+web notes:
+on load, put up loading page where the web reads config file and finds port of c server and then does a request on that port
+if it can't connect or times out, then put up an error page saying the media server isn't running...
+
+if c code is running, it will get the status of if it is a server or client which would allow us to move from loading page to media page

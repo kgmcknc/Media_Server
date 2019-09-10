@@ -6,17 +6,34 @@
 #include "config.h"
 
 #define CONTINUE_HEARTBEAT      1
-#define HEARTBEAT_PERIOD_SEC    10
-#define TIMEOUT_TIME            (HEARTBEAT_PERIOD_SEC*2)
+#define HEARTBEAT_PERIOD_SEC    4
+#define TIMEOUT_TIME            (HEARTBEAT_PERIOD_SEC*4)
 #define MAX_BROADCAST_PACKET    512
 #define UDP_BROADCAST_PORT      1900
 #define UDP_TRANSFER_LENGTH     128
+#define MAX_ACTIVE_DEVICES      64
+
+struct device_info_struct {
+    struct system_config_struct config;
+    uint8_t is_active;
+    uint8_t timeout_set;
+    uint8_t is_connected;
+    uint8_t is_playing;
+};
+
+struct device_table_struct {
+    uint8_t active_device_count;
+    struct device_info_struct device[MAX_ACTIVE_DEVICES];
+};
 
 void heartbeat(struct system_config_struct* system_config);
 int send_broadcast_packet(uint16_t broadcast_port, char* packet_data, uint16_t data_length);
 uint16_t receive_broadcast_packet(uint16_t broadcast_port, char* packet_data);
 void listen_for_devices(struct system_config_struct* system_config, struct system_config_struct* new_device);
 uint8_t validate_packet(char* packet_data, uint16_t packet_length);
+void add_device_to_table(struct device_table_struct* active_devices, struct system_config_struct* new_device);
+void remove_inactive_devices(struct device_table_struct* active_devices);
+void set_device_timeout_flags(struct device_table_struct* active_devices);
 
 // #include <stdio.h>
 // #include <stdlib.h>

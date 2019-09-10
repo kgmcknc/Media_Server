@@ -30,17 +30,6 @@ struct system_config_struct {
 	DEFAULT_TCP_PORT /* uint16_t  - server_tcp_port  - Randomly selected..  */ \
 };
 
-struct device_info_struct {
-    struct system_config_struct config;
-    char name[MAX_DEVICE_NAME];
-    uint8_t is_connected;
-    uint8_t is_playing;
-};
-
-struct system_struct {
-    uint8_t is_connected;
-};
-
 void create_config_file(struct system_config_struct system_config);
 void get_this_ip(char* ip_addr);
 void configure_system(struct system_config_struct* system_config);

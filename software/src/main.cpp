@@ -10,7 +10,7 @@
 
 #include <signal.h>
 #include <string.h>
-// #include <fcntl.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -25,6 +25,7 @@
 
 pid_t heartbeat_fork;
 pid_t device_discovery_fork;
+pid_t device_timeout_fork;
 
 FILE* config_file;
 
@@ -94,6 +95,8 @@ int main(int argc, char **argv) {
 void shutdown(void){
     // kill all child processes
     kill(heartbeat_fork, SIGKILL);
+    kill(device_discovery_fork, SIGKILL);
+    kill(device_timeout_fork, SIGKILL);
     while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
@@ -106,53 +109,99 @@ uint8_t main_process(struct system_config_struct* system_config){
     uint8_t reconfigure = 0;
     uint8_t connected = 0;
     struct system_config_struct new_device;
+    struct device_table_struct active_devices;
+    struct device_table_struct connected_devices;
     int pipefd[2];
+    int data_size;
+    uint8_t timeout_set = 0;
+
+    active_devices.active_device_count = 0;
+    connected_devices.active_device_count = 0;
 
     // open local web/control socket
 
     while(!reconfigure){
-        // we return here after every new broadcast packet we get from a device other than ourselves
+        // we return here after every new broadcast packet we get from a device other than ourselves to restart the broadcast listener
         if (pipe(pipefd) == -1) {
             perror("pipe");
             //exit(EXIT_FAILURE);
         }
+        // set pipe to not block on reads
+        fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
         device_discovery_fork = fork();
         if(device_discovery_fork == 0){
-            // inside child listening for broadcast packet
-            close(pipefd[0]); // won't read in child
-            listen_for_devices(system_config, &new_device);
-            write(pipefd[1], &new_device, sizeof(struct system_config_struct)); // write new device data into pipe
-            close(pipefd[1]);
-            // pass new device to parent
-            exit(EXIT_SUCCESS);
+            while(1){ // search indefinitely
+                // inside child listening for broadcast packet
+                close(pipefd[0]); // won't read in child
+                listen_for_devices(system_config, &new_device);
+                int data_size = sizeof(struct system_config_struct);
+                write(pipefd[1], &data_size, sizeof(data_size));
+                write(pipefd[1], &new_device, sizeof(struct system_config_struct)); // write new device data into pipe
+            }
         } else {
             // inside parent waiting for stuff to process
-            while(waitpid(device_discovery_fork, NULL, WNOHANG) == 0){
-                // maybe do timeout for
+            close(pipefd[1]); // won't write in parent
+            while(1){//waitpid(device_discovery_fork, NULL, WNOHANG) == 0
+                // check for new broadcast client
+                if(read(pipefd[0], &data_size, sizeof(data_size)) > 0){
+                    read(pipefd[0], &new_device, data_size);
+                    // essentially add to a table of all currently available clients
+                    add_device_to_table(&active_devices, &new_device);
+                    if(system_config->is_server){
+                        // we are server, see if packet is another server (bad) or a client (good)
+                        // if client packet, check to see if it's not in available client table
+                            // if so, add it to available client table
+                        // if client packet and already in table, find location in table and update status bit
+                    } else {
+                        // we are client, see if packet is another client (bad) or a server (good)
+                        // if server packet, check to see if it's not in available server table
+                            // if so, add it to available server table
+                    }
+
+                    // set flag for new client received
+                }
                 
+                // fork here and do timeout for sleep with second count of (timeout) and essentially
+                // if a timeout happens it clears all active clients
+                // and then next timeout if a client is cleared (hasn't received a broadcast packet), then it's not active anymore
+                if(timeout_set){
+                    if(waitpid(device_timeout_fork, NULL, WNOHANG) != 0){
+                        // process client connected table
+                        // remove any no longer "active" clients from the table
+                        remove_inactive_devices(&active_devices);
+                        timeout_set = 0;
+                    }
+                } else {
+                    device_timeout_fork = fork();
+                    if(device_timeout_fork == 0){
+                        // in child - do sleep and then exit
+                        sleep(TIMEOUT_TIME);
+                        exit(EXIT_SUCCESS);
+                    } else {
+                        // in parent
+                        // clear all flags for active clients
+                        set_device_timeout_flags(&active_devices);
+                    }
+                    timeout_set = 1;
+                }
+
+                // create array of "connected" clients (reads from database)
+                // then if a new client comes in we will check to see if it's in "connected" array
+                // if so, then we will make the socket connection
+
+                // do all normal socket stuff here
+                // process commands received over socket
+                // process commands after children close (like end of media item?)
                 
                 //kill process if reconfiguring
                 if(reconfigure){
                     kill(device_discovery_fork, SIGKILL);
+                    break;
                 }
             }
-            // receive new device from child
-            read(pipefd[0], &new_device, sizeof(struct system_config_struct));
-            // now we have new device in parent... close read
+            // finished reading...
             close(pipefd[0]);
-            
-            if(system_config->is_server){
-                // we are server, see if packet is another server (bad) or a client (good)
-                // if client packet, check to see if it's not in available client table
-                    // if so, add it to available client table
-                // if client packet and already in table, find location in table and update status bit
-            } else {
-                // we are client, see if packet is another client (bad) or a server (good)
-                // if server packet, check to see if it's not in available server table
-                    // if so, add it to available server table
-            }
         }
-
     }
 
     // close local web/control socket

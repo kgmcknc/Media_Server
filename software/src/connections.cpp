@@ -111,6 +111,49 @@ uint8_t validate_packet(char* packet_data, uint16_t packet_length){
     return valid_packet;
 }
 
+void add_device_to_table(struct device_table_struct* active_devices, struct system_config_struct* new_device){
+    int i;
+    uint8_t device_in_table = 0;
+    if(active_devices->active_device_count < MAX_ACTIVE_DEVICES){
+        for(i=0;i<active_devices->active_device_count;i++){
+            if(memcmp(&active_devices->device[i].config, &new_device, sizeof(system_config_struct))){
+                device_in_table = 1;
+            }
+        }
+        if(device_in_table){
+            printf("Device Already In Table!\n");
+        } else {
+            printf("Adding Device To Table!\n");
+            memcpy(&active_devices->device[active_devices->active_device_count].config, &new_device, sizeof(system_config_struct));
+            active_devices->device[active_devices->active_device_count].is_active = 1;
+            active_devices->device[active_devices->active_device_count].is_active = 0;
+            active_devices->active_device_count = active_devices->active_device_count + 1;
+        }
+    } else {
+        printf("Too Many Active Devices!!!\n");
+    }
+}
+
+void remove_inactive_devices(struct device_table_struct* active_devices){
+    int i;
+    for(i=0;i<active_devices->active_device_count;i++){
+        if(active_devices->device[i].timeout_set && active_devices->device[i].is_active){
+            printf("Removing Inactive Client!\n");
+            active_devices->device[i].is_active = 0;
+            active_devices->device[i].timeout_set = 0;
+            active_devices->active_device_count = active_devices->active_device_count - 1;
+        }
+    }
+    // add function (cleanup_device_table) to shift devices to lowest position as they get removed
+}
+
+void set_device_timeout_flags(struct device_table_struct* active_devices){
+    int i;
+    for(i=0;i<active_devices->active_device_count;i++){
+        active_devices->device[i].timeout_set = 1;
+    }
+}
+
 // #include "main.h"
 // #include "sys_config.h"
 // #include "sys_functions.h"

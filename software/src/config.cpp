@@ -226,6 +226,7 @@ void string_to_config(char* string, struct system_config_struct* config){
         &config->major_version, &config->minor_version, &config->is_server, &config->device_id, ip_string, &config->server_tcp_port);
     inet_aton(&ip_string[0], &ip_address);
     config->server_ip_addr = ip_address.s_addr;
+    printf("Rec IP: %d\n", config->server_ip_addr);
 }
 
 // just need to write config to string and string to config functions and then could update the packet validation to search for first line in packet

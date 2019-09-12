@@ -26,6 +26,7 @@
 pid_t heartbeat_fork;
 pid_t device_discovery_fork;
 pid_t device_timeout_fork;
+pid_t new_connection_fork;
 
 FILE* config_file;
 
@@ -97,6 +98,7 @@ void shutdown(void){
     kill(heartbeat_fork, SIGKILL);
     kill(device_discovery_fork, SIGKILL);
     kill(device_timeout_fork, SIGKILL);
+    kill(new_connection_fork, SIGKILL);
     while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
@@ -108,17 +110,19 @@ void safe_shutdown(int sig){
 uint8_t main_process(struct system_config_struct* system_config){
     uint8_t reconfigure = 0;
     uint8_t connected = 0;
+    struct network_struct network;
     struct system_config_struct new_device;
+    struct device_table_struct local_devices;
     struct device_table_struct active_devices;
     struct device_table_struct connected_devices;
     int pipefd[2];
     int data_size;
     uint8_t timeout_set = 0;
+    uint8_t new_connection_set = 0;
 
-    active_devices.active_device_count = 0;
-    connected_devices.active_device_count = 0;
-
-    // open local web/control socket
+    active_devices.device_count = 0;
+    connected_devices.device_count = 0;
+    network.network_socket_fd = create_network_socket(system_config);
 
     while(!reconfigure){
         // we return here after every new broadcast packet we get from a device other than ourselves to restart the broadcast listener
@@ -134,8 +138,8 @@ uint8_t main_process(struct system_config_struct* system_config){
                 // inside child listening for broadcast packet
                 close(pipefd[0]); // won't read in child
                 listen_for_devices(system_config, &new_device);
-                int data_size = sizeof(struct system_config_struct);
-                write(pipefd[1], &data_size, sizeof(data_size));
+                //int data_size = sizeof(struct system_config_struct);
+                //write(pipefd[1], &data_size, sizeof(data_size));
                 write(pipefd[1], &new_device, sizeof(struct system_config_struct)); // write new device data into pipe
             }
         } else {
@@ -143,9 +147,10 @@ uint8_t main_process(struct system_config_struct* system_config){
             close(pipefd[1]); // won't write in parent
             while(1){//waitpid(device_discovery_fork, NULL, WNOHANG) == 0
                 // check for new broadcast client
-                if(read(pipefd[0], &data_size, sizeof(data_size)) > 0){
-                    read(pipefd[0], &new_device, data_size);
+                if(read(pipefd[0], &new_device, sizeof(struct system_config_struct)) > 0){//read(pipefd[0], &data_size, sizeof(data_size)) > 0){
+                    //read(pipefd[0], &new_device, data_size);
                     // essentially add to a table of all currently available clients
+                    printf("new_ip: %d\n", new_device.server_ip_addr);
                     add_device_to_table(&active_devices, &new_device);
                     if(system_config->is_server){
                         // we are server, see if packet is another server (bad) or a client (good)
@@ -161,7 +166,7 @@ uint8_t main_process(struct system_config_struct* system_config){
                     // set flag for new client received
                 }
                 
-                // fork here and do timeout for sleep with second count of (timeout) and essentially
+                // fork here and do timeout for sleep with timeout count and essentially
                 // if a timeout happens it clears all active clients
                 // and then next timeout if a client is cleared (hasn't received a broadcast packet), then it's not active anymore
                 if(timeout_set){
@@ -184,14 +189,31 @@ uint8_t main_process(struct system_config_struct* system_config){
                     }
                     timeout_set = 1;
                 }
+                
+                if(new_connection_set){
+                    if(waitpid(new_connection_fork, NULL, WNOHANG) != 0){
+                        receive_connections(&network, system_config, &connected_devices, &local_devices); // receives server and network connections
+                        new_connection_set = 0;
+                    }
+                } else {
+                    set_new_connections(&network);
+                    new_connection_fork = fork();
+                    if(new_connection_fork == 0){
+                        wait_for_new_connections(&network, &connected_devices, &local_devices); // receives server and network connections
+                        exit(EXIT_SUCCESS);
+                    }
+                    new_connection_set = 1;
+                }
 
                 // create array of "connected" clients (reads from database)
                 // then if a new client comes in we will check to see if it's in "connected" array
                 // if so, then we will make the socket connection
+                //if(system_config->is_server){
+                //    connect_linked_devices(&network, &connected_devices, &active_devices); // connects to clients
+                //}
 
                 // do all normal socket stuff here
-                // process commands received over socket
-                // process commands after children close (like end of media item?)
+                //check_connections(&connected_devices, &local_devices); // checks, processes, closes
                 
                 //kill process if reconfiguring
                 if(reconfigure){
@@ -204,12 +226,10 @@ uint8_t main_process(struct system_config_struct* system_config){
         }
     }
 
-    // close local web/control socket
+    close(network.network_socket_fd);
 
     return reconfigure;
 }
-
-/*
 
 void receive_get_request(void){
     int com_fd, message;
@@ -230,7 +250,7 @@ void receive_get_request(void){
     com_addr.sin_family = AF_INET;
     com_addr.sin_addr.s_addr = htonl(INADDR_ANY);//INADDR_ANY;
     //com_addr.sin_addr.s_addr = inet_addr("192.168.1.33");
-    com_addr.sin_port = htons(65005);
+    com_addr.sin_port = htons(4000);
     int test = bind(com_fd,(sockaddr*)&com_addr, sizeof (com_addr));
     int list = listen(com_fd, 1024);
     int rx_len = 100;
@@ -238,7 +258,7 @@ void receive_get_request(void){
     printf("receiving get\n");
     message = accept(com_fd, NULL, NULL);
     int retval = recvfrom(message,my_message,rx_len,0,(sockaddr *)&com_addr,&len);
-    int error = errno;
+    int error = 0;//errno;
     //char response[] = "HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\nContent-Length: 44\r\nConnection: close\r\nContent-Type: text/html\r\nX-Pad: avoid browser bug\r\n\r\n<html><body><h1>It works!</h1></body></html>\r\n";
     char response[] = "HTTP/1.0 404 NOT FOUND\r\nContent-Length: 17\r\nContent-Type: text/html\r\n\r\ntwentyisonetoomanytt\r\n";
     socklen_t sa_len = sizeof(web_addr);
@@ -250,7 +270,7 @@ void receive_get_request(void){
     close(com_fd);
     printf("status: %d, %d, Message: %s\n", retval, error, my_message);
 }
-
+/*
 void server_system(void){
     int heartbeat_socket_s;
     int new_client;

@@ -9,9 +9,10 @@ uint8_t main_process(struct system_config_struct* system_config);
 void safe_shutdown(int sig);
 void shutdown(void);
 
-/*
-void receive_broadcast_packet(void);
+
+//void receive_broadcast_packet(void);
 void receive_get_request(void);
+/*s
 void server_listener(void);
 void get_rx(int com_socket);
 void process(char type, char client, char f_string[MAX_FUNCTION_STRING]);

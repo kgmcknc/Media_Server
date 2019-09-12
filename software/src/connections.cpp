@@ -9,13 +9,14 @@
 #include <string.h>
 // #include <fcntl.h>
 //#include <sys/stat.h>
-//#include <sys/types.h>
+#include <sys/types.h>
 //#include <sys/wait.h>
  
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/select.h>
 // #include <sys/un.h>
 // #include <sys/time.h>
 //#include <wiringPi.h>
@@ -47,12 +48,12 @@ int send_broadcast_packet(uint16_t broadcast_port, char* packet_data, uint16_t d
         printf("Main Socket Opt Failed\n");
         return -1;
     }
-    memset(&conn_addr, 0, sizeof(conn_addr));
+    memset(&conn_addr, 0, sizeof(sockaddr_in));
     conn_addr.sin_family = AF_INET;
     conn_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
     conn_addr.sin_port = htons(broadcast_port);
 
-    retval = sendto(conn_fd,packet_data,data_length,0,(sockaddr *)&conn_addr,sizeof(conn_addr));
+    retval = sendto(conn_fd,packet_data,data_length,0,(sockaddr *)&conn_addr,sizeof(sockaddr_in));
     close(conn_fd);
     return retval;
 }
@@ -76,11 +77,11 @@ uint16_t receive_broadcast_packet(uint16_t broadcast_port, char* packet_data){
         //return -1;
     }
 
-    memset(&conn_addr, 0, sizeof(conn_addr));
+    memset(&conn_addr, 0, sizeof(sockaddr_in));
     conn_addr.sin_family = AF_INET;
     conn_addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
     conn_addr.sin_port = htons(broadcast_port);
-    bind(conn_fd,(sockaddr*)&conn_addr, sizeof (conn_addr));
+    bind(conn_fd,(sockaddr*)&conn_addr, sizeof (sockaddr_in));
     
     receive_length = recvfrom(conn_fd,packet_data,rx_len,0,(sockaddr *)&conn_addr,&len);
     close(conn_fd);
@@ -114,20 +115,28 @@ uint8_t validate_packet(char* packet_data, uint16_t packet_length){
 void add_device_to_table(struct device_table_struct* active_devices, struct system_config_struct* new_device){
     int i;
     uint8_t device_in_table = 0;
-    if(active_devices->active_device_count < MAX_ACTIVE_DEVICES){
-        for(i=0;i<active_devices->active_device_count;i++){
-            if(memcmp(&active_devices->device[i].config, &new_device, sizeof(system_config_struct))){
+    if(active_devices->device_count < MAX_ACTIVE_DEVICES){
+        for(i=0;i<active_devices->device_count;i++){
+            in_addr device_ip;
+            device_ip.s_addr = new_device->server_ip_addr;
+            printf("Count: %d, Device IP: %s\n", active_devices->device_count, inet_ntoa(device_ip));
+            if(memcmp(&active_devices->device[i].config, new_device, sizeof(system_config_struct)) == 0){
                 device_in_table = 1;
+                active_devices->device[i].is_active = 1;
+                active_devices->device[i].timeout_set = 0;
             }
         }
         if(device_in_table){
             printf("Device Already In Table!\n");
         } else {
             printf("Adding Device To Table!\n");
-            memcpy(&active_devices->device[active_devices->active_device_count].config, &new_device, sizeof(system_config_struct));
-            active_devices->device[active_devices->active_device_count].is_active = 1;
-            active_devices->device[active_devices->active_device_count].is_active = 0;
-            active_devices->active_device_count = active_devices->active_device_count + 1;
+            memcpy(&active_devices->device[active_devices->device_count].config, new_device, sizeof(system_config_struct));
+            active_devices->device[active_devices->device_count].is_active = 1;
+            active_devices->device[active_devices->device_count].timeout_set = 0;
+            in_addr ip_val;
+            ip_val.s_addr = active_devices->device[active_devices->device_count].config.server_ip_addr;
+            printf("Count: %d, new area IP: %s\n", active_devices->device_count, inet_ntoa(ip_val));
+            active_devices->device_count = active_devices->device_count + 1;
         }
     } else {
         printf("Too Many Active Devices!!!\n");
@@ -136,12 +145,12 @@ void add_device_to_table(struct device_table_struct* active_devices, struct syst
 
 void remove_inactive_devices(struct device_table_struct* active_devices){
     int i;
-    for(i=0;i<active_devices->active_device_count;i++){
+    for(i=0;i<active_devices->device_count;i++){
         if(active_devices->device[i].timeout_set && active_devices->device[i].is_active){
             printf("Removing Inactive Client!\n");
             active_devices->device[i].is_active = 0;
             active_devices->device[i].timeout_set = 0;
-            active_devices->active_device_count = active_devices->active_device_count - 1;
+            active_devices->device_count = active_devices->device_count - 1;
         }
     }
     // add function (cleanup_device_table) to shift devices to lowest position as they get removed
@@ -149,9 +158,135 @@ void remove_inactive_devices(struct device_table_struct* active_devices){
 
 void set_device_timeout_flags(struct device_table_struct* active_devices){
     int i;
-    for(i=0;i<active_devices->active_device_count;i++){
+    for(i=0;i<active_devices->device_count;i++){
         active_devices->device[i].timeout_set = 1;
     }
+}
+
+int create_network_socket(struct system_config_struct* system_config){
+    int conn_fd;
+    int conn_socket, conn_opt = 1;
+    struct sockaddr_in conn_addr;
+    
+    conn_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(conn_fd == 0){
+        printf("Couldn't connect socket\n");
+        return 0;
+    }
+
+    if(setsockopt(conn_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *) &conn_opt, sizeof(conn_opt))){
+        printf("Couldn't Set Socket Opt\n");
+        return 0;
+    }
+
+    memset(&conn_addr, 0, sizeof(sockaddr_in));
+    conn_addr.sin_family = AF_INET;
+    conn_addr.sin_addr.s_addr = htonl(INADDR_ANY);//device->config.server_ip_addr;
+    conn_addr.sin_port = htons(system_config->server_tcp_port);
+
+    printf("Doing Bind for socket\n");
+    if(bind(conn_fd, (sockaddr*) &conn_addr, sizeof(conn_addr)) < 0){
+        printf("Failed in Bind\n");
+        return 0;
+    }
+    
+    if(listen(conn_fd, LISTEN_DEPTH) < 0){
+        printf("Failed in Listen\n");
+        return 0;
+    }
+
+    printf("Created Socket!\n");
+    return conn_fd;
+}
+
+void connect_linked_devices(struct network_struct* network, struct device_table_struct* connected_devices, struct device_table_struct* attached_devices){
+    int c,a;
+    for(c=0;c<connected_devices->device_count;c++){
+        for(a=0;a<attached_devices->device_count;a++){
+            // see if connected device is in attached devices
+            if(memcmp(&connected_devices->device[c].config, &attached_devices->device[a].config, sizeof(system_config_struct)) == 0){
+                // then if it's not connected, connect it
+                if(!connected_devices->device[c].is_connected || !attached_devices->device[a].is_connected){
+                    connect_device(&connected_devices->device[c]);
+                    connected_devices->device_count = connected_devices->device_count + 1;
+                }
+            }
+        }
+    }
+}
+
+void set_new_connections(struct network_struct* network){
+    int max_fd_val = 0;
+
+    FD_ZERO(&network->network_set);
+    network->max_network_set = network->network_socket_fd;
+    FD_SET(network->max_network_set, &network->network_set);
+}
+
+void wait_for_new_connections(struct network_struct* network, struct device_table_struct* connected_devices, struct device_table_struct* local_devices){
+    int new_connection;
+    printf("Looking for New Connections\n");
+    new_connection = select((network->max_network_set + 1), &network->network_set, NULL, NULL, NULL);
+    
+    if(new_connection < 0){
+        printf("---- ERROR IN SERVER ---\n");
+    } else {
+        if(new_connection == 0){
+            printf("Nothing...\n");
+        } else {
+            printf("New Connection!\n");
+        }
+    }
+}
+
+void receive_connections(struct network_struct* network, struct system_config_struct* system_config, struct device_table_struct* connected_devices, struct device_table_struct* local_devices){
+    sockaddr new_sock;
+    socklen_t new_sock_length;
+    int new_socket;
+    new_socket = accept(network->network_socket_fd, &new_sock, &new_sock_length);
+    close(new_socket);
+}
+
+uint8_t connect_device(struct device_info_struct* device){
+    int conn_fd;
+    int conn_socket, conn_opt = 1;
+    struct sockaddr_in conn_addr;
+    
+    conn_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(conn_fd == 0){
+        printf("Couldn't connect socket\n");
+        return 0;
+    }
+
+    if(setsockopt(conn_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *) &conn_opt, sizeof(conn_opt))){
+        printf("Couldn't Set Socket Opt\n");
+        return 0;
+    }
+
+    memset(&conn_addr, 0, sizeof(sockaddr_in));
+    conn_addr.sin_family = AF_INET;
+    conn_addr.sin_addr.s_addr = htonl(INADDR_ANY);//device->config.server_ip_addr;
+    conn_addr.sin_port = htons(device->config.server_tcp_port);
+
+    printf("Doing Bind in connect\n");
+    if(bind(conn_fd, (sockaddr*) &conn_addr, sizeof(conn_addr)) < 0){
+        printf("Failed in Bind\n");
+        return 0;
+    }
+    
+    if(listen(conn_fd, LISTEN_DEPTH) < 0){
+        printf("Failed in Listen\n");
+        return 0;
+    }
+
+    device->is_connected = 1;
+    device->device_socket = conn_fd;
+    printf("Connected Device!\n");
+    return 0;
+}
+
+void check_connections(struct device_table_struct* device_connections, struct device_table_struct* local_connections){
+    
 }
 
 // #include "main.h"

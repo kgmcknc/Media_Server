@@ -122,6 +122,7 @@ uint8_t main_process(struct system_config_struct* system_config){
 
     active_devices.device_count = 0;
     connected_devices.device_count = 0;
+    local_devices.device_count = 0;
     network.network_socket_fd = create_network_socket(system_config);
 
     while(!reconfigure){
@@ -142,6 +143,7 @@ uint8_t main_process(struct system_config_struct* system_config){
                 //write(pipefd[1], &data_size, sizeof(data_size));
                 write(pipefd[1], &new_device, sizeof(struct system_config_struct)); // write new device data into pipe
             }
+            exit(EXIT_SUCCESS);
         } else {
             // inside parent waiting for stuff to process
             close(pipefd[1]); // won't write in parent
@@ -169,6 +171,7 @@ uint8_t main_process(struct system_config_struct* system_config){
                 // fork here and do timeout for sleep with timeout count and essentially
                 // if a timeout happens it clears all active clients
                 // and then next timeout if a client is cleared (hasn't received a broadcast packet), then it's not active anymore
+                
                 if(timeout_set){
                     if(waitpid(device_timeout_fork, NULL, WNOHANG) != 0){
                         // process client connected table
@@ -192,19 +195,20 @@ uint8_t main_process(struct system_config_struct* system_config){
                 
                 if(new_connection_set){
                     if(waitpid(new_connection_fork, NULL, WNOHANG) != 0){
-                        receive_connections(&network, system_config, &connected_devices, &local_devices); // receives server and network connections
+                        receive_connections(&network, system_config, &connected_devices, &active_devices, &local_devices); // receives server and network connections
                         new_connection_set = 0;
                     }
                 } else {
+                    
                     set_new_connections(&network);
                     new_connection_fork = fork();
                     if(new_connection_fork == 0){
-                        wait_for_new_connections(&network, &connected_devices, &local_devices); // receives server and network connections
+                        wait_for_new_connections(&network); // receives server and network connections
                         exit(EXIT_SUCCESS);
                     }
                     new_connection_set = 1;
                 }
-
+                
                 // create array of "connected" clients (reads from database)
                 // then if a new client comes in we will check to see if it's in "connected" array
                 // if so, then we will make the socket connection

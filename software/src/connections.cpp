@@ -199,16 +199,20 @@ int create_network_socket(struct system_config_struct* system_config){
     return conn_fd;
 }
 
-void connect_linked_devices(struct network_struct* network, struct device_table_struct* connected_devices, struct device_table_struct* attached_devices){
+void connect_linked_devices(struct network_struct* network, struct device_table_struct* connected_devices, struct device_table_struct* active_devices){
     int c,a;
     for(c=0;c<connected_devices->device_count;c++){
-        for(a=0;a<attached_devices->device_count;a++){
-            // see if connected device is in attached devices
-            if(memcmp(&connected_devices->device[c].config, &attached_devices->device[a].config, sizeof(system_config_struct)) == 0){
-                // then if it's not connected, connect it
-                if(!connected_devices->device[c].is_connected || !attached_devices->device[a].is_connected){
-                    connect_device(&connected_devices->device[c]);
-                    connected_devices->device_count = connected_devices->device_count + 1;
+        for(a=0;a<active_devices->device_count;a++){
+            if(active_devices->device->config.is_server){
+                // dont connect server to server
+            } else {
+                // see if connected device is in attached devices
+                if(memcmp(&connected_devices->device[c].config, &active_devices->device[a].config, sizeof(system_config_struct)) == 0){
+                    // then if it's not connected, connect it
+                    if(!connected_devices->device[c].is_connected || !active_devices->device[a].is_connected){
+                        connect_device(&connected_devices->device[c]);
+                        connected_devices->device_count = connected_devices->device_count + 1;
+                    }
                 }
             }
         }
@@ -223,7 +227,7 @@ void set_new_connections(struct network_struct* network){
     FD_SET(network->max_network_set, &network->network_set);
 }
 
-void wait_for_new_connections(struct network_struct* network, struct device_table_struct* connected_devices, struct device_table_struct* local_devices){
+void wait_for_new_connections(struct network_struct* network){
     int new_connection;
     printf("Looking for New Connections\n");
     new_connection = select((network->max_network_set + 1), &network->network_set, NULL, NULL, NULL);
@@ -239,49 +243,55 @@ void wait_for_new_connections(struct network_struct* network, struct device_tabl
     }
 }
 
-void receive_connections(struct network_struct* network, struct system_config_struct* system_config, struct device_table_struct* connected_devices, struct device_table_struct* local_devices){
-    sockaddr new_sock;
+void receive_connections(struct network_struct* network, struct system_config_struct* system_config,
+                            struct device_table_struct* connected_devices, struct device_table_struct* active_devices,
+                            struct device_table_struct* local_devices){
+    sockaddr_in new_addr;
     socklen_t new_sock_length;
     int new_socket;
-    new_socket = accept(network->network_socket_fd, &new_sock, &new_sock_length);
-    close(new_socket);
+    uint8_t found_connection = 0;
+    
+    new_socket = accept(network->network_socket_fd, (sockaddr*) &new_addr, &new_sock_length);
+    for(int i=0;i<active_devices->device_count;i++){
+        if(new_addr.sin_addr.s_addr == active_devices->device[active_devices->device_count].config.server_ip_addr){
+            if(active_devices->device[active_devices->device_count].config.is_server){
+                printf("Connecting Device to Server!\n");
+                active_devices->device[active_devices->device_count].is_connected = 1;
+                active_devices->device[active_devices->device_count].device_socket = new_socket;
+                active_devices->device[active_devices->device_count].config.server_ip_addr = new_addr.sin_addr.s_addr;
+                active_devices->device[active_devices->device_count].config.server_tcp_port = new_addr.sin_port;
+                active_devices->device_count = active_devices->device_count + 1;
+            } else {
+                printf("Clients Can't Connect To Other Clients\n");
+            }
+            found_connection = 1;
+        }
+    }
+    if(!found_connection){
+        // connection wasn't device on server
+        local_devices->device[local_devices->device_count].is_connected = 1;
+        local_devices->device[local_devices->device_count].device_socket = new_socket;
+        local_devices->device[local_devices->device_count].config.server_ip_addr = new_addr.sin_addr.s_addr;
+        local_devices->device[local_devices->device_count].config.server_tcp_port = new_addr.sin_port;
+        local_devices->device_count = local_devices->device_count + 1;
+        printf("Local Network Connection!\n");
+    }
 }
 
 uint8_t connect_device(struct device_info_struct* device){
-    int conn_fd;
-    int conn_socket, conn_opt = 1;
-    struct sockaddr_in conn_addr;
-    
-    conn_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if(conn_fd == 0){
-        printf("Couldn't connect socket\n");
-        return 0;
-    }
+    sockaddr_in conn_addr;
 
-    if(setsockopt(conn_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *) &conn_opt, sizeof(conn_opt))){
-        printf("Couldn't Set Socket Opt\n");
-        return 0;
-    }
-
-    memset(&conn_addr, 0, sizeof(sockaddr_in));
-    conn_addr.sin_family = AF_INET;
-    conn_addr.sin_addr.s_addr = htonl(INADDR_ANY);//device->config.server_ip_addr;
+    memset(&conn_addr, '0', sizeof(conn_addr));
+    conn_addr.sin_family = htonl(device->config.server_ip_addr);
     conn_addr.sin_port = htons(device->config.server_tcp_port);
 
-    printf("Doing Bind in connect\n");
-    if(bind(conn_fd, (sockaddr*) &conn_addr, sizeof(conn_addr)) < 0){
-        printf("Failed in Bind\n");
-        return 0;
-    }
-    
-    if(listen(conn_fd, LISTEN_DEPTH) < 0){
-        printf("Failed in Listen\n");
-        return 0;
+    if(connect(device->device_socket, (struct sockaddr *) &conn_addr, sizeof(sockaddr_in)) < 0){
+        printf("Error connecting device!\n");
+    } else {
+        device->is_connected = 1;
+        printf("Connected Device!\n");
     }
 
-    device->is_connected = 1;
-    device->device_socket = conn_fd;
-    printf("Connected Device!\n");
     return 0;
 }
 

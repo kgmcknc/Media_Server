@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 void clear_system_config_struct(struct system_config_struct* system_config){
     memset(system_config, 0, sizeof(struct system_config_struct));
@@ -114,6 +115,7 @@ void get_this_ip(char* ip)
 void create_config_file(struct system_config_struct system_config){
     FILE* config_file;
     config_file = fopen(CONFIG_PATH, "ab");
+    
     char this_ip[16] = "0";
     if(config_file != NULL){
         fprintf(config_file, "// Media Server C Code Config File\n");
@@ -123,19 +125,29 @@ void create_config_file(struct system_config_struct system_config){
         fprintf(config_file, "\n");
         fprintf(config_file, "is_server 0\n");
         fprintf(config_file, "\n");
-        fprintf(config_file, "device_id -1\n");
+        fprintf(config_file, "device_id %d\n", create_random_id());
         fprintf(config_file, "\n");
         fprintf(config_file, "// server_ip_addr will get set by c code if you are connected to the internet... or you can overwrite it with format xxx.xxx.xxx.xxx if you want..?\n");
         get_this_ip(&this_ip[0]);
         fprintf(config_file, "server_ip_addr %s\n", this_ip);
         fprintf(config_file, "\n");
         fprintf(config_file, "// server_tcp_port will get set by c code to default 28500 (randomly picked) or you can overwrite it if you want\n");
-        fprintf(config_file, "server_tcp_port 0\n");
+        fprintf(config_file, "server_tcp_port %hu\n", DEFAULT_TCP_PORT);
         fprintf(config_file, "\n");
     } else {
         printf("Couldn't Create Config File... Exitting");
         exit(EXIT_FAILURE);
     }
+    fclose(config_file);
+}
+
+int32_t create_random_id(void){
+    int random_id;
+
+    srand(time(0)); // seed random number generator
+    random_id = rand(); // create random number
+    
+    return random_id;
 }
 
 void load_config(struct system_config_struct* system_config){
@@ -243,7 +255,6 @@ void string_to_config(char* string, struct system_config_struct* config){
         &config->major_version, &config->minor_version, &config->is_server, &config->device_id, ip_string, &config->server_tcp_port);
     inet_aton(&ip_string[0], &ip_address);
     config->server_ip_addr = ip_address.s_addr;
-    //printf("Rec IP: %d\n", config->server_ip_addr);
 }
 
 // just need to write config to string and string to config functions and then could update the packet validation to search for first line in packet

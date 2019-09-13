@@ -34,6 +34,7 @@ void clear_system_config_struct(struct system_config_struct* system_config);
 void init_system_config_struct(struct system_config_struct* system_config);
 void create_config_file(struct system_config_struct system_config);
 void get_this_ip(char* ip_addr);
+int32_t create_random_id(void);
 void configure_system(struct system_config_struct* system_config);
 void load_config(struct system_config_struct* system_config);
 void print_config_menu(void);

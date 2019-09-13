@@ -11,10 +11,12 @@
 #define HEARTBEAT_PERIOD_SEC    4
 #define TIMEOUT_TIME            (HEARTBEAT_PERIOD_SEC*4)
 #define MAX_BROADCAST_PACKET    512
+#define MAX_PACKET_LENGTH       1440
 #define UDP_BROADCAST_PORT      1900
 #define UDP_TRANSFER_LENGTH     128
 #define MAX_ACTIVE_DEVICES      64
 #define LISTEN_DEPTH            1024
+#define MAX_CONNECT_READ_WAIT   8
 
 #define NOT_CONNECTED           0
 #define IS_CONNECTED            1
@@ -46,6 +48,7 @@ void listen_for_devices(struct system_config_struct* system_config, struct syste
 uint8_t validate_packet(char* packet_data, uint16_t packet_length);
 void add_device_to_table(struct device_table_struct* active_devices, struct system_config_struct* new_device);
 void remove_inactive_devices(struct device_table_struct* active_devices);
+void clean_up_table_order(struct device_table_struct* device_table);
 void set_device_timeout_flags(struct device_table_struct* active_devices);
 
 int create_network_socket(struct system_config_struct* system_config);

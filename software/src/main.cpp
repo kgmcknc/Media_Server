@@ -23,6 +23,8 @@
 // #include <sys/time.h>
 //#include <wiringPi.h>
 
+//#define CONNECT_TEST
+
 pid_t heartbeat_fork;
 pid_t device_discovery_fork;
 pid_t device_timeout_fork;
@@ -37,7 +39,7 @@ int main(int argc, char **argv) {
     uint8_t reload_configuration = 0;
 
     printf("\n\n----- Starting Media Server -----\n\n");
-    
+
     config_file = fopen(CONFIG_PATH, "r+b");
     if(config_file != NULL){
         printf("\n\n----- Successfully Opened Config File -----\n\n");
@@ -134,7 +136,7 @@ uint8_t main_process(struct system_config_struct* system_config){
     clear_system_config_struct(&linked_devices.device[0].config);
     linked_devices.device[0].is_connected = 0;
     linked_devices.device[0].config.is_server = 0;
-    linked_devices.device[0].config.device_id = -1;
+    linked_devices.device[0].config.device_id = 261516760;
     linked_devices.device[0].config.major_version = 1;
     linked_devices.device[0].config.minor_version = 1;
     linked_devices.device[0].config.server_tcp_port = 28500;
@@ -184,7 +186,6 @@ uint8_t main_process(struct system_config_struct* system_config){
                         // if server packet, check to see if it's not in available server table
                             // if so, add it to available server table
                     }
-
                     // set flag for new client received
                 }
                 
@@ -238,7 +239,7 @@ uint8_t main_process(struct system_config_struct* system_config){
                 }
 
                 // do all normal socket stuff here
-                check_connections(&active_devices, &local_devices); // checks, processes, closes
+                check_connections(&connected_devices, &local_devices); // checks, processes, closes
                 
                 //kill process if reconfiguring
                 if(reconfigure){

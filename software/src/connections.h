@@ -16,6 +16,9 @@
 #define MAX_ACTIVE_DEVICES      64
 #define LISTEN_DEPTH            1024
 
+#define NOT_CONNECTED           0
+#define IS_CONNECTED            1
+
 struct device_info_struct {
     struct system_config_struct config;
     int device_socket;
@@ -46,13 +49,14 @@ void remove_inactive_devices(struct device_table_struct* active_devices);
 void set_device_timeout_flags(struct device_table_struct* active_devices);
 
 int create_network_socket(struct system_config_struct* system_config);
-void connect_linked_devices(struct network_struct* network, struct device_table_struct* connected_devices, struct device_table_struct* active_devices);
-uint8_t connect_device(struct device_info_struct* device);
+void connect_linked_devices(struct network_struct* network, struct device_table_struct* linked_devices, 
+                            struct device_table_struct* active_devices, struct device_table_struct* connected_devices);
+uint8_t connect_device(struct network_struct* network, struct device_info_struct* device);
 void check_connections(struct device_table_struct* device_connections, struct device_table_struct* local_connections);
 void set_new_connections(struct network_struct* network);
 void wait_for_new_connections(struct network_struct* network); // receives server and network connections
 void receive_connections(struct network_struct* network, struct system_config_struct* system_config,
-                            struct device_table_struct* connected_devices, struct device_table_struct* active_devices,
+                            struct device_table_struct* active_devices, struct device_table_struct* connected_devices,
                             struct device_table_struct* local_devices);
 
 // #include <stdio.h>

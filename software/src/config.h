@@ -13,23 +13,25 @@
 #define DEFAULT_TCP_PORT (uint16_t) 28500
 
 struct system_config_struct {
-    uint8_t  major_version;
-    uint8_t  minor_version;
-    uint8_t  is_server;
     int32_t  device_id;
     uint32_t server_ip_addr;
     uint16_t server_tcp_port;
+    uint8_t  major_version;
+    uint8_t  minor_version;
+    uint8_t  is_server;
 };
 
 #define SYS_CONFIG_DEFAULT  {\
-    SERVER_MAJOR_VERSION,   /* uint8_t   - major_version    - Current Version      */ \
-    SERVER_MINOR_VERSION,   /* uint8_t   - minor_version    - Current Version      */ \
-    0,               /* uint8_t   - is_server        - Client By Default    */ \
     -1,              /* int32_t   - device_id        - Set By Server        */ \
     0,               /* uint32_t  - server_ip_addr   - it gets loaded       */ \
-	DEFAULT_TCP_PORT /* uint16_t  - server_tcp_port  - Randomly selected..  */ \
+	DEFAULT_TCP_PORT, /* uint16_t  - server_tcp_port  - Randomly selected..  */ \
+    SERVER_MAJOR_VERSION,   /* uint8_t   - major_version    - Current Version      */ \
+    SERVER_MINOR_VERSION,   /* uint8_t   - minor_version    - Current Version      */ \
+    0               /* uint8_t   - is_server        - Client By Default    */ \
 };
 
+void clear_system_config_struct(struct system_config_struct* system_config);
+void init_system_config_struct(struct system_config_struct* system_config);
 void create_config_file(struct system_config_struct system_config);
 void get_this_ip(char* ip_addr);
 void configure_system(struct system_config_struct* system_config);

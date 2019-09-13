@@ -28,7 +28,7 @@ void heartbeat(struct system_config_struct* system_config){
     while(CONTINUE_HEARTBEAT){
         sleep(HEARTBEAT_PERIOD_SEC);
         send_broadcast_packet(UDP_BROADCAST_PORT, &packet_data[0], UDP_TRANSFER_LENGTH);
-        printf("\n---- Sent Heartbeat Command ----\n");
+        //printf("\n---- Sent Heartbeat Command ----\n");
     }
 }
 
@@ -119,7 +119,7 @@ void add_device_to_table(struct device_table_struct* active_devices, struct syst
         for(i=0;i<active_devices->device_count;i++){
             in_addr device_ip;
             device_ip.s_addr = new_device->server_ip_addr;
-            printf("Count: %d, Device IP: %s\n", active_devices->device_count, inet_ntoa(device_ip));
+            //printf("Count: %d, Device IP: %s\n", active_devices->device_count, inet_ntoa(device_ip));
             if(memcmp(&active_devices->device[i].config, new_device, sizeof(system_config_struct)) == 0){
                 device_in_table = 1;
                 active_devices->device[i].is_active = 1;
@@ -127,15 +127,16 @@ void add_device_to_table(struct device_table_struct* active_devices, struct syst
             }
         }
         if(device_in_table){
-            printf("Device Already In Table!\n");
+            //printf("Device Already In Table!\n");
         } else {
             printf("Adding Device To Table!\n");
+            init_system_config_struct(&active_devices->device[active_devices->device_count].config);
             memcpy(&active_devices->device[active_devices->device_count].config, new_device, sizeof(system_config_struct));
             active_devices->device[active_devices->device_count].is_active = 1;
             active_devices->device[active_devices->device_count].timeout_set = 0;
             in_addr ip_val;
             ip_val.s_addr = active_devices->device[active_devices->device_count].config.server_ip_addr;
-            printf("Count: %d, new area IP: %s\n", active_devices->device_count, inet_ntoa(ip_val));
+            //printf("Count: %d, new area IP: %s\n", active_devices->device_count, inet_ntoa(ip_val));
             active_devices->device_count = active_devices->device_count + 1;
         }
     } else {
@@ -199,19 +200,24 @@ int create_network_socket(struct system_config_struct* system_config){
     return conn_fd;
 }
 
-void connect_linked_devices(struct network_struct* network, struct device_table_struct* connected_devices, struct device_table_struct* active_devices){
+void connect_linked_devices(struct network_struct* network, struct device_table_struct* linked_devices,
+                                struct device_table_struct* active_devices, struct device_table_struct* connected_devices){
     int c,a;
-    for(c=0;c<connected_devices->device_count;c++){
+    
+    for(c=0;c<linked_devices->device_count;c++){
         for(a=0;a<active_devices->device_count;a++){
             if(active_devices->device->config.is_server){
                 // dont connect server to server
             } else {
-                // see if connected device is in attached devices
-                if(memcmp(&connected_devices->device[c].config, &active_devices->device[a].config, sizeof(system_config_struct)) == 0){
+                // see if linked device is in attached devices
+                if(memcmp(&linked_devices->device[c].config, &active_devices->device[a].config, sizeof(struct system_config_struct)) == 0){
                     // then if it's not connected, connect it
-                    if(!connected_devices->device[c].is_connected || !active_devices->device[a].is_connected){
-                        connect_device(&connected_devices->device[c]);
-                        connected_devices->device_count = connected_devices->device_count + 1;
+                    if(!linked_devices->device[c].is_connected){
+                        memcpy(&connected_devices->device[connected_devices->device_count].config, &linked_devices->device[c].config, sizeof(struct system_config_struct));
+                        if(connect_device(network, &connected_devices->device[c])){
+                            linked_devices->device[c].is_connected = 1;
+                            connected_devices->device_count = connected_devices->device_count + 1;
+                        }
                     }
                 }
             }
@@ -244,7 +250,7 @@ void wait_for_new_connections(struct network_struct* network){
 }
 
 void receive_connections(struct network_struct* network, struct system_config_struct* system_config,
-                            struct device_table_struct* connected_devices, struct device_table_struct* active_devices,
+                            struct device_table_struct* active_devices, struct device_table_struct* connected_devices,
                             struct device_table_struct* local_devices){
     sockaddr_in new_addr;
     socklen_t new_sock_length;
@@ -256,11 +262,11 @@ void receive_connections(struct network_struct* network, struct system_config_st
         if(new_addr.sin_addr.s_addr == active_devices->device[active_devices->device_count].config.server_ip_addr){
             if(active_devices->device[active_devices->device_count].config.is_server){
                 printf("Connecting Device to Server!\n");
-                active_devices->device[active_devices->device_count].is_connected = 1;
-                active_devices->device[active_devices->device_count].device_socket = new_socket;
-                active_devices->device[active_devices->device_count].config.server_ip_addr = new_addr.sin_addr.s_addr;
-                active_devices->device[active_devices->device_count].config.server_tcp_port = new_addr.sin_port;
-                active_devices->device_count = active_devices->device_count + 1;
+                connected_devices->device[connected_devices->device_count].is_connected = 1;
+                connected_devices->device[connected_devices->device_count].device_socket = new_socket;
+                connected_devices->device[connected_devices->device_count].config.server_ip_addr = new_addr.sin_addr.s_addr;
+                connected_devices->device[connected_devices->device_count].config.server_tcp_port = new_addr.sin_port;
+                connected_devices->device_count = connected_devices->device_count + 1;
             } else {
                 printf("Clients Can't Connect To Other Clients\n");
             }
@@ -274,25 +280,27 @@ void receive_connections(struct network_struct* network, struct system_config_st
         local_devices->device[local_devices->device_count].config.server_ip_addr = new_addr.sin_addr.s_addr;
         local_devices->device[local_devices->device_count].config.server_tcp_port = new_addr.sin_port;
         local_devices->device_count = local_devices->device_count + 1;
-        printf("Local Network Connection!\n");
+        printf("Local Network Connection!: %d, %d\n", new_addr.sin_addr.s_addr, active_devices->device[active_devices->device_count].config.server_ip_addr);
     }
 }
 
-uint8_t connect_device(struct device_info_struct* device){
+uint8_t connect_device(struct network_struct* network, struct device_info_struct* device){
     sockaddr_in conn_addr;
-
-    memset(&conn_addr, '0', sizeof(conn_addr));
-    conn_addr.sin_family = htonl(device->config.server_ip_addr);
+    device->device_socket = socket(AF_INET, SOCK_STREAM, 0);
+    memset(&conn_addr, 0, sizeof(conn_addr));
+    conn_addr.sin_family = AF_INET;
+    conn_addr.sin_addr.s_addr = device->config.server_ip_addr;
     conn_addr.sin_port = htons(device->config.server_tcp_port);
-
+    
     if(connect(device->device_socket, (struct sockaddr *) &conn_addr, sizeof(sockaddr_in)) < 0){
         printf("Error connecting device!\n");
+        return NOT_CONNECTED;
     } else {
         device->is_connected = 1;
         printf("Connected Device!\n");
     }
 
-    return 0;
+    return IS_CONNECTED;
 }
 
 void check_connections(struct device_table_struct* device_connections, struct device_table_struct* local_connections){

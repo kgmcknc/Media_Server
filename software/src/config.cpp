@@ -15,6 +15,20 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+void clear_system_config_struct(struct system_config_struct* system_config){
+    memset(system_config, 0, sizeof(struct system_config_struct));
+}
+
+void init_system_config_struct(struct system_config_struct* system_config){
+    clear_system_config_struct(system_config);
+    system_config->device_id = -1;
+    system_config->is_server = 0;
+    system_config->server_ip_addr = 0;
+    system_config->server_tcp_port = DEFAULT_TCP_PORT;
+    system_config->major_version = SERVER_MAJOR_VERSION;
+    system_config->minor_version = SERVER_MINOR_VERSION;
+}
+
 void get_this_ip(char* ip)
 {
     struct ifaddrs *ifaddr, *ifa;
@@ -133,9 +147,10 @@ void load_config(struct system_config_struct* system_config){
     config_file = fopen(CONFIG_PATH, "r+b");
     
     memset(&config_file_data[0], 0, MAX_CONFIG_LINE_SIZE);
-
+    
     system_config->major_version = SERVER_MAJOR_VERSION;
     system_config->minor_version = SERVER_MINOR_VERSION;
+    
     do{
         // read line from file
         continue_reading = fgets(&config_file_data[0], MAX_CONFIG_LINE_SIZE, config_file);
@@ -176,13 +191,13 @@ void load_config(struct system_config_struct* system_config){
         data_pointer = strstr(&config_file_data[0], "server_tcp_port");
         if(data_pointer){
             if(data_pointer > comment_pointer){
-                sscanf(data_pointer, "server_tcp_port %d", &system_config->server_tcp_port);
+                sscanf(data_pointer, "server_tcp_port %hu", &system_config->server_tcp_port);
                 loaded_port = 1;
             }
         }
 
     }while(continue_reading); // read end of file, stop
-
+    
     // load anything we didn't find from file
     if(!loaded_type){
         system_config->is_server = 0; // default to client if not specified
@@ -194,11 +209,13 @@ void load_config(struct system_config_struct* system_config){
             system_config->device_id = -1; // set to -1 to mark that it has not yet been given an id
         }
     }
+    
     if(!loaded_ip){
         char this_ip[16];
         get_this_ip(&this_ip[0]);
         inet_aton(&this_ip[0], (struct in_addr *) &system_config->server_ip_addr);
     }
+    
     if(!loaded_port){
         system_config->server_tcp_port = DEFAULT_TCP_PORT;
     }
@@ -226,7 +243,7 @@ void string_to_config(char* string, struct system_config_struct* config){
         &config->major_version, &config->minor_version, &config->is_server, &config->device_id, ip_string, &config->server_tcp_port);
     inet_aton(&ip_string[0], &ip_address);
     config->server_ip_addr = ip_address.s_addr;
-    printf("Rec IP: %d\n", config->server_ip_addr);
+    //printf("Rec IP: %d\n", config->server_ip_addr);
 }
 
 // just need to write config to string and string to config functions and then could update the packet validation to search for first line in packet

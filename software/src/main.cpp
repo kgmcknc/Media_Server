@@ -31,7 +31,9 @@ pid_t new_connection_fork;
 FILE* config_file;
 
 int main(int argc, char **argv) {
-    system_config_struct system_config = SYS_CONFIG_DEFAULT;
+    system_config_struct system_config;
+    init_system_config_struct(&system_config);
+    
     uint8_t reload_configuration = 0;
 
     printf("\n\n----- Starting Media Server -----\n\n");
@@ -109,20 +111,35 @@ void safe_shutdown(int sig){
 
 uint8_t main_process(struct system_config_struct* system_config){
     uint8_t reconfigure = 0;
-    uint8_t connected = 0;
     struct network_struct network;
     struct system_config_struct new_device;
     struct device_table_struct local_devices;
     struct device_table_struct active_devices;
     struct device_table_struct connected_devices;
+    struct device_table_struct linked_devices; // gets loaded from database
     int pipefd[2];
-    int data_size;
+    //int data_size;
     uint8_t timeout_set = 0;
     uint8_t new_connection_set = 0;
 
+    clear_system_config_struct(&new_device);
+
     active_devices.device_count = 0;
+    linked_devices.device_count = 0;
     connected_devices.device_count = 0;
     local_devices.device_count = 0;
+
+    #ifdef CONNECT_TEST
+    linked_devices.device_count = 1;
+    clear_system_config_struct(&linked_devices.device[0].config);
+    linked_devices.device[0].is_connected = 0;
+    linked_devices.device[0].config.is_server = 0;
+    linked_devices.device[0].config.device_id = -1;
+    linked_devices.device[0].config.major_version = 1;
+    linked_devices.device[0].config.minor_version = 1;
+    linked_devices.device[0].config.server_tcp_port = 28500;
+    #endif
+    
     network.network_socket_fd = create_network_socket(system_config);
 
     while(!reconfigure){
@@ -138,6 +155,7 @@ uint8_t main_process(struct system_config_struct* system_config){
             while(1){ // search indefinitely
                 // inside child listening for broadcast packet
                 close(pipefd[0]); // won't read in child
+                clear_system_config_struct(&new_device);
                 listen_for_devices(system_config, &new_device);
                 //int data_size = sizeof(struct system_config_struct);
                 //write(pipefd[1], &data_size, sizeof(data_size));
@@ -152,8 +170,10 @@ uint8_t main_process(struct system_config_struct* system_config){
                 if(read(pipefd[0], &new_device, sizeof(struct system_config_struct)) > 0){//read(pipefd[0], &data_size, sizeof(data_size)) > 0){
                     //read(pipefd[0], &new_device, data_size);
                     // essentially add to a table of all currently available clients
-                    printf("new_ip: %d\n", new_device.server_ip_addr);
+                    //printf("new_ip: %d\n", new_device.server_ip_addr);
                     add_device_to_table(&active_devices, &new_device);
+                    // clear struct after saving to tables
+                    clear_system_config_struct(&new_device);
                     if(system_config->is_server){
                         // we are server, see if packet is another server (bad) or a client (good)
                         // if client packet, check to see if it's not in available client table
@@ -195,11 +215,10 @@ uint8_t main_process(struct system_config_struct* system_config){
                 
                 if(new_connection_set){
                     if(waitpid(new_connection_fork, NULL, WNOHANG) != 0){
-                        receive_connections(&network, system_config, &connected_devices, &active_devices, &local_devices); // receives server and network connections
+                        receive_connections(&network, system_config, &active_devices, &connected_devices, &local_devices); // receives server and network connections
                         new_connection_set = 0;
                     }
                 } else {
-                    
                     set_new_connections(&network);
                     new_connection_fork = fork();
                     if(new_connection_fork == 0){
@@ -208,16 +227,18 @@ uint8_t main_process(struct system_config_struct* system_config){
                     }
                     new_connection_set = 1;
                 }
-                
+                #ifdef CONNECT_TEST
+                linked_devices.device[0].config.server_ip_addr = active_devices.device[0].config.server_ip_addr;
+                #endif
                 // create array of "connected" clients (reads from database)
                 // then if a new client comes in we will check to see if it's in "connected" array
                 // if so, then we will make the socket connection
-                //if(system_config->is_server){
-                //    connect_linked_devices(&network, &connected_devices, &active_devices); // connects to clients
-                //}
+                if(system_config->is_server){
+                    connect_linked_devices(&network, &linked_devices, &active_devices, &connected_devices); // connects to clients
+                }
 
                 // do all normal socket stuff here
-                //check_connections(&connected_devices, &local_devices); // checks, processes, closes
+                check_connections(&active_devices, &local_devices); // checks, processes, closes
                 
                 //kill process if reconfiguring
                 if(reconfigure){

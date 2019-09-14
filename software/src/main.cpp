@@ -236,7 +236,7 @@ uint8_t main_process(struct system_config_struct* system_config){
                 if(system_config->is_server){
                     connect_linked_devices(&network, system_config, &linked_devices, &active_devices, &connected_devices); // connects to clients
                 }
-
+                
                 // do all normal socket stuff here
                 check_connections(&network, system_config, &active_devices, &linked_devices, &connected_devices, &local_devices); // checks, processes, closes
                 

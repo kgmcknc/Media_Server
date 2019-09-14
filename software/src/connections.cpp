@@ -272,6 +272,7 @@ uint8_t connect_device(struct network_struct* network, struct system_config_stru
         printf("Error connecting device!\n");
         return NOT_CONNECTED;
     } else {
+        fcntl(device->device_socket, F_SETFL, O_NONBLOCK);
         send(device->device_socket,packet_data,UDP_TRANSFER_LENGTH,0);
         device->is_connected = 1;
         printf("Connected Device!\n");
@@ -318,7 +319,7 @@ void receive_connections(struct network_struct* network, struct system_config_st
     struct system_config_struct new_config;
 
     usleep_time = READ_USLEEP_COUNT;
-
+    
     new_socket = accept(network->network_socket_fd, (sockaddr*) &new_addr, &new_sock_length);
     if(new_socket < 0){
         printf("Error on receive accept...\n");
@@ -333,13 +334,13 @@ void receive_connections(struct network_struct* network, struct system_config_st
                 }
             } else {
                 if(read_length > 0){
-                    //printf("got a peek: %d\n", read_length);
+                    printf("got a peek: %d\n", read_length);
                     break;
                 }
             }
-            //printf("Waiting for receive read\n");
+            printf("Waiting for receive read\n");
             usleep(usleep_time);
-            read_wait_count++;
+            read_wait_count = read_wait_count + 1;
         }
         if(read_length){
             if(strstr(packet_data, "Media_Server System:") > 0){

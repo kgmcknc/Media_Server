@@ -52,15 +52,19 @@ void clean_up_table_order(struct device_table_struct* device_table);
 void set_device_timeout_flags(struct device_table_struct* active_devices);
 
 int create_network_socket(struct system_config_struct* system_config);
-void connect_linked_devices(struct network_struct* network, struct device_table_struct* linked_devices, 
+void connect_linked_devices(struct network_struct* network, struct system_config_struct* system_config, struct device_table_struct* linked_devices, 
                             struct device_table_struct* active_devices, struct device_table_struct* connected_devices);
-uint8_t connect_device(struct network_struct* network, struct device_info_struct* device);
-void check_connections(struct device_table_struct* device_connections, struct device_table_struct* local_connections);
+uint8_t connect_device(struct network_struct* network, struct system_config_struct* system_config, struct device_info_struct* device);
 void set_new_connections(struct network_struct* network);
 void wait_for_new_connections(struct network_struct* network); // receives server and network connections
-void receive_connections(struct network_struct* network, struct system_config_struct* system_config,
-                            struct device_table_struct* active_devices, struct device_table_struct* connected_devices,
-                            struct device_table_struct* local_devices);
+void receive_connections(struct network_struct* network, struct system_config_struct* system_config, 
+                            struct device_table_struct* active_devices, struct device_table_struct* linked_devices,
+                            struct device_table_struct* connected_devices, struct device_table_struct* local_devices);
+void check_connections(struct network_struct* network, struct system_config_struct* system_config, 
+                            struct device_table_struct* active_devices, struct device_table_struct* linked_devices,
+                            struct device_table_struct* connected_devices, struct device_table_struct* local_devices);
+void handle_http_message(char* packet_data, struct device_info_struct* device);
+void close_device_connection(struct device_info_struct* device, struct device_table_struct* active_devices, struct device_table_struct* linked_devices);
 
 // #include <stdio.h>
 // #include <stdlib.h>

@@ -7,7 +7,8 @@
 #include <stdint.h>
 
 #include <string.h>
-// #include <fcntl.h>
+#include <fcntl.h>
+#include <errno.h>
 //#include <sys/stat.h>
 #include <sys/types.h>
 //#include <sys/wait.h>
@@ -225,7 +226,7 @@ int create_network_socket(struct system_config_struct* system_config){
     return conn_fd;
 }
 
-void connect_linked_devices(struct network_struct* network, struct device_table_struct* linked_devices,
+void connect_linked_devices(struct network_struct* network, struct system_config_struct* system_config, struct device_table_struct* linked_devices,
                                 struct device_table_struct* active_devices, struct device_table_struct* connected_devices){
     int c,a;
     
@@ -239,7 +240,7 @@ void connect_linked_devices(struct network_struct* network, struct device_table_
                     // then if it's not connected, connect it
                     if(!linked_devices->device[c].is_connected){
                         memcpy(&connected_devices->device[connected_devices->device_count].config, &active_devices->device[c].config, sizeof(struct system_config_struct));
-                        if(connect_device(network, &connected_devices->device[c])){
+                        if(connect_device(network, system_config, &connected_devices->device[c])){
                             linked_devices->device[c].is_connected = 1;
                             connected_devices->device_count = connected_devices->device_count + 1;
                         }
@@ -250,10 +251,12 @@ void connect_linked_devices(struct network_struct* network, struct device_table_
     }
 }
 
-uint8_t connect_device(struct network_struct* network, struct device_info_struct* device){
+// add system config to connect linked devices and connect device and then change the config data of the packet to the system
+
+uint8_t connect_device(struct network_struct* network, struct system_config_struct* system_config, struct device_info_struct* device){
     sockaddr_in conn_addr;
     char packet_data[MAX_PACKET_LENGTH];
-    config_to_string(&device->config, &packet_data[0]);
+    config_to_string(system_config, &packet_data[0]);
     
     device->device_socket = socket(AF_INET, SOCK_STREAM, 0);
     memset(&conn_addr, 0, sizeof(conn_addr));
@@ -297,89 +300,170 @@ void wait_for_new_connections(struct network_struct* network){
     }
 }
 
-void receive_connections(struct network_struct* network, struct system_config_struct* system_config,
-                            struct device_table_struct* active_devices, struct device_table_struct* connected_devices,
-                            struct device_table_struct* local_devices){
+void receive_connections(struct network_struct* network, struct system_config_struct* system_config, 
+                            struct device_table_struct* active_devices, struct device_table_struct* linked_devices,
+                            struct device_table_struct* connected_devices, struct device_table_struct* local_devices){
     sockaddr_in new_addr;
+    int new_socket = 0;
     char packet_data[MAX_PACKET_LENGTH];
     uint32_t read_length;
     socklen_t new_sock_length;
     uint32_t usleep_time;
-    int new_socket;
     uint8_t found_connection = 0;
     uint8_t read_wait_count = 0;
     struct system_config_struct new_config;
 
     usleep_time = 20000;
-    
+
     new_socket = accept(network->network_socket_fd, (sockaddr*) &new_addr, &new_sock_length);
-    while(read_wait_count < MAX_CONNECT_READ_WAIT){
-        read_length = read(new_socket, packet_data, UDP_TRANSFER_LENGTH);
-        if(read_length < 0){
-            printf("Read Error In Receive\n");
-            break;
-        } else {
-            if(read_length > 0){
+    if(new_socket < 0){
+        printf("Error on receive accept...\n");
+    } else {
+        fcntl(new_socket, F_SETFL, O_NONBLOCK);
+        while(read_wait_count < MAX_CONNECT_READ_WAIT){
+            read_length = recv(new_socket, packet_data, UDP_TRANSFER_LENGTH, MSG_PEEK);
+            if(read_length < 0){
+                printf("Read Error In Receive\n");
                 break;
-            }
-        }
-        printf("Waiting for receive read\n");
-        usleep(usleep_time);
-        read_wait_count++;
-    }
-    if(read_length){
-        if(strstr(packet_data, "Media_Server System:") > 0){
-            // valid packet from server connecting
-            string_to_config(packet_data, &new_config);
-            for(int i=0;i<active_devices->device_count;i++){
-                //printf("rx addr: %d, %d\n", new_addr.sin_addr.s_addr, active_devices->device[i].config.server_ip_addr);
-                if(new_addr.sin_addr.s_addr == active_devices->device[i].config.server_ip_addr){
-                    if(system_config->is_server){
-                        // we are server
-                        // we should only receive network connections (not in active device table)
-                    } else {
-                        // we are client
-                        if(active_devices->device[i].config.is_server){
-                            printf("Connecting Device to Server!\n");
-                            connected_devices->device[connected_devices->device_count].is_connected = 1;
-                            connected_devices->device[connected_devices->device_count].device_socket = new_socket;
-                            connected_devices->device[connected_devices->device_count].config.server_ip_addr = new_addr.sin_addr.s_addr;
-                            connected_devices->device[connected_devices->device_count].config.server_tcp_port = new_addr.sin_port;
-                            connected_devices->device_count = connected_devices->device_count + 1;
-                        } else {
-                            printf("Clients Can't Connect To Other Clients\n");
-                        }
-                    }
-                    found_connection = 1;
+            } else {
+                if(read_length > 0){
+                    break;
                 }
             }
-            if(!found_connection){
-                printf("Media_Server Device Not In Table... Closing\n");
-                close(new_socket);
+            printf("Waiting for receive read\n");
+            usleep(usleep_time);
+            read_wait_count++;
+        }
+        if(read_length){
+            if(strstr(packet_data, "Media_Server System:") > 0){
+                // valid packet from server connecting
+                read_length = recv(new_socket, packet_data, UDP_TRANSFER_LENGTH, 0);
+                string_to_config(packet_data, &new_config);
+                for(int i=0;i<active_devices->device_count;i++){
+                    printf("rx addr: %d, %d\n", new_config.server_ip_addr, active_devices->device[i].config.server_ip_addr);
+                    if(new_config.server_ip_addr == active_devices->device[i].config.server_ip_addr){
+                        if(system_config->is_server){
+                            // we are server
+                            // we should only receive network connections (not in active device table)
+                        } else {
+                            // we are client
+                            if(active_devices->device[i].config.is_server){
+                                printf("Connecting Device to Server!\n");
+                                connected_devices->device[connected_devices->device_count].is_connected = 1;
+                                connected_devices->device[connected_devices->device_count].device_socket = new_socket;
+                                connected_devices->device[connected_devices->device_count].config.server_ip_addr = new_config.server_ip_addr;
+                                connected_devices->device[connected_devices->device_count].config.server_tcp_port = new_config.server_tcp_port;
+                                connected_devices->device_count = connected_devices->device_count + 1;
+                            } else {
+                                printf("Clients Can't Connect To Other Clients\n");
+                            }
+                        }
+                        found_connection = 1;
+                    }
+                }
+                if(!found_connection){
+                    printf("Media_Server Device Not In Table... Closing\n");
+                    close(new_socket);
+                }
+            } else {
+                // not valid media server connect packet... maybe http
+                if(strstr(packet_data, "HTTP") > 0){
+                    // HTTP packet from web
+                    local_devices->device[local_devices->device_count].is_connected = 1;
+                    local_devices->device[local_devices->device_count].device_socket = new_socket;
+                    local_devices->device[local_devices->device_count].config.server_ip_addr = new_config.server_ip_addr;
+                    local_devices->device[local_devices->device_count].config.server_tcp_port = new_config.server_tcp_port;
+                    local_devices->device_count = local_devices->device_count + 1;
+                    printf("Local Network Connection!\n");
+                } else {
+                    printf("Not Valid HTTP close\n");
+                    close(new_socket);
+                }
             }
         } else {
-            // not valid media server connect packet... maybe http
-            if(strstr(packet_data, "HTTP") > 0){
-                // HTTP packet from web
-                local_devices->device[local_devices->device_count].is_connected = 1;
-                local_devices->device[local_devices->device_count].device_socket = new_socket;
-                local_devices->device[local_devices->device_count].config.server_ip_addr = new_addr.sin_addr.s_addr;
-                local_devices->device[local_devices->device_count].config.server_tcp_port = new_addr.sin_port;
-                local_devices->device_count = local_devices->device_count + 1;
-                printf("Local Network Connection!: %d, %d\n", new_addr.sin_addr.s_addr, active_devices->device[active_devices->device_count].config.server_ip_addr);
-            } else {
-                printf("Not Valid HTTP close\n");
-                close(new_socket);
-            }
+            printf("Didn't receive data on connect... close\n");
+            close(new_socket);
         }
-    } else {
-        printf("Didn't receive data on connect... close\n");
-        close(new_socket);
     }
 }
 
-void check_connections(struct device_table_struct* device_connections, struct device_table_struct* local_connections){
-    
+void check_connections(struct network_struct* network, struct system_config_struct* system_config,
+                        struct device_table_struct* active_devices, struct device_table_struct* linked_devices,
+                        struct device_table_struct* connected_devices, struct device_table_struct* local_devices){
+    int i;
+    char packet_data[MAX_PACKET_LENGTH];
+    int read_length;
+    uint8_t device_closed = 0;
+
+    for(i=0;i<connected_devices->device_count;i++){
+        read_length = read(connected_devices->device[i].device_socket, packet_data, MAX_PACKET_LENGTH);
+        if(read_length < 0){
+            if((errno != EAGAIN) && (errno != EWOULDBLOCK)){
+                printf("socket read error - closing connection\n");
+                close_device_connection(&connected_devices->device[i], active_devices, linked_devices);
+                connected_devices->device_count = connected_devices->device_count - 1;
+                device_closed = 1;
+            }
+        } else {
+            if(read_length == 0){
+                printf("closing connection\n");
+                close_device_connection(&connected_devices->device[i], active_devices, linked_devices);
+                connected_devices->device_count = connected_devices->device_count - 1;
+                device_closed = 1;
+            } else {
+                printf("ConPack: %s\n", connected_devices);
+            }
+        }
+    }
+    if(device_closed == 1){
+        clean_up_table_order(active_devices);
+    }
+
+    device_closed = 0;
+    for(i=0;i<local_devices->device_count;i++){
+        read_length = read(local_devices->device[i].device_socket, packet_data, MAX_PACKET_LENGTH);
+        if(read_length < 0){
+            if((errno == EAGAIN) || (errno == EWOULDBLOCK)){
+                printf("socket read error - closing connection\n");
+                local_devices->device[i].is_connected = 0;
+                local_devices->device_count = local_devices->device_count - 1;
+                device_closed = 1;
+            }
+        } else {
+            if(read_length == 0){
+                printf("closing connection\n");
+                local_devices->device[i].is_connected = 0;
+                local_devices->device_count = local_devices->device_count - 1;
+                device_closed = 1;
+            } else {
+                printf("NETPACK: %s\n", packet_data);
+            }
+        }
+    }
+    if(device_closed == 1){
+        clean_up_table_order(local_devices);
+    }
+}
+
+void handle_http_message(char* packet_data, struct device_info_struct* device){
+    printf("HTTP MESSAGE: %s", packet_data);
+}
+
+void close_device_connection(struct device_info_struct* device, struct device_table_struct* active_devices, struct device_table_struct* linked_devices){
+    int i;
+    for(i=0;i<linked_devices->device_count;i++){
+        if(device->config.device_id == linked_devices->device[i].config.device_id){
+            linked_devices->device[i].is_connected = 0;
+        }
+    }
+    for(i=0;i<active_devices->device_count;i++){
+        if(device->config.device_id == active_devices->device[i].config.device_id){
+            active_devices->device[i].is_active = 0;
+            active_devices->device_count = active_devices->device_count - 1;
+        }
+    }
+    device->is_connected = 0;
+    close(device->device_socket);
 }
 
 // #include "main.h"

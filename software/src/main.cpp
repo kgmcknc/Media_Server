@@ -23,7 +23,7 @@
 // #include <sys/time.h>
 //#include <wiringPi.h>
 
-//#define CONNECT_TEST
+#define CONNECT_TEST
 
 pid_t heartbeat_fork;
 pid_t device_discovery_fork;
@@ -213,10 +213,9 @@ uint8_t main_process(struct system_config_struct* system_config){
                     }
                     timeout_set = 1;
                 }
-                
                 if(new_connection_set){
                     if(waitpid(new_connection_fork, NULL, WNOHANG) != 0){
-                        receive_connections(&network, system_config, &active_devices, &connected_devices, &local_devices); // receives server and network connections
+                        receive_connections(&network, system_config, &active_devices, &linked_devices, &connected_devices, &local_devices); // receives server and network connections
                         new_connection_set = 0;
                     }
                 } else {
@@ -235,11 +234,11 @@ uint8_t main_process(struct system_config_struct* system_config){
                 // then if a new client comes in we will check to see if it's in "connected" array
                 // if so, then we will make the socket connection
                 if(system_config->is_server){
-                    connect_linked_devices(&network, &linked_devices, &active_devices, &connected_devices); // connects to clients
+                    connect_linked_devices(&network, system_config, &linked_devices, &active_devices, &connected_devices); // connects to clients
                 }
 
                 // do all normal socket stuff here
-                check_connections(&connected_devices, &local_devices); // checks, processes, closes
+                check_connections(&network, system_config, &active_devices, &linked_devices, &connected_devices, &local_devices); // checks, processes, closes
                 
                 //kill process if reconfiguring
                 if(reconfigure){

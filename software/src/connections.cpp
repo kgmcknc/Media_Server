@@ -310,14 +310,14 @@ void receive_connections(struct network_struct* network, struct system_config_st
     sockaddr_in new_addr;
     int new_socket = 0;
     char packet_data[MAX_PACKET_LENGTH];
-    uint32_t read_length;
+    int32_t read_length;
     socklen_t new_sock_length;
     uint32_t usleep_time;
     uint8_t found_connection = 0;
     uint8_t read_wait_count = 0;
     struct system_config_struct new_config;
 
-    usleep_time = 20000;
+    usleep_time = READ_USLEEP_COUNT;
 
     new_socket = accept(network->network_socket_fd, (sockaddr*) &new_addr, &new_sock_length);
     if(new_socket < 0){
@@ -325,26 +325,29 @@ void receive_connections(struct network_struct* network, struct system_config_st
     } else {
         fcntl(new_socket, F_SETFL, O_NONBLOCK);
         while(read_wait_count < MAX_CONNECT_READ_WAIT){
-            read_length = recv(new_socket, packet_data, UDP_TRANSFER_LENGTH, MSG_PEEK);
+            read_length = recv(new_socket, packet_data, MAX_PACKET_LENGTH, MSG_PEEK);
             if(read_length < 0){
-                printf("Read Error In Receive\n");
-                break;
+                if((errno != EAGAIN) && (errno != EWOULDBLOCK)){
+                    printf("Read Error In Receive\n");
+                    break;
+                }
             } else {
                 if(read_length > 0){
+                    //printf("got a peek: %d\n", read_length);
                     break;
                 }
             }
-            printf("Waiting for receive read\n");
+            //printf("Waiting for receive read\n");
             usleep(usleep_time);
             read_wait_count++;
         }
         if(read_length){
             if(strstr(packet_data, "Media_Server System:") > 0){
                 // valid packet from server connecting
-                read_length = recv(new_socket, packet_data, UDP_TRANSFER_LENGTH, 0);
+                read_length = recv(new_socket, packet_data, MAX_PACKET_LENGTH, 0);
                 string_to_config(packet_data, &new_config);
                 for(int i=0;i<active_devices->device_count;i++){
-                    printf("rx addr: %d, %d\n", new_config.server_ip_addr, active_devices->device[i].config.server_ip_addr);
+                    //printf("rx addr: %d, %d\n", new_config.server_ip_addr, active_devices->device[i].config.server_ip_addr);
                     if(new_config.server_ip_addr == active_devices->device[i].config.server_ip_addr){
                         if(system_config->is_server){
                             // we are server
@@ -381,6 +384,7 @@ void receive_connections(struct network_struct* network, struct system_config_st
                     printf("Local Network Connection!\n");
                 } else {
                     printf("Not Valid HTTP close\n");
+                    //printf("Packet: %s\n", packet_data);
                     close(new_socket);
                 }
             }
@@ -403,14 +407,14 @@ void check_connections(struct network_struct* network, struct system_config_stru
         read_length = read(connected_devices->device[i].device_socket, packet_data, MAX_PACKET_LENGTH);
         if(read_length < 0){
             if((errno != EAGAIN) && (errno != EWOULDBLOCK)){
-                printf("socket read error - closing connection\n");
+                printf("dev socket read error - closing connection\n");
                 close_device_connection(&connected_devices->device[i], active_devices, linked_devices);
                 connected_devices->device_count = connected_devices->device_count - 1;
                 device_closed = 1;
             }
         } else {
             if(read_length == 0){
-                printf("closing connection\n");
+                printf("closing dev connection\n");
                 close_device_connection(&connected_devices->device[i], active_devices, linked_devices);
                 connected_devices->device_count = connected_devices->device_count - 1;
                 device_closed = 1;
@@ -428,19 +432,23 @@ void check_connections(struct network_struct* network, struct system_config_stru
         read_length = read(local_devices->device[i].device_socket, packet_data, MAX_PACKET_LENGTH);
         if(read_length < 0){
             if((errno == EAGAIN) || (errno == EWOULDBLOCK)){
-                printf("socket read error - closing connection\n");
+                printf("net socket read error - closing connection\n");
                 local_devices->device[i].is_connected = 0;
                 local_devices->device_count = local_devices->device_count - 1;
                 device_closed = 1;
             }
         } else {
             if(read_length == 0){
-                printf("closing connection\n");
+                printf("closing net connection\n");
                 local_devices->device[i].is_connected = 0;
                 local_devices->device_count = local_devices->device_count - 1;
                 device_closed = 1;
             } else {
-                printf("NETPACK: %s\n", packet_data);
+                //printf("NETPACK: %s\n", packet_data);
+                handle_http_message(packet_data, &local_devices->device[i]);
+                local_devices->device[i].is_connected = 0;
+                local_devices->device_count = local_devices->device_count - 1;
+                device_closed = 1;
             }
         }
     }
@@ -450,7 +458,17 @@ void check_connections(struct network_struct* network, struct system_config_stru
 }
 
 void handle_http_message(char* packet_data, struct device_info_struct* device){
-    printf("HTTP MESSAGE: %s", packet_data);
+    char response[] = "HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\nContent-Length: 44\r\nConnection: close\r\nContent-Type: text/html\r\nX-Pad: avoid browser bug\r\n\r\n<html><body><h1>It works!</h1></body></html>\r\n";
+    if(strstr(packet_data, "GET") > 0){
+        printf("Http Get Message: %s\n", packet_data);
+        // string to json
+        send(device->device_socket, response, MAX_PACKET_LENGTH, 0);
+    } else {
+        if(strstr(packet_data, "PUT") > 0){
+            printf("Http Put Message\n");
+            send(device->device_socket, response, MAX_PACKET_LENGTH, 0);
+        }
+    }
 }
 
 void close_device_connection(struct device_info_struct* device, struct device_table_struct* active_devices, struct device_table_struct* linked_devices){

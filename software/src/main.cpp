@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
         }
 
         // if we get here we broke out of system...
-        shutdown();
+        system_shutdown();
         // we will reconfigure and restart unless it errored or quit
     } while(reload_configuration);
     
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
     exit(EXIT_SUCCESS);
 }
 
-void shutdown(void){
+void system_shutdown(void){
     // kill all child processes
     kill(heartbeat_fork, SIGKILL);
     kill(device_discovery_fork, SIGKILL);
@@ -107,7 +107,7 @@ void shutdown(void){
 }
 
 void safe_shutdown(int sig){
-    shutdown();
+    system_shutdown();
     exit(EXIT_FAILURE);
 }
 
@@ -284,8 +284,8 @@ void receive_get_request(void){
     message = accept(com_fd, NULL, NULL);
     int retval = recvfrom(message,my_message,rx_len,0,(sockaddr *)&com_addr,&len);
     int error = 0;//errno;
-    //char response[] = "HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\nContent-Length: 44\r\nConnection: close\r\nContent-Type: text/html\r\nX-Pad: avoid browser bug\r\n\r\n<html><body><h1>It works!</h1></body></html>\r\n";
-    char response[] = "HTTP/1.0 404 NOT FOUND\r\nContent-Length: 17\r\nContent-Type: text/html\r\n\r\ntwentyisonetoomanytt\r\n";
+    char response[] = "HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\nContent-Length: 44\r\nConnection: close\r\nContent-Type: text/html\r\nX-Pad: avoid browser bug\r\n\r\n<html><body><h1>It works!</h1></body></html>\r\n";
+    //char response[] = "HTTP/1.0 404 NOT FOUND\r\nContent-Length: 17\r\nContent-Type: text/html\r\n\r\ntwentyisonetoomanytt\r\n";
     socklen_t sa_len = sizeof(web_addr);
     getsockname(message,(sockaddr *) &web_addr,&sa_len);
     retval = sendto(message,response,strlen(response)+1,0,(sockaddr *)&web_addr,sizeof(web_addr));

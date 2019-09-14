@@ -7,7 +7,7 @@
 
 uint8_t main_process(struct system_config_struct* system_config);
 void safe_shutdown(int sig);
-void shutdown(void);
+void system_shutdown(void);
 
 
 //void receive_broadcast_packet(void);

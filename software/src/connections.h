@@ -16,7 +16,9 @@
 #define UDP_TRANSFER_LENGTH     128
 #define MAX_ACTIVE_DEVICES      64
 #define LISTEN_DEPTH            1024
-#define MAX_CONNECT_READ_WAIT   8
+
+#define MAX_CONNECT_READ_WAIT   10
+#define READ_USLEEP_COUNT       500
 
 #define NOT_CONNECTED           0
 #define IS_CONNECTED            1

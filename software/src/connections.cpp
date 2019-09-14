@@ -243,6 +243,10 @@ void connect_linked_devices(struct network_struct* network, struct system_config
                         if(connect_device(network, system_config, &connected_devices->device[c])){
                             linked_devices->device[c].is_connected = 1;
                             connected_devices->device_count = connected_devices->device_count + 1;
+                        } else {
+                            active_devices->device[c].is_active = 0;
+                            active_devices->device_count = active_devices->device_count - 1;
+                            clean_up_table_order(active_devices);
                         }
                     }
                 }

@@ -1,6 +1,7 @@
 
 #include "config.h"
 #include "connections.h"
+#include "http.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -404,6 +405,8 @@ void check_connections(struct network_struct* network, struct system_config_stru
     int read_length;
     uint8_t device_closed = 0;
 
+    memset(packet_data, 0, MAX_PACKET_LENGTH);
+
     for(i=0;i<connected_devices->device_count;i++){
         read_length = read(connected_devices->device[i].device_socket, packet_data, MAX_PACKET_LENGTH);
         if(read_length < 0){
@@ -455,20 +458,6 @@ void check_connections(struct network_struct* network, struct system_config_stru
     }
     if(device_closed == 1){
         clean_up_table_order(local_devices);
-    }
-}
-
-void handle_http_message(char* packet_data, struct device_info_struct* device){
-    char response[] = "HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\nContent-Length: 44\r\nConnection: close\r\nContent-Type: text/html\r\nX-Pad: avoid browser bug\r\n\r\n<html><body><h1>It works!</h1></body></html>\r\n";
-    if(strstr(packet_data, "GET") > 0){
-        printf("Http Get Message: %s\n", packet_data);
-        // string to json
-        send(device->device_socket, response, MAX_PACKET_LENGTH, 0);
-    } else {
-        if(strstr(packet_data, "PUT") > 0){
-            printf("Http Put Message\n");
-            send(device->device_socket, response, MAX_PACKET_LENGTH, 0);
-        }
     }
 }
 

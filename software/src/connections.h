@@ -65,7 +65,6 @@ void receive_connections(struct network_struct* network, struct system_config_st
 void check_connections(struct network_struct* network, struct system_config_struct* system_config, 
                             struct device_table_struct* active_devices, struct device_table_struct* linked_devices,
                             struct device_table_struct* connected_devices, struct device_table_struct* local_devices);
-void handle_http_message(char* packet_data, struct device_info_struct* device);
 void close_device_connection(struct device_info_struct* device, struct device_table_struct* active_devices, struct device_table_struct* linked_devices);
 
 // #include <stdio.h>

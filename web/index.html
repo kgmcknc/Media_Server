@@ -1,0 +1,54 @@
+
+<html>
+  <head>
+    <title>Media Server Test</title>
+  </head>
+  <body>
+    <div class="main_page">
+	<button type="button" onclick="testgeturl()">Test GET</button>
+	<button type="button" onclick="testposturl()">Test POST</button>
+    </div>
+    <script>
+        function testgeturl(){
+			var xmlhttp;
+			var object = {command:"show_active_devices",value:"0"};
+			var valuestring = JSON.stringify(object);
+			//alert(valuestring);
+			if (window.XMLHttpRequest) {
+				xmlhttp = new XMLHttpRequest();
+			} else {
+				// code for IE6, IE5
+				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+		        xmlhttp.open("GET", "msp.php?q="+valuestring, true);
+			xmlhttp.send();
+			xmlhttp.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					//document.getElementById(value).innerHTML = this.responseText;
+					alert(this.responseText);
+				}
+			}
+        }
+		function testposturl(){
+			var xmlhttp;
+			var object = {command:"show_active_devices",value:"0"};
+			var valuestring = JSON.stringify(object);
+			//alert(valuestring);
+			if (window.XMLHttpRequest) {
+				xmlhttp = new XMLHttpRequest();
+			} else {
+				// code for IE6, IE5
+				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+		        xmlhttp.open("POST", "msp.php?q="+valuestring, true);
+			xmlhttp.send();
+			xmlhttp.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					//document.getElementById(value).innerHTML = this.responseText;
+					alert(this.responseText);
+				}
+			}
+        }
+    </script>
+  </body>
+</html>

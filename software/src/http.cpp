@@ -23,14 +23,15 @@ void handle_http_message(char* packet_data, struct device_info_struct* device){
         http_message.is_get = 1;
         printf("Http Get Message: %s\n", packet_data);
         process_message(packet_data, &http_message);
-        char response[] = "<html><body><h1>It works!</h1></body></html>";
+        char response[] = "<html><body><h1>GET works!</h1></body></html>";
         send_http_okay(device, response, strlen(response));
     } else {
-        if(strstr(packet_data, "PUT") > 0){
+        if(strstr(packet_data, "POST") > 0){
             http_message.is_get = 0;
-            printf("Http Put Message\n");
-            char response[] = "<html><body><h1>It works!</h1></body></html>";
-            send_http_okay(device, response, 44);
+            printf("Http Post Message: %s\n", packet_data);
+            process_message(packet_data, &http_message);
+            char response[] = "<html><body><h1>POST works!</h1></body></html>";
+            send_http_okay(device, response, strlen(response));
         }
     }
 }
@@ -38,7 +39,7 @@ void handle_http_message(char* packet_data, struct device_info_struct* device){
 void process_message(char* message, struct http_message_struct* http){
     char* command_pointer;
     sscanf(message, "{\"%s\":", http->command);
-    //message = message + strlen(http->command) + 4; // get past what we just scanned
+    
     http->command_number = 0;
 
     for(int i=0;i<NUMBER_COMMANDS;i++){

@@ -33,8 +33,9 @@ pid_t new_connection_fork;
 FILE* config_file;
 
 int main(int argc, char **argv) {
-    system_config_struct system_config;
-    init_system_config_struct(&system_config);
+    struct system_struct system;
+    //system_config_struct system_config;
+    init_system_config_struct(&system.config);
     
     uint8_t reload_configuration = 0;
 
@@ -47,14 +48,14 @@ int main(int argc, char **argv) {
     } else {
         printf("\n\n----- Failed To Open Config File      -----\n\n");
         printf("\n\n----- ReWriting Default Config File   -----\n\n");
-        create_config_file(system_config);
+        create_config_file(system.config);
     }
 
     if(argc > 1) {
         printf("\n\n----- Checking Input Argument -----\n\n");
         if(strcmp(argv[1], "Config") || strcmp(argv[1], "config")) {
                 printf("\n\n----- Running System Config -----\n\n");
-                configure_system(&system_config);
+                configure_system(&system.config);
         } else {
             printf("\n\n----- Argument wasn't \"Config\"  -----\n\n");
             printf("\n\n----- Exiting Media Server        -----\n\n");
@@ -64,8 +65,8 @@ int main(int argc, char **argv) {
     
     do{
         printf("\n\n----- Checking Configuration Settings -----\n\n");
-        load_config(&system_config);
-        if(system_config.is_server){
+        load_config(&system.config);
+        if(system.config.is_server){
             printf("\n\n----- Running as Server -----\n\n");
         } else {
             printf("\n\n----- Running as Client -----\n\n");
@@ -79,13 +80,13 @@ int main(int argc, char **argv) {
         heartbeat_fork = fork();
         if(heartbeat_fork == 0){
             printf("\n---- Inside Heartbeat Child ----\n");
-            heartbeat(&system_config);
+            heartbeat(&system.config);
             printf("\n---- Exitting Heartbeat Child ----\n");
             exit(EXIT_SUCCESS);
         } else {
             printf("\n---- Inside Parent Server ----\n");
             // start server
-            reload_configuration = main_process(&system_config);
+            reload_configuration = main_process(&system);
         }
 
         // if we get here we broke out of system...
@@ -111,14 +112,13 @@ void safe_shutdown(int sig){
     exit(EXIT_FAILURE);
 }
 
-uint8_t main_process(struct system_config_struct* system_config){
+uint8_t main_process(struct system_struct* system){
     uint8_t reconfigure = 0;
-    struct network_struct network;
     struct system_config_struct new_device;
-    struct device_table_struct local_devices;
-    struct device_table_struct active_devices;
-    struct device_table_struct connected_devices;
-    struct device_table_struct linked_devices; // gets loaded from database
+    //struct device_table_struct local_devices;
+    //struct device_table_struct active_devices;
+    //struct device_table_struct connected_devices;
+    //struct device_table_struct linked_devices; // gets loaded from database
     int pipefd[2];
     //int data_size;
     uint8_t timeout_set = 0;
@@ -126,23 +126,23 @@ uint8_t main_process(struct system_config_struct* system_config){
 
     clear_system_config_struct(&new_device);
 
-    active_devices.device_count = 0;
-    linked_devices.device_count = 0;
-    connected_devices.device_count = 0;
-    local_devices.device_count = 0;
+    system->active_devices.device_count = 0;
+    system->linked_devices.device_count = 0;
+    system->connected_devices.device_count = 0;
+    system->local_devices.device_count = 0;
 
     #ifdef CONNECT_TEST
-    linked_devices.device_count = 1;
-    clear_system_config_struct(&linked_devices.device[0].config);
-    linked_devices.device[0].is_connected = 0;
-    linked_devices.device[0].config.is_server = 0;
-    linked_devices.device[0].config.device_id = 261516760;
-    linked_devices.device[0].config.major_version = 1;
-    linked_devices.device[0].config.minor_version = 1;
-    linked_devices.device[0].config.server_tcp_port = 28500;
+    system->linked_devices.device_count = 1;
+    clear_system_config_struct(&system->linked_devices.device[0].config);
+    system->linked_devices.device[0].is_connected = 0;
+    system->linked_devices.device[0].config.is_server = 0;
+    system->linked_devices.device[0].config.device_id = 261516760;
+    system->linked_devices.device[0].config.major_version = 1;
+    system->linked_devices.device[0].config.minor_version = 1;
+    system->linked_devices.device[0].config.server_tcp_port = 28500;
     #endif
     
-    network.network_socket_fd = create_network_socket(system_config);
+    system->network.network_socket_fd = create_network_socket(&system->config);
 
     while(!reconfigure){
         // we return here after every new broadcast packet we get from a device other than ourselves to restart the broadcast listener
@@ -158,7 +158,7 @@ uint8_t main_process(struct system_config_struct* system_config){
                 // inside child listening for broadcast packet
                 close(pipefd[0]); // won't read in child
                 clear_system_config_struct(&new_device);
-                listen_for_devices(system_config, &new_device);
+                listen_for_devices(&system->config, &new_device);
                 //int data_size = sizeof(struct system_config_struct);
                 //write(pipefd[1], &data_size, sizeof(data_size));
                 write(pipefd[1], &new_device, sizeof(struct system_config_struct)); // write new device data into pipe
@@ -173,10 +173,10 @@ uint8_t main_process(struct system_config_struct* system_config){
                     //read(pipefd[0], &new_device, data_size);
                     // essentially add to a table of all currently available clients
                     //printf("new_ip: %d\n", new_device.server_ip_addr);
-                    add_device_to_table(&active_devices, &new_device);
+                    add_device_to_table(&system->active_devices, &new_device);
                     // clear struct after saving to tables
                     clear_system_config_struct(&new_device);
-                    if(system_config->is_server){
+                    if(system->config.is_server){
                         // we are server, see if packet is another server (bad) or a client (good)
                         // if client packet, check to see if it's not in available client table
                             // if so, add it to available client table
@@ -197,7 +197,7 @@ uint8_t main_process(struct system_config_struct* system_config){
                     if(waitpid(device_timeout_fork, NULL, WNOHANG) != 0){
                         // process client connected table
                         // remove any no longer "active" clients from the table
-                        remove_inactive_devices(&active_devices);
+                        remove_inactive_devices(&system->active_devices);
                         timeout_set = 0;
                     }
                 } else {
@@ -209,36 +209,36 @@ uint8_t main_process(struct system_config_struct* system_config){
                     } else {
                         // in parent
                         // clear all flags for active clients
-                        set_device_timeout_flags(&active_devices);
+                        set_device_timeout_flags(&system->active_devices);
                     }
                     timeout_set = 1;
                 }
                 if(new_connection_set){
                     if(waitpid(new_connection_fork, NULL, WNOHANG) != 0){
-                        receive_connections(&network, system_config, &active_devices, &linked_devices, &connected_devices, &local_devices); // receives server and network connections
+                        receive_connections(system); // receives server and network connections
                         new_connection_set = 0;
                     }
                 } else {
-                    set_new_connections(&network);
+                    set_new_connections(&system->network);
                     new_connection_fork = fork();
                     if(new_connection_fork == 0){
-                        wait_for_new_connections(&network); // receives server and network connections
+                        wait_for_new_connections(&system->network); // receives server and network connections
                         exit(EXIT_SUCCESS);
                     }
                     new_connection_set = 1;
                 }
                 #ifdef CONNECT_TEST
-                linked_devices.device[0].config.server_ip_addr = active_devices.device[0].config.server_ip_addr;
+                system->linked_devices.device[0].config.server_ip_addr = system->active_devices.device[0].config.server_ip_addr;
                 #endif
                 // create array of "connected" clients (reads from database)
                 // then if a new client comes in we will check to see if it's in "connected" array
                 // if so, then we will make the socket connection
-                if(system_config->is_server){
-                    connect_linked_devices(&network, system_config, &linked_devices, &active_devices, &connected_devices); // connects to clients
+                if(system->config.is_server){
+                    connect_linked_devices(system); // connects to clients
                 }
                 
                 // do all normal socket stuff here
-                check_connections(&network, system_config, &active_devices, &linked_devices, &connected_devices, &local_devices); // checks, processes, closes
+                check_connections(system); // checks, processes, closes
                 
                 //kill process if reconfiguring
                 if(reconfigure){
@@ -251,11 +251,11 @@ uint8_t main_process(struct system_config_struct* system_config){
         }
     }
 
-    close(network.network_socket_fd);
+    close(system->network.network_socket_fd);
 
     return reconfigure;
 }
-
+/*
 void receive_get_request(void){
     int com_fd, message;
     int com_socket, com_len, com_opt = 1;
@@ -295,7 +295,7 @@ void receive_get_request(void){
     close(com_fd);
     printf("status: %d, %d, Message: %s\n", retval, error, my_message);
 }
-/*
+
 void server_system(void){
     int heartbeat_socket_s;
     int new_client;

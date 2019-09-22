@@ -3,9 +3,19 @@
 #define SRC_MAIN_H_
 
 #include <stdint.h>
+#include "connections.h"
 #include "config.h"
 
-uint8_t main_process(struct system_config_struct* system_config);
+struct system_struct {
+    struct system_config_struct config;
+    struct network_struct network;
+    struct device_table_struct local_devices;
+    struct device_table_struct active_devices;
+    struct device_table_struct connected_devices;
+    struct device_table_struct linked_devices; // gets loaded from database
+};
+
+uint8_t main_process(struct system_struct* system);
 void safe_shutdown(int sig);
 void system_shutdown(void);
 

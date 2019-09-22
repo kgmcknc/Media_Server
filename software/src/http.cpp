@@ -12,12 +12,12 @@
 // char header_end[] = "Connection: close\r\nContent-Type: text/html\r\nX-Pad: avoid browser bug\r\n\r\n";
 
 char command_string[NUMBER_COMMANDS][MAX_COMMAND_STRING] = {
-    "show_active_devices",
+    "get_active_devices",
     "add_device_to_server",
     "rem_device_from_server"
 };
 
-void handle_http_message(char* packet_data, struct device_info_struct* device){
+void handle_http_message(struct system_struct* system, char* packet_data, struct device_info_struct* device){
     struct http_message_struct http_message;
     if(strstr(packet_data, "GET") > 0){
         http_message.is_get = 1;
@@ -52,7 +52,7 @@ void process_message(char* message, struct http_message_struct* http){
     printf("command: %s, num: %d\n", http->command, http->command_number);
     switch(http->command_number){
         case 0 : {
-            printf("show active devices\n");
+            printf("get active devices\n");
             break;
         }
         case 1 : {

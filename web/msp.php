@@ -2,9 +2,10 @@
 	// media server proxy to pass from web page to c code listening on another tcp port
 	$ms_ip = $_SERVER['SERVER_ADDR'];
 	$ms_port = "28500";
+	
 	$valid_post = 0;
 	$valid_get = 0;
-		
+	
 	if ($_SERVER["REQUEST_METHOD"] == "POST") {
 		// collect value of input field
 		$json_string = $_REQUEST['q'];

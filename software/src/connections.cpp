@@ -1,4 +1,5 @@
 
+#include "main.h"
 #include "config.h"
 #include "connections.h"
 #include "http.h"
@@ -227,27 +228,26 @@ int create_network_socket(struct system_config_struct* system_config){
     return conn_fd;
 }
 
-void connect_linked_devices(struct network_struct* network, struct system_config_struct* system_config, struct device_table_struct* linked_devices,
-                                struct device_table_struct* active_devices, struct device_table_struct* connected_devices){
+void connect_linked_devices(struct system_struct* system){
     int c,a;
     
-    for(c=0;c<linked_devices->device_count;c++){
-        for(a=0;a<active_devices->device_count;a++){
-            if(active_devices->device->config.is_server){
+    for(c=0;c<system->linked_devices.device_count;c++){
+        for(a=0;a<system->active_devices.device_count;a++){
+            if(system->active_devices.device[a].config.is_server){
                 // dont connect server to server
             } else {
                 // see if linked device is in attached devices
-                if(linked_devices->device[c].config.device_id == active_devices->device[a].config.device_id){
+                if(system->linked_devices.device[c].config.device_id == system->active_devices.device[a].config.device_id){
                     // then if it's not connected, connect it
-                    if(!linked_devices->device[c].is_connected){
-                        memcpy(&connected_devices->device[connected_devices->device_count].config, &active_devices->device[c].config, sizeof(struct system_config_struct));
-                        if(connect_device(network, system_config, &connected_devices->device[c])){
-                            linked_devices->device[c].is_connected = 1;
-                            connected_devices->device_count = connected_devices->device_count + 1;
+                    if(!system->linked_devices.device[c].is_connected){
+                        memcpy(&system->connected_devices.device[system->connected_devices.device_count].config, &system->active_devices.device[c].config, sizeof(struct system_config_struct));
+                        if(connect_device(&system->network, &system->config, &system->connected_devices.device[c])){
+                            system->linked_devices.device[c].is_connected = 1;
+                            system->connected_devices.device_count = system->connected_devices.device_count + 1;
                         } else {
-                            active_devices->device[c].is_active = 0;
-                            active_devices->device_count = active_devices->device_count - 1;
-                            clean_up_table_order(active_devices);
+                            system->active_devices.device[c].is_active = 0;
+                            system->active_devices.device_count = system->active_devices.device_count - 1;
+                            clean_up_table_order(&system->active_devices);
                         }
                     }
                 }
@@ -306,9 +306,7 @@ void wait_for_new_connections(struct network_struct* network){
     }
 }
 
-void receive_connections(struct network_struct* network, struct system_config_struct* system_config, 
-                            struct device_table_struct* active_devices, struct device_table_struct* linked_devices,
-                            struct device_table_struct* connected_devices, struct device_table_struct* local_devices){
+void receive_connections(struct system_struct* system){
     sockaddr_in new_addr;
     int new_socket = 0;
     char packet_data[MAX_PACKET_LENGTH];
@@ -321,7 +319,7 @@ void receive_connections(struct network_struct* network, struct system_config_st
 
     usleep_time = READ_USLEEP_COUNT;
     
-    new_socket = accept(network->network_socket_fd, (sockaddr*) &new_addr, &new_sock_length);
+    new_socket = accept(system->network.network_socket_fd, (sockaddr*) &new_addr, &new_sock_length);
     if(new_socket < 0){
         printf("Error on receive accept...\n");
     } else {
@@ -348,21 +346,21 @@ void receive_connections(struct network_struct* network, struct system_config_st
                 // valid packet from server connecting
                 read_length = recv(new_socket, packet_data, MAX_PACKET_LENGTH, 0);
                 string_to_config(packet_data, &new_config);
-                for(int i=0;i<active_devices->device_count;i++){
+                for(int i=0;i<system->active_devices.device_count;i++){
                     //printf("rx addr: %d, %d\n", new_config.server_ip_addr, active_devices->device[i].config.server_ip_addr);
-                    if(new_config.server_ip_addr == active_devices->device[i].config.server_ip_addr){
-                        if(system_config->is_server){
+                    if(new_config.server_ip_addr == system->active_devices.device[i].config.server_ip_addr){
+                        if(system->config.is_server){
                             // we are server
                             // we should only receive network connections (not in active device table)
                         } else {
                             // we are client
-                            if(active_devices->device[i].config.is_server){
+                            if(system->active_devices.device[i].config.is_server){
                                 printf("Connecting Device to Server!\n");
-                                connected_devices->device[connected_devices->device_count].is_connected = 1;
-                                connected_devices->device[connected_devices->device_count].device_socket = new_socket;
-                                connected_devices->device[connected_devices->device_count].config.server_ip_addr = new_config.server_ip_addr;
-                                connected_devices->device[connected_devices->device_count].config.server_tcp_port = new_config.server_tcp_port;
-                                connected_devices->device_count = connected_devices->device_count + 1;
+                                system->connected_devices.device[system->connected_devices.device_count].is_connected = 1;
+                                system->connected_devices.device[system->connected_devices.device_count].device_socket = new_socket;
+                                system->connected_devices.device[system->connected_devices.device_count].config.server_ip_addr = new_config.server_ip_addr;
+                                system->connected_devices.device[system->connected_devices.device_count].config.server_tcp_port = new_config.server_tcp_port;
+                                system->connected_devices.device_count = system->connected_devices.device_count + 1;
                             } else {
                                 printf("Clients Can't Connect To Other Clients\n");
                             }
@@ -378,11 +376,11 @@ void receive_connections(struct network_struct* network, struct system_config_st
                 // not valid media server connect packet... maybe http
                 if(strstr(packet_data, "HTTP") > 0){
                     // HTTP packet from web
-                    local_devices->device[local_devices->device_count].is_connected = 1;
-                    local_devices->device[local_devices->device_count].device_socket = new_socket;
-                    local_devices->device[local_devices->device_count].config.server_ip_addr = new_config.server_ip_addr;
-                    local_devices->device[local_devices->device_count].config.server_tcp_port = new_config.server_tcp_port;
-                    local_devices->device_count = local_devices->device_count + 1;
+                    system->local_devices.device[system->local_devices.device_count].is_connected = 1;
+                    system->local_devices.device[system->local_devices.device_count].device_socket = new_socket;
+                    system->local_devices.device[system->local_devices.device_count].config.server_ip_addr = new_config.server_ip_addr;
+                    system->local_devices.device[system->local_devices.device_count].config.server_tcp_port = new_config.server_tcp_port;
+                    system->local_devices.device_count = system->local_devices.device_count + 1;
                     printf("Local Network Connection!\n");
                 } else {
                     printf("Not Valid HTTP close\n");
@@ -397,9 +395,7 @@ void receive_connections(struct network_struct* network, struct system_config_st
     }
 }
 
-void check_connections(struct network_struct* network, struct system_config_struct* system_config,
-                        struct device_table_struct* active_devices, struct device_table_struct* linked_devices,
-                        struct device_table_struct* connected_devices, struct device_table_struct* local_devices){
+void check_connections(struct system_struct* system){
     int i;
     char packet_data[MAX_PACKET_LENGTH];
     int read_length;
@@ -407,57 +403,57 @@ void check_connections(struct network_struct* network, struct system_config_stru
 
     memset(packet_data, 0, MAX_PACKET_LENGTH);
 
-    for(i=0;i<connected_devices->device_count;i++){
-        read_length = read(connected_devices->device[i].device_socket, packet_data, MAX_PACKET_LENGTH);
+    for(i=0;i<system->connected_devices.device_count;i++){
+        read_length = read(system->connected_devices.device[i].device_socket, packet_data, MAX_PACKET_LENGTH);
         if(read_length < 0){
             if((errno != EAGAIN) && (errno != EWOULDBLOCK)){
                 printf("dev socket read error - closing connection\n");
-                close_device_connection(&connected_devices->device[i], active_devices, linked_devices);
-                connected_devices->device_count = connected_devices->device_count - 1;
+                close_device_connection(&system->connected_devices.device[i], &system->active_devices, &system->linked_devices);
+                system->connected_devices.device_count = system->connected_devices.device_count - 1;
                 device_closed = 1;
             }
         } else {
             if(read_length == 0){
                 printf("closing dev connection\n");
-                close_device_connection(&connected_devices->device[i], active_devices, linked_devices);
-                connected_devices->device_count = connected_devices->device_count - 1;
+                close_device_connection(&system->connected_devices.device[i], &system->active_devices, &system->linked_devices);
+                system->connected_devices.device_count = system->connected_devices.device_count - 1;
                 device_closed = 1;
             } else {
-                printf("ConPack: %s\n", connected_devices);
+                printf("ConPack: %s\n", system->connected_devices);
             }
         }
     }
     if(device_closed == 1){
-        clean_up_table_order(active_devices);
+        clean_up_table_order(&system->active_devices);
     }
 
     device_closed = 0;
-    for(i=0;i<local_devices->device_count;i++){
-        read_length = read(local_devices->device[i].device_socket, packet_data, MAX_PACKET_LENGTH);
+    for(i=0;i<system->local_devices.device_count;i++){
+        read_length = read(system->local_devices.device[i].device_socket, packet_data, MAX_PACKET_LENGTH);
         if(read_length < 0){
             if((errno == EAGAIN) || (errno == EWOULDBLOCK)){
                 printf("net socket read error - closing connection\n");
-                local_devices->device[i].is_connected = 0;
-                local_devices->device_count = local_devices->device_count - 1;
+                system->local_devices.device[i].is_connected = 0;
+                system->local_devices.device_count = system->local_devices.device_count - 1;
                 device_closed = 1;
             }
         } else {
             if(read_length == 0){
                 printf("closing net connection\n");
-                local_devices->device[i].is_connected = 0;
-                local_devices->device_count = local_devices->device_count - 1;
+                system->local_devices.device[i].is_connected = 0;
+                system->local_devices.device_count = system->local_devices.device_count - 1;
                 device_closed = 1;
             } else {
                 //printf("NETPACK: %s\n", packet_data);
-                handle_http_message(packet_data, &local_devices->device[i]);
-                local_devices->device[i].is_connected = 0;
-                local_devices->device_count = local_devices->device_count - 1;
+                handle_http_message(system, packet_data, &system->local_devices.device[i]);
+                system->local_devices.device[i].is_connected = 0;
+                system->local_devices.device_count = system->local_devices.device_count - 1;
                 device_closed = 1;
             }
         }
     }
     if(device_closed == 1){
-        clean_up_table_order(local_devices);
+        clean_up_table_order(&system->local_devices);
     }
 }
 

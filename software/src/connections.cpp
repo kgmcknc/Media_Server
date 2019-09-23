@@ -149,6 +149,7 @@ void add_device_to_table(struct device_table_struct* active_devices, struct syst
 
 void remove_inactive_devices(struct device_table_struct* active_devices){
     int i;
+    uint8_t removed = 0;
     for(i=0;i<active_devices->device_count;i++){
         if(active_devices->device[i].timeout_set && active_devices->device[i].is_active){
             printf("Removing Inactive Client!\n");
@@ -158,26 +159,39 @@ void remove_inactive_devices(struct device_table_struct* active_devices){
         }
     }
     // add function (cleanup_device_table) to shift devices to lowest position as they get removed
-    clean_up_table_order(active_devices);
+    if(removed){
+        clean_up_table_order(active_devices);
+    }
 }
 
 void clean_up_table_order(struct device_table_struct* device_table){
     struct device_table_struct device_table_copy;
+    uint8_t found_valid;
     uint32_t valid_count;
     uint32_t valid_position;
     uint32_t device_position;
 
     memcpy(&device_table_copy, device_table, sizeof(struct device_table_struct));
-
+    init_device_table_struct(device_table);
+    device_table->device_count = device_table_copy.device_count;
     valid_count = 0;
     valid_position = 0;
     for(int i=0;i<MAX_ACTIVE_DEVICES;i++){
-        while(!(device_table_copy.device[valid_position].is_active || device_table_copy.device[valid_position].is_connected)){
+        found_valid = 0;
+        while((valid_position < MAX_ACTIVE_DEVICES) && !found_valid){
             // find a valid position to put into table
-            valid_position = valid_position + 1;
+            found_valid = (device_table_copy.device[valid_position].is_active || device_table_copy.device[valid_position].is_connected);
+            if(!found_valid){
+                valid_position = valid_position + 1;
+            } else {
+                printf("found valid position\n");
+            }
         }
         valid_count = valid_count + 1;
-        memcpy(&device_table->device[i], &device_table_copy.device[valid_position], sizeof(struct device_info_struct));
+        if(found_valid){
+            printf("copied valid position\n");
+            memcpy(&device_table->device[i], &device_table_copy.device[valid_position], sizeof(struct device_info_struct));
+        }
         if(valid_count >= device_table_copy.device_count){
             // finished copying all devices back over... done
             break;
@@ -235,16 +249,20 @@ void connect_linked_devices(struct system_struct* system){
         for(a=0;a<system->active_devices.device_count;a++){
             if(system->active_devices.device[a].config.is_server){
                 // dont connect server to server
+                printf("Active Device Is Server!\n");
             } else {
-                // see if linked device is in attached devices
+                // see if linked device is in active devices
                 if(system->linked_devices.device[c].config.device_id == system->active_devices.device[a].config.device_id){
                     // then if it's not connected, connect it
                     if(!system->linked_devices.device[c].is_connected){
+                        printf("connecting device: %d\n", system->linked_devices.device_count);
                         memcpy(&system->connected_devices.device[system->connected_devices.device_count].config, &system->active_devices.device[c].config, sizeof(struct system_config_struct));
                         if(connect_device(&system->network, &system->config, &system->connected_devices.device[c])){
+                            printf("Connected device!\n");
                             system->linked_devices.device[c].is_connected = 1;
                             system->connected_devices.device_count = system->connected_devices.device_count + 1;
                         } else {
+                            printf("Couldn't Connect device!\n");
                             system->active_devices.device[c].is_active = 0;
                             system->active_devices.device_count = system->active_devices.device_count - 1;
                             clean_up_table_order(&system->active_devices);
@@ -472,6 +490,65 @@ void close_device_connection(struct device_info_struct* device, struct device_ta
     }
     device->is_connected = 0;
     close(device->device_socket);
+}
+
+void link_device_to_server(struct system_struct* system, int32_t device_id){
+    uint8_t device_added = 0;
+    for(int i=0;i<system->linked_devices.device_count;i++){
+        if(system->linked_devices.device[i].config.device_id == device_id){
+            device_added = 1;
+        }
+    }
+    if(device_added){
+        // device already added
+        printf("device_already added\n");
+    } else {
+        for(int i=0;i<system->active_devices.device_count;i++){
+            if(device_id == system->active_devices.device[i].config.device_id){
+                memcpy(&system->linked_devices.device[system->linked_devices.device_count].config, &system->active_devices.device[i].config, sizeof(struct system_config_struct));
+                system->linked_devices.device_count = system->linked_devices.device_count + 1;
+                printf("device added: %d\n", system->linked_devices.device_count);
+            }
+        }
+    }
+}
+
+void remove_device_from_server(struct system_struct* system, int32_t device_id){
+    for(int i=0;i<system->linked_devices.device_count;i++){
+        if(device_id == system->linked_devices.device[i].config.device_id){
+            if(system->linked_devices.device[i].is_connected){
+                for(int k=0;k<system->connected_devices.device_count;k++){
+                    if(device_id == system->connected_devices.device[k].config.device_id){
+                        close(system->connected_devices.device[k].device_socket);
+                        init_device_info_struct(&system->connected_devices.device[k]);
+                        system->connected_devices.device_count = system->connected_devices.device_count - 1;
+                        printf("removed device: %d\n", system->connected_devices.device_count);
+                    }
+                }
+                init_device_info_struct(&system->linked_devices.device[i]);
+                system->linked_devices.device_count = system->linked_devices.device_count - 1;
+                printf("removed linked: %d\n", system->linked_devices.device_count);
+            }
+        }
+    }
+    clean_up_table_order(&system->linked_devices);
+    clean_up_table_order(&system->connected_devices);
+}
+
+void init_device_table_struct(struct device_table_struct* device_table){
+    device_table->device_count = 0;
+    for(int i=0;i<MAX_ACTIVE_DEVICES;i++){
+        init_device_info_struct(&device_table->device[i]);
+    }
+}
+
+void init_device_info_struct(struct device_info_struct* device_info){
+    init_system_config_struct(&device_info->config);
+    device_info->timeout_set = 0;
+    device_info->device_socket = 0;
+    device_info->is_active = 0;
+    device_info->is_connected = 0;
+    device_info->is_playing = 0;
 }
 
 // #include "main.h"

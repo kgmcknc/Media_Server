@@ -2,6 +2,7 @@
 #define SRC_HTTP_H_
 
 #include <stdint.h>
+#include "main.h"
 
 #define HEADER_OKAY "HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\n"
 #define HEADER_ERROR "HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\n"
@@ -25,9 +26,11 @@ struct http_message_struct {
 extern char command_string[NUMBER_COMMANDS][MAX_COMMAND_STRING];
 
 void handle_http_message(struct system_struct* system, char* packet_data, struct device_info_struct* device);
-void process_message(char* message, struct http_message_struct* http);
+void process_message(struct system_struct* system, struct device_info_struct* device, char* message, struct http_message_struct* http);
 void send_http_okay(struct device_info_struct* device, char* packet_data, uint32_t packet_length);
 void send_http_error(struct device_info_struct* device, uint32_t error_number);
 void send_http_not_found(struct device_info_struct* device);
+
+char* get_json_string(char* command_pointer, char* command);
 
 #endif // SRC_HTTP_H_

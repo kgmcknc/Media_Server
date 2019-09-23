@@ -23,7 +23,7 @@
 // #include <sys/time.h>
 //#include <wiringPi.h>
 
-#define CONNECT_TEST
+//#define CONNECT_TEST
 
 pid_t heartbeat_fork;
 pid_t device_discovery_fork;
@@ -125,11 +125,10 @@ uint8_t main_process(struct system_struct* system){
     uint8_t new_connection_set = 0;
 
     clear_system_config_struct(&new_device);
-
-    system->active_devices.device_count = 0;
-    system->linked_devices.device_count = 0;
-    system->connected_devices.device_count = 0;
-    system->local_devices.device_count = 0;
+    init_device_table_struct(&system->active_devices);
+    init_device_table_struct(&system->linked_devices);
+    init_device_table_struct(&system->connected_devices);
+    init_device_table_struct(&system->local_devices);
 
     #ifdef CONNECT_TEST
     system->linked_devices.device_count = 1;

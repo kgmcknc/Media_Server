@@ -2,7 +2,7 @@ CURDIR = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 SRCDIR = $(CURDIR)src
 OUTDIR = $(CURDIR)obj
 PRJNAME = $(shell basename $(CURDIR))
-LIBRARIES = -lwiringPi
+LIBRARIES = -lwiringPi -lmariadbclient
 
 CC=g++
 CFLAGS=-I$(COMDIR) -I$(SRCDIR) -DSPI_MASTER -DINTERFACE

@@ -23,4 +23,6 @@
 // #include <sys/time.h>
 //#include <wiringPi.h>
 
+#include <mysql/mysql.h>
+
 

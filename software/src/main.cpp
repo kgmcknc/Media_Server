@@ -36,6 +36,9 @@ int main(int argc, char **argv) {
     struct system_struct system;
     //system_config_struct system_config;
     init_system_config_struct(&system.config);
+    init_device_table_struct(&system.active_devices);
+    init_local_table_struct(&system.local_connections);
+    init_linked_table_struct(&system.linked_devices);
     
     uint8_t reload_configuration = 0;
 
@@ -125,10 +128,6 @@ uint8_t main_process(struct system_struct* system){
     uint8_t new_connection_set = 0;
 
     clear_system_config_struct(&new_device);
-    init_device_table_struct(&system->active_devices);
-    init_device_table_struct(&system->linked_devices);
-    init_device_table_struct(&system->connected_devices);
-    init_device_table_struct(&system->local_devices);
 
     #ifdef CONNECT_TEST
     system->linked_devices.device_count = 1;
@@ -142,7 +141,7 @@ uint8_t main_process(struct system_struct* system){
     #endif
     
     system->network.network_socket_fd = create_network_socket(&system->config);
-
+    uint32_t send_counter = 0;
     while(!reconfigure){
         // we return here after every new broadcast packet we get from a device other than ourselves to restart the broadcast listener
         if (pipe(pipefd) == -1) {
@@ -172,7 +171,7 @@ uint8_t main_process(struct system_struct* system){
                     //read(pipefd[0], &new_device, data_size);
                     // essentially add to a table of all currently available clients
                     //printf("new_ip: %d\n", new_device.server_ip_addr);
-                    add_device_to_table(&system->active_devices, &new_device);
+                    add_device_to_table(system, &new_device);
                     // clear struct after saving to tables
                     clear_system_config_struct(&new_device);
                     if(system->config.is_server){
@@ -239,6 +238,18 @@ uint8_t main_process(struct system_struct* system){
                 // do all normal socket stuff here
                 check_connections(system); // checks, processes, closes
                 
+                send_counter = send_counter + 1;
+                if(send_counter > 40000){
+                    if(system->active_devices.device_count){
+                        if(system->active_devices.device[0].is_connected){
+                            printf("sending packet\n");
+                            char packet[] = {"Test Packet String"};
+                            send(system->active_devices.device[0].device_socket,packet,strlen(packet),0);
+                        }
+                    }
+                    send_counter = 0;
+                }
+
                 //kill process if reconfiguring
                 if(reconfigure){
                     kill(device_discovery_fork, SIGKILL);

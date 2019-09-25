@@ -25,11 +25,11 @@ struct http_message_struct {
 
 extern char command_string[NUMBER_COMMANDS][MAX_COMMAND_STRING];
 
-void handle_http_message(struct system_struct* system, char* packet_data, struct device_info_struct* device);
-void process_message(struct system_struct* system, struct device_info_struct* device, char* message, struct http_message_struct* http);
-void send_http_okay(struct device_info_struct* device, char* packet_data, uint32_t packet_length);
-void send_http_error(struct device_info_struct* device, uint32_t error_number);
-void send_http_not_found(struct device_info_struct* device);
+void handle_http_message(struct system_struct* system, char* packet_data, struct local_connection_struct* device);
+void process_message(struct system_struct* system, struct local_connection_struct* device, char* message, struct http_message_struct* http);
+void send_http_okay(struct local_connection_struct* device, char* packet_data, uint32_t packet_length);
+void send_http_error(struct local_connection_struct* device, uint32_t error_number);
+void send_http_not_found(struct local_connection_struct* device);
 
 char* get_json_string(char* command_pointer, char* command);
 

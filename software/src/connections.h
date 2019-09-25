@@ -26,15 +26,37 @@
 struct device_info_struct {
     struct system_config_struct config;
     int device_socket;
+    char device_name[MAX_DEVICE_NAME];
     uint8_t is_active;
-    uint8_t timeout_set;
     uint8_t is_connected;
-    uint8_t is_playing;
+    uint8_t is_linked;
+    uint8_t timeout_set;
 };
 
 struct device_table_struct {
     uint8_t device_count;
     struct device_info_struct device[MAX_ACTIVE_DEVICES];
+};
+
+struct local_connection_struct {
+    int device_socket;
+    uint8_t is_connected;
+};
+
+struct local_connection_table_struct {
+    uint8_t device_count;
+    struct local_connection_struct device[MAX_ACTIVE_DEVICES];
+};
+
+struct linked_device_struct {
+    int32_t device_id;
+    uint8_t is_valid;
+    char device_name[MAX_DEVICE_NAME];
+};
+
+struct linked_device_table_struct {
+    uint8_t device_count;
+    struct linked_device_struct device[MAX_ACTIVE_DEVICES];
 };
 
 struct network_struct {
@@ -48,9 +70,11 @@ int send_broadcast_packet(uint16_t broadcast_port, char* packet_data, uint16_t d
 uint16_t receive_broadcast_packet(uint16_t broadcast_port, char* packet_data);
 void listen_for_devices(struct system_config_struct* system_config, struct system_config_struct* new_device);
 uint8_t validate_packet(char* packet_data, uint16_t packet_length);
-void add_device_to_table(struct device_table_struct* active_devices, struct system_config_struct* new_device);
+void add_device_to_table(struct system_struct* system, struct system_config_struct* new_device);
 void remove_inactive_devices(struct device_table_struct* active_devices);
 void clean_up_table_order(struct device_table_struct* device_table);
+void clean_up_local_table(struct local_connection_table_struct* device_table);
+void clean_up_linked_table(struct linked_device_table_struct* device_table);
 void set_device_timeout_flags(struct device_table_struct* active_devices);
 
 int create_network_socket(struct system_config_struct* system_config);
@@ -60,11 +84,13 @@ void set_new_connections(struct network_struct* network);
 void wait_for_new_connections(struct network_struct* network); // receives server and network connections
 void receive_connections(struct system_struct* system);
 void check_connections(struct system_struct* system);
-void close_device_connection(struct device_info_struct* device, struct device_table_struct* active_devices, struct device_table_struct* linked_devices);
+void close_device_connection(struct device_info_struct* device);
 void link_device_to_server(struct system_struct* system, int32_t device_id);
 void remove_device_from_server(struct system_struct* system, int32_t device_id);
 void init_device_table_struct(struct device_table_struct* device_table);
 void init_device_info_struct(struct device_info_struct* device_info);
+void init_local_table_struct(struct local_connection_table_struct* device_info);
+void init_linked_table_struct(struct linked_device_table_struct* device_table);
 
 // #include <stdio.h>
 // #include <stdlib.h>

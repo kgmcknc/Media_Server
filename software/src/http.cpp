@@ -35,18 +35,17 @@ void handle_http_message(struct system_struct* system, char* packet_data, struct
 
 void process_message(struct system_struct* system, struct local_connection_struct* device, char* message, struct http_message_struct* http){
     char* command_pointer;
-    char* message_pointer;
     char response[MAX_PACKET_LENGTH] = {'\0'};
     char* response_pointer = &response[0];
     int write_count;
 
     command_pointer = strstr(message, "q={");
-    command_pointer = command_pointer + 2; // got open brace
+    command_pointer = command_pointer + 2; // got to open brace
     if(*command_pointer == '{'){
         // valid json object
         command_pointer = command_pointer + 1;
         memset(&http->command[0], 0, MAX_COMMAND_STRING);
-        message_pointer = get_json_string(command_pointer, &http->command[0]);
+        get_json_string(command_pointer, "command", http->command);
     } else {
         // unknown data... close connection
     }
@@ -93,11 +92,10 @@ void process_message(struct system_struct* system, struct local_connection_struc
             if(http->is_get){
                 // can't add from get
             } else {
-                int32_t new_device_id;
-                struct system_config_struct new_device;
-                message_pointer = message_pointer + 1;
-                sscanf(message_pointer, "%d", &new_device_id);
-                link_device_to_server(system, new_device_id);
+                struct linked_device_struct new_linked_device;
+                get_json_int(command_pointer, "device_id", &new_linked_device.device_id);
+                get_json_string(command_pointer, "device_name", &new_linked_device.device_name[0]);
+                link_device_to_server(system, &new_linked_device);
             }
             send_http_okay(device, command_pointer, strlen(command_pointer));
             break;
@@ -107,9 +105,7 @@ void process_message(struct system_struct* system, struct local_connection_struc
                 // can't remove from get
             } else {
                 int32_t new_device_id;
-                struct system_config_struct new_device;
-                message_pointer = message_pointer + 1;
-                sscanf(message_pointer, "%d", &new_device_id);
+                get_json_int(command_pointer, "device_id", &new_device_id);
                 remove_device_from_server(system, new_device_id);
             }
             send_http_okay(device, command_pointer, strlen(command_pointer));
@@ -137,19 +133,38 @@ void send_http_not_found(struct local_connection_struct* device){
 
 }
 
-char* get_json_string(char* command_pointer, char* command){
-    char* string_pointer = command_pointer;
-    int max_string_counter = 0;
-    if(*string_pointer == '\"'){
-        string_pointer = string_pointer + 1;
-        while((*string_pointer != '\"') && (max_string_counter < MAX_VALUE_STRING)){
-            command[max_string_counter] = string_pointer[0];
-            string_pointer = string_pointer + 1;
-            max_string_counter = max_string_counter + 1;
+uint8_t get_json_string(char* json_pointer, const char* search_string, char* result_string){
+    char* string_pointer = strstr(json_pointer, search_string);
+    
+    if(string_pointer > 0){
+        string_pointer = string_pointer + strlen(search_string) + 2;
+        if(sscanf(string_pointer, "\"%[^\"]s", result_string)){
+            printf("found string in object: %s\n", result_string);
+            return 1;
+        } else {
+            printf("string wasn't in object\n");
+            return 0;
         }
-        string_pointer = string_pointer + 1;
     } else {
         printf("didn't find valid string at pointer location\n");
+        return 0;
     }
-    return string_pointer;
+}
+
+uint8_t get_json_int(char* json_pointer, const char* search_string, int32_t* value){
+    char* string_pointer = strstr(json_pointer, search_string);
+    
+    if(string_pointer > 0){
+        string_pointer = string_pointer + strlen(search_string) + 2;
+        if(sscanf(string_pointer, "%d", value)){
+            printf("found int in object\n");
+            return 1;
+        } else {
+            printf("int wasn't in object\n");
+            return 0;
+        }
+    } else {
+        printf("didn't find valid int at pointer location\n");
+        return 0;
+    }
 }

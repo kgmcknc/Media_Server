@@ -31,6 +31,7 @@ void send_http_okay(struct local_connection_struct* device, char* packet_data, u
 void send_http_error(struct local_connection_struct* device, uint32_t error_number);
 void send_http_not_found(struct local_connection_struct* device);
 
-char* get_json_string(char* command_pointer, char* command);
+uint8_t get_json_string(char* json_pointer, const char* search_string, char* result_string);
+uint8_t get_json_int(char* json_pointer, const char* search_string, int32_t* value);
 
 #endif // SRC_HTTP_H_

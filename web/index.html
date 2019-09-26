@@ -12,7 +12,7 @@
     <script>
         function testgeturl(){
 			var xmlhttp;
-			var object = {get_active_devices:0};
+			var object = {"command":"get_active_devices"};
 			var valuestring = JSON.stringify(object);
 			//alert(valuestring);
 			if (window.XMLHttpRequest) {
@@ -32,7 +32,7 @@
         }
 		function testposturl(){
 			var xmlhttp;
-			var object = {add_device_to_server:1963287791};
+			var object = {"command":"add_device_to_server","device_id":1963287791,"device_name":"Test Name"};
 			var valuestring = JSON.stringify(object);
 			//alert(valuestring);
 			if (window.XMLHttpRequest) {
@@ -52,7 +52,7 @@
         }
 		function testremurl(){
 			var xmlhttp;
-			var object = {rem_device_from_server:1963287791};
+			var object = {"command":"rem_device_from_server","device_id":1963287791};
 			var valuestring = JSON.stringify(object);
 			//alert(valuestring);
 			if (window.XMLHttpRequest) {

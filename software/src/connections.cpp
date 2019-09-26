@@ -139,6 +139,7 @@ void add_device_to_table(struct system_struct* system, struct system_config_stru
             for(int i=0;i<system->linked_devices.device_count;i++){
                 if(system->linked_devices.device[i].device_id == system->active_devices.device[system->active_devices.device_count].config.device_id){
                     system->active_devices.device[system->active_devices.device_count].is_linked = 1;
+                    strcpy(&system->active_devices.device[system->active_devices.device_count].config.device_name[0], system->linked_devices.device[i].device_name);
                 }
             }
             //in_addr ip_val;
@@ -502,10 +503,11 @@ void close_device_connection(struct device_info_struct* device){
     close(device->device_socket);
 }
 
-void link_device_to_server(struct system_struct* system, int32_t device_id){
+void link_device_to_server(struct system_struct* system, struct linked_device_struct* new_linked_device){
     uint8_t device_added = 0;
     for(int i=0;i<system->linked_devices.device_count;i++){
-        if(system->linked_devices.device[i].device_id == device_id){
+        if(system->linked_devices.device[i].device_id == new_linked_device->device_id){
+            strcpy(&system->linked_devices.device[i].device_name[0], new_linked_device->device_name);
             device_added = 1;
         }
     }
@@ -513,13 +515,14 @@ void link_device_to_server(struct system_struct* system, int32_t device_id){
         // device already added
         printf("device_already added\n");
     } else {
-        system->linked_devices.device[system->linked_devices.device_count].device_id = device_id;
+        system->linked_devices.device[system->linked_devices.device_count].device_id = new_linked_device->device_id;
         system->linked_devices.device_count = system->linked_devices.device_count + 1;
-        printf("NEED TO UPDATE DATABASE WITH THE NEW LINKED DEVICE HERE!");
+        printf("NEED TO UPDATE DATABASE WITH THE NEW LINKED DEVICE HERE!\n");
         for(int i=0;i<system->active_devices.device_count;i++){
-            if(device_id == system->active_devices.device[i].config.device_id){
+            if(new_linked_device->device_id == system->active_devices.device[i].config.device_id){
                 system->active_devices.device[i].is_linked = 1;
-                printf("device linked: %d\n", system->linked_devices.device_count);
+                strcpy(&system->active_devices.device[i].config.device_name[0], new_linked_device->device_name);
+                printf("device linked: %d, %s\n", system->linked_devices.device_count, new_linked_device->device_name);
             }
         }
     }
@@ -565,6 +568,7 @@ void init_linked_table_struct(struct linked_device_table_struct* device_table){
     for(int i=0;i<MAX_ACTIVE_DEVICES;i++){
         device_table->device[i].device_id = 0;
         device_table->device[i].is_valid = 0;
+        device_table->device[i].device_name[0] = '\0';
     }
 }
 

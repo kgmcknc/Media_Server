@@ -127,6 +127,8 @@ void create_config_file(struct system_config_struct system_config){
         fprintf(config_file, "\n");
         fprintf(config_file, "device_id %d\n", create_random_id());
         fprintf(config_file, "\n");
+        fprintf(config_file, "device_name Unnamed Device\n");
+        fprintf(config_file, "\n");
         fprintf(config_file, "// server_ip_addr will get set by c code if you are connected to the internet... or you can overwrite it with format xxx.xxx.xxx.xxx if you want..?\n");
         get_this_ip(&this_ip[0]);
         fprintf(config_file, "server_ip_addr %s\n", this_ip);
@@ -186,6 +188,14 @@ void load_config(struct system_config_struct* system_config){
         if(data_pointer){
             if(data_pointer > comment_pointer){
                 sscanf(data_pointer, "device_id %d", &system_config->device_id);
+                loaded_id = 1;
+            }
+        }
+        // look for "device_name";
+        data_pointer = strstr(&config_file_data[0], "device_name");
+        if(data_pointer){
+            if(data_pointer > comment_pointer){
+                sscanf(data_pointer, "device_name %[^\n]s", &system_config->device_name[0]);
                 loaded_id = 1;
             }
         }

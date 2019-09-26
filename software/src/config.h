@@ -14,6 +14,7 @@
 
 struct system_config_struct {
     int32_t  device_id;
+    char device_name[MAX_DEVICE_NAME];
     uint32_t server_ip_addr;
     uint16_t server_tcp_port;
     uint8_t  major_version;

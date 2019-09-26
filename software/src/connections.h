@@ -26,7 +26,6 @@
 struct device_info_struct {
     struct system_config_struct config;
     int device_socket;
-    char device_name[MAX_DEVICE_NAME];
     uint8_t is_active;
     uint8_t is_connected;
     uint8_t is_linked;
@@ -85,7 +84,7 @@ void wait_for_new_connections(struct network_struct* network); // receives serve
 void receive_connections(struct system_struct* system);
 void check_connections(struct system_struct* system);
 void close_device_connection(struct device_info_struct* device);
-void link_device_to_server(struct system_struct* system, int32_t device_id);
+void link_device_to_server(struct system_struct* system, struct linked_device_struct* new_linked_device);
 void remove_device_from_server(struct system_struct* system, int32_t device_id);
 void init_device_table_struct(struct device_table_struct* device_table);
 void init_device_info_struct(struct device_info_struct* device_info);

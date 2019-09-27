@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -33,7 +34,7 @@ void handle_http_message(struct system_struct* system, char* packet_data, struct
     }
 }
 
-void process_message(struct system_struct* system, struct local_connection_struct* device, char* message, struct http_message_struct* http){
+void process_message(struct system_struct* system_struct, struct local_connection_struct* device, char* message, struct http_message_struct* http){
     char* command_pointer;
     char response[MAX_PACKET_LENGTH] = {'\0'};
     char* response_pointer = &response[0];
@@ -63,16 +64,16 @@ void process_message(struct system_struct* system, struct local_connection_struc
     switch(http->command_number){
         case 0 : {
             if(http->is_get){
-                write_count = sprintf(response_pointer, "{\"active_device_count\":%d", system->active_devices.device_count);
+                write_count = sprintf(response_pointer, "{\"active_device_count\":%d", system_struct->active_devices.device_count);
                 response_pointer = response_pointer + write_count;
-                if(system->active_devices.device_count){
+                if(system_struct->active_devices.device_count){
                     write_count = sprintf(response_pointer, ",\"active_devices\":[");
                     response_pointer = response_pointer + write_count;
-                    for(int i=0;i<system->active_devices.device_count;i++){
+                    for(int i=0;i<system_struct->active_devices.device_count;i++){
                         if(i > 0){
-                            write_count = sprintf(response_pointer, ",%u", system->active_devices.device[i].config.device_id);
+                            write_count = sprintf(response_pointer, ",%u", system_struct->active_devices.device[i].config.device_id);
                         } else {
-                            write_count = sprintf(response_pointer, "%u", system->active_devices.device[i].config.device_id);
+                            write_count = sprintf(response_pointer, "%u", system_struct->active_devices.device[i].config.device_id);
                         }
                         response_pointer = response_pointer + write_count;
                     }
@@ -95,7 +96,7 @@ void process_message(struct system_struct* system, struct local_connection_struc
                 struct linked_device_struct new_linked_device;
                 get_json_int(command_pointer, "device_id", &new_linked_device.device_id);
                 get_json_string(command_pointer, "device_name", &new_linked_device.device_name[0]);
-                link_device_to_server(system, &new_linked_device);
+                link_device_to_server(system_struct, &new_linked_device);
             }
             send_http_okay(device, command_pointer, strlen(command_pointer));
             break;
@@ -106,7 +107,7 @@ void process_message(struct system_struct* system, struct local_connection_struc
             } else {
                 int32_t new_device_id;
                 get_json_int(command_pointer, "device_id", &new_device_id);
-                remove_device_from_server(system, new_device_id);
+                remove_device_from_server(system_struct, new_device_id);
             }
             send_http_okay(device, command_pointer, strlen(command_pointer));
             break;

@@ -5,10 +5,13 @@
 #include <stdint.h>
 #include "connections.h"
 #include "config.h"
+#include "database.h"
+#include <mysql/mysql.h>
 
 struct system_struct {
     struct system_config_struct config;
     struct network_struct network;
+    struct database_struct database;
     struct device_table_struct active_devices;
     struct local_connection_table_struct local_connections;
     struct linked_device_table_struct linked_devices; // gets loaded from database

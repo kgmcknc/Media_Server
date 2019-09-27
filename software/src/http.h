@@ -11,7 +11,7 @@
 
 //"200 OK", "404 Not Found", "403 Forbidden", "500 Internal Server Error".
 
-#define NUMBER_COMMANDS 3
+#define NUMBER_COMMANDS 4
 #define MAX_COMMAND_STRING 256
 #define MAX_VALUE_STRING 512
 
@@ -26,7 +26,7 @@ struct http_message_struct {
 extern char command_string[NUMBER_COMMANDS][MAX_COMMAND_STRING];
 
 void handle_http_message(struct system_struct* system, char* packet_data, struct local_connection_struct* device);
-void process_message(struct system_struct* system, struct local_connection_struct* device, char* message, struct http_message_struct* http);
+void process_message(struct system_struct* system_struct, struct local_connection_struct* device, char* message, struct http_message_struct* http);
 void send_http_okay(struct local_connection_struct* device, char* packet_data, uint32_t packet_length);
 void send_http_error(struct local_connection_struct* device, uint32_t error_number);
 void send_http_not_found(struct local_connection_struct* device);

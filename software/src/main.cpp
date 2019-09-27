@@ -3,6 +3,7 @@
 #include "config.h"
 #include "version.h"
 #include "connections.h"
+#include "database.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,6 +44,10 @@ int main(int argc, char **argv) {
     uint8_t reload_configuration = 0;
 
     printf("\n\n----- Starting Media Server -----\n\n");
+    
+    connect_database(&system.database.conn);
+    
+    load_linked_device_list(&system);
 
     config_file = fopen(CONFIG_PATH, "r+b");
     if(config_file != NULL){
@@ -93,6 +98,7 @@ int main(int argc, char **argv) {
         }
 
         // if we get here we broke out of system...
+        close_database(&system.database.conn);
         system_shutdown();
         // we will reconfigure and restart unless it errored or quit
     } while(reload_configuration);

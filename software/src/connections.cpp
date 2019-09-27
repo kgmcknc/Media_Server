@@ -514,10 +514,11 @@ void link_device_to_server(struct system_struct* system, struct linked_device_st
     if(device_added){
         // device already added
         printf("device_already added\n");
+        update_device_in_db(&system->database.conn, new_linked_device);
     } else {
         system->linked_devices.device[system->linked_devices.device_count].device_id = new_linked_device->device_id;
         system->linked_devices.device_count = system->linked_devices.device_count + 1;
-        printf("NEED TO UPDATE DATABASE WITH THE NEW LINKED DEVICE HERE!\n");
+        add_device_to_db(&system->database.conn, new_linked_device);
         for(int i=0;i<system->active_devices.device_count;i++){
             if(new_linked_device->device_id == system->active_devices.device[i].config.device_id){
                 system->active_devices.device[i].is_linked = 1;
@@ -533,6 +534,7 @@ void remove_device_from_server(struct system_struct* system, int32_t device_id){
     for(int i=0;i<system->linked_devices.device_count;i++){
         if(device_id == system->linked_devices.device[i].device_id){
             system->linked_devices.device[i].is_valid = 0;
+            remove_device_from_db(&system->database.conn, &system->linked_devices.device[i]);
             printf("Cleared Linked Flag!\n");
         }
     }

@@ -1,0 +1,7 @@
+for server source code:
+you need python
+you need mongodb
+you need pymongo (python mongo driver)
+
+for webpage:
+you need a web server with php support (and maybe mongo db ability?)

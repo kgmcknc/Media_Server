@@ -1,0 +1,95 @@
+
+main server file starts:
+connects to server database (creates if doesn't exist)
+loads server information like listening ports,timeout period,broadcast interval,log level,max logs 
+server database should have attached clients with info for media with a link id (playing linked media) or other things
+
+create log file (with log name, date, time). delete oldest log if it exceeds max log storage
+
+creates thread for media player
+creates thread for alarms
+creates network listener thread
+
+waits for event from network
+   if event happened
+      read data
+      process data
+      do anything to finish
+      log data
+   else
+      check client timeouts
+      send braodcast packet (if server)
+
+   check for alarm event (such as door event or alarm enable/disable)
+   
+   check for video event (such as finished media item, starting media item)
+
+
+
+media player file start
+   waits for event for something to do
+   
+
+
+main server c code just needs to:
+serve media names
+return up status of players/security doors/ect.
+
+detached servers need to:
+play media/detect doors/set alarms etc (can send alarm set to all devices)
+
+
+
+
+functions:
+   update directory listings:
+
+      creates one file that contains all the info for all the mounted folders.
+      it'll list base location (mount point on system), list folder and sub folders and files.
+
+      returns started:
+      returns in progress:
+      returns complete:
+   
+   get directory data:
+   (could have number of items to offset and number of items to return...)
+
+
+media functions
+   load media player
+
+   get media info
+
+   play media player
+
+   pause media player
+   
+   stop media player
+
+   ff media
+   
+   rw media
+
+   next media
+
+   prev media
+
+
+alarm functions
+   set alarm
+
+   clear alarm
+
+   get alarm
+
+   get sensor value
+
+   set sensor value
+
+
+
+
+   file index info:
+   create separate index file for each data storage location
+   start file with root location to folder
+   start with a number

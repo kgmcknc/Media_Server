@@ -1,0 +1,22 @@
+
+first time server runs, it gets random number for unique device id
+all new devices that attach are given an idea from the main server
+status flag for if you are main server or not (main server has full webpage, sub clients have limited pages...)
+holds information for all devices on the server, device status, current ip addresses of all connected devices
+
+use broadcast packet to send out a ping broadcasting your own settings:
+   what unique server you are assigned to
+   your name
+   your ip
+
+
+whenever new client is present that hasn't been connected we can show that to webpage
+whenever a web accept happens, we then give a device an id in the server list. this links the device and is unique to all devices
+devices can also have name and could include what options are allowed on a device...
+a device could serve everything but can't play media, it could serve everything and play media, it could have alarm/sensors or not
+
+maybe make defined standard for any options the server can do:
+   Server Ability: Enabled/Disabled : unique port number to interface (could be 0 to use default server port)
+   Play Media : enabled : #
+   Output Alarms : enabled : #
+   Input Sensors : enabled : #

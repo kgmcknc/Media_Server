@@ -16,6 +16,8 @@
 *.code-workspace
 *.vscode/
 
+*.pyc
+
 /.metadata/*
 /outgoing/*
 /machine/.settings/*

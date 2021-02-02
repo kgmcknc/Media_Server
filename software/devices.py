@@ -1,44 +1,53 @@
 
 import pymongo
+import json
 
 class server_device_class:
    name = "noname"
-   id = 0
+   id_num = 0
    ip_addr = 0
    linked = 0
    connected = 0
+   db_id = 0
+
    def __init__(self, **device_info):
-      if "name" in device_info:
-         self.name = device_info["name"]
-      if "id" in device_info:
-         self.id = device_info["id"]
-      if "ip_addr" in device_info:
-         self.ip_addr = device_info["ip_addr"]
-      if "linked" in device_info:
-         self.linked = device_info["linked"]
-      if "connected" in device_info:
-         self.connected = device_info["connected"]
+      for key in device_info:
+         setattr(self, key, device_info[key])
+
+   def update_device_info(self, **device_info):
+      for key in device_info:
+         if((key == 'id_num') or (key == 'db_id')):
+            printf("Can't modify id or db_id number")
+         else:
+            setattr(self, key, device_info[key])
+            
+   def update_device_name(self):
+      pass
+
+   def update_device_ip_addr(self):
+      pass
+
+   def update_device_link_status(self):
+      pass
+
+   def update_device_connection_status(self):
+      pass
+
+   def update_device_id(self):
+      pass
+
+   def add_device_to_db(self):
+      pass
+
+   def rem_device_from_db(self):
+      pass
+
+   def update_device_in_db(self):
+      pass
    
-   def update_device_name():
+   def load_device_from_db(self):
       pass
 
-   def update_device_ip_addr():
-      pass
+   def to_json(self):
+      return json.dumps(vars(self))
 
-   def update_device_link_status():
-      pass
-
-   def update_device_connection_status():
-      pass
-
-   def update_device_id():
-      pass
-
-   def add_device_to_db():
-      pass
-
-   def rem_device_from_db():
-      pass
-
-   def update_device_in_db():
-      pass

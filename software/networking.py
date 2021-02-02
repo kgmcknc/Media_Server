@@ -1,27 +1,34 @@
 import socket
+import heartbeat
 
-max_upd_length = 1024
-
-def network_test(network_thread):
-   while (network_thread.is_active()):
-      network_thread.pause(1)
-      receive_broadcast_packet(1900)
-
-   return
+def get_my_ip():
+   s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+   try:
+      # doesn't even have to be reachable
+      s.connect(('255.255.255.255', 1))
+      ip_address = s.getsockname()[0]
+   except Exception:
+      try:
+         # doesn't even have to be reachable
+         s.connect(('10.255.255.255', 1))
+         ip_address = s.getsockname()[0]
+      except Exception:
+         ip_address = '127.0.0.1'
+   finally:
+      s.close()
+   return ip_address
    
-def send_broadcast_packet(packet_port, packet_data):
-   print("would send broadcast here")
+def send_broadcast_packet(packet_port, packet_data, packet_length):
    udp_sock = socket.socket (socket.AF_INET, socket.SOCK_DGRAM)
    udp_sock.bind(('',0))
    udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
    udp_sock.sendto(packet_data, ('<broadcast>', packet_port))
 
-def receive_broadcast_packet(packet_port):
-   print("waiting for bcast")
+def receive_broadcast_packet(packet_port, packet_length):
    udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
    udp_sock.bind(('',packet_port))
-   udp_packet_data = udp_sock.recvfrom(max_upd_length)
-   print(udp_packet_data)
+   udp_packet_data = udp_sock.recvfrom(packet_length)
+   return udp_packet_data
 
 
 #get database exists

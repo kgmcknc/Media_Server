@@ -20,3 +20,17 @@ maybe make defined standard for any options the server can do:
    Play Media : enabled : #
    Output Alarms : enabled : #
    Input Sensors : enabled : #
+
+
+
+main thread starts all others
+
+network thread 
+
+heartbeat thread runs by itself and just sends a packet every x seconds. started once at beginning. updates config flag whenever it tries to send data
+
+heartbeat listener starts at main and blocks waiting for udp packets... updates database from received packets if needed... needs timeout and timeout counts on devices to show when things are inactive
+   heartbeat listener can maybe post to main any time a connection changes?
+
+media server thread runs forever and receives stuff from queue to process commands and return status (status is like media server... queue requests and status returns)
+   media server requests and status have "id" with them for what "id" to return the message to...

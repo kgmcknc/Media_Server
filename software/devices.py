@@ -3,21 +3,24 @@ import pymongo
 import json
 
 class server_device_class:
+   _id = 0
+   device_id = 0
    name = "noname"
-   id_num = 0
    ip_addr = 0
+   port = 0
    linked = 0
    connected = 0
-   db_id = 0
+   hb_period = 0
 
    def __init__(self, **device_info):
       for key in device_info:
          setattr(self, key, device_info[key])
 
    def update_device_info(self, **device_info):
+      #TODO make this a try with except
       for key in device_info:
-         if((key == 'id_num') or (key == 'db_id')):
-            printf("Can't modify id or db_id number")
+         if((key == 'device_id') or (key == '_id')):
+            print("Can't modify id or _id number")
          else:
             setattr(self, key, device_info[key])
             

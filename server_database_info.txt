@@ -1,4 +1,6 @@
 
+add "media_links" document to database. it will just have a list of all connected device ids
+
 first time server runs, it gets random number for unique device id
 all new devices that attach are given an idea from the main server
 status flag for if you are main server or not (main server has full webpage, sub clients have limited pages...)

@@ -15,8 +15,14 @@ main_thread = server_threads.server_thread_class("Main Server Thread")
 media_player_thread = server_threads.server_thread_class("Media Player Thread")
 heartbeat_listener_thread = server_threads.server_thread_class("Heartbeat Listener Thread")
 heartbeat_thread = server_threads.server_thread_class("Heartbeat Thread")
+network_thread = server_threads.server_thread_class("Network Thread")
 
 config_changed = 0
+skips_till_timeout = 4
+system_running = 1
+
+device_list = []
+device_timeouts = []
 
 def server_main(main_thread):
    global config_changed
@@ -26,10 +32,10 @@ def server_main(main_thread):
    
    init_system()
 
-   heartbeat.set_heartbeat_period(5)
+   heartbeat_listener_thread.start(heartbeat.heartbeat_listener)
    heartbeat_thread.start(heartbeat.heartbeat_keepalive)
    media_player_thread.start(media_player.run_media_player)
-   heartbeat_listener_thread.start(heartbeat.heartbeat_listener)
+   network_thread.start(networking.network_listener)
 
    print("main while")
    while (main_thread.is_active()):
@@ -38,43 +44,149 @@ def server_main(main_thread):
       # queue is used to return data back to website 
       if(config_changed):
          print("Main config changed")
-         global_data.heartbeat_queue.put(config_changed)
+         instruction = global_data.instruction_class()
+         instruction.group = "heartbeat_task"
+         instruction.task = "reload_config"
+         global_data.heartbeat_queue.put(instruction)
          config_changed = 0
       try:
-         main_queue_data = global_data.main_queue.get(timeout=global_data.main_queue_timeout)
-         if(main_queue_data):
-            #process_main_request(main_queue_data)
-            print("got new request in main")
+         new_main_instruction = global_data.main_queue.get(timeout=global_data.main_queue_timeout)
       except:
          #main queue was empty and timed out
          pass
+      else:
+         process_main_instruction(new_main_instruction)
    
    server_shutdown()
    return
 
+def process_main_instruction(instruction):
+   global config_changed
+   update_config = 0;
+
+   if(instruction.group == "system_tasks"):
+      if(instruction.task == "shutdown_delay"):
+         main_thread.pause(1)
+   
+   if(instruction.group == "heartbeat_tasks"):
+      if(instruction.task == "ip_changed"):
+         device_list[0].ip_addr = networking.get_my_ip()
+         update_config = 1
+
+      if(instruction.task == "new_packet"):
+         update_device_list(instruction.data)
+   
+   if(instruction.group == "device_tasks"):
+      if(instruction.task == "update_device"):
+         pass
+      #    try:
+      #       new_name = instruction.data["name"]
+      #       if(type(new_name) == "string"):
+      #          device_list[0].name = new_name
+      #          update_config = 1
+      #    except:
+      #       #invalid name... or no name
+      #       pass
+
+      # if(instruction.task == "update_ip"):
+      #    device_list[0].ip_addr = networking.get_my_ip()
+      #    update_config = 1
+
+      # if(instruction.task == "update_port"):
+      #    try:
+      #       new_name = instruction.data["port"]
+      #       if(type(new_name) == "string"):
+      #          device_list[0].name = new_name
+      #          update_config = 1
+      #    except:
+      #       #invalid name... or no name
+      #       pass
+
+      # if(instruction.task == "update_link"):
+      #    device_list[0].ip_addr = networking.get_my_ip()
+      #    update_config = 1
+
+      # if(instruction.task == "update_connected"):
+      #    device_list[0].ip_addr = networking.get_my_ip()
+      #    update_config = 1
+
+      # if(instruction.task == "update_period"):
+      #    device_list[0].ip_addr = networking.get_my_ip()
+      #    update_config = 1
+
+   if(update_config):
+      database.update_db_device_config(device_list[0])
+      config_changed = 1
+
+def update_device_list(device_data):
+   global device_list
+   global device_timeouts
+   if(device_data.device_id == device_list[0].device_id):
+      update_device_timeouts()
+   else:
+      for index in range(1, len(device_list)):
+         if(device_data.device_id == device_list[index].device_id):
+            device_data.connected = 1
+            device_list[index] = device_data
+            device_timeouts[index] = 0
+            database.update_db_device_in_list(device_list[index])
+            break
+      else:
+         device_data.connected = 1
+         device_list.append(device_data)
+         device_timeouts.append(0)
+         database.update_db_device_in_list(device_data)
+
+def update_device_timeouts():
+   for index in range(1, len(device_timeouts)):
+      if(device_list[index].connected == 1):
+         device_timeouts[index] = device_timeouts[index] + device_list[0].hb_period
+   for index in range(1, len(device_timeouts)):
+      if(device_timeouts[index] > (device_list[index].hb_period*skips_till_timeout)):
+         device_list[index].connected = 0
+         device_timeouts[index] = 0
+         database.update_db_device_in_list(device_list[index])
+
 def init_system():
+   global device_list
+   global device_timeouts
    if(database.exists()):
       database.open_server_db()
    else:
       database.init_server_db()
    
+   device_config = devices.server_device_class(**database.get_device_config())
    device_list = []
-   new_device = devices.server_device_class()
-   #TODO convert from database to device class...
-   new_device = database.get_device_config()
-   device_list.append(new_device)
+   device_list.append(device_config)
+   device_timeouts = []
+   device_timeouts.append(0)
+   database.remove_unlinked_db_devices()
+   linked_devices = database.get_linked_db_devices()
+   for new_device in linked_devices:
+      new_device.connected = 0
+      device_list.append(new_device)
+      device_timeouts.append(0)
 
 def exit_handler(signum, frame):
-   print("caught exit... shutting down")
-   main_thread.stop_thread()
+   global system_running
+   if(system_running):
+      system_running = 0
+      print("caught exit... shutting down")
+      instruction = global_data.instruction_class()
+      instruction.group = "system_tasks"
+      instruction.task = "shutdown_delay"
+      global_data.main_queue.put(instruction, block=False)
+      main_thread.stop_thread()
 
 def stop_threads():
+   networking.abort_broadcast_receive()
    heartbeat_listener_thread.stop_thread()
    media_player_thread.stop_thread()
    heartbeat_thread.stop_thread()
+   network_thread.stop_thread()
 
 def server_shutdown():
-   #TODO: clean up device list. Remove un-linked devices and set status of every linked device to "not connected"
+   database.remove_unlinked_db_devices()
    stop_threads()
    print("done")
 
@@ -98,3 +210,4 @@ except:
 main_thread.start(server_main)
 while(main_thread.is_active()):
    main_thread.pause(2)
+

@@ -11,6 +11,7 @@ class server_device_class:
    linked = 0
    connected = 0
    hb_period = 0
+   is_server = 0
 
    def __init__(self, **device_info):
       for key in device_info:

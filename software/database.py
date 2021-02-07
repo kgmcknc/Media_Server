@@ -58,7 +58,8 @@ def init_config():
       "port": 50000,
       "linked": 0,
       "connected": 0,
-      "device_id": device_id
+      "device_id": device_id,
+      "is_server": 1
       }
    config_info = devices.server_device_class(**device_init)
    server_config.insert_one(vars(config_info))

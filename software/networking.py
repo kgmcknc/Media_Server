@@ -4,6 +4,7 @@ import devices
 import global_data
 import database
 import select
+import json
 
 select_timeout = 1
 reload_devices = 0
@@ -20,7 +21,8 @@ class my_socket_class:
    port = 0,
    device_id = 0,
    active = 0,
-   ready = 0
+   ready = 0,
+   done = 0
 
 def get_my_ip():
    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -89,21 +91,45 @@ def network_listener(network_thread):
          while(not global_data.network_queue.empty()):
             process_instruction(new_queue_data)
 
-      # Remove old unconnected devices
-
       # Process ready devices
       for dev in local_socket_list:
          if(dev.ready):
             dev.ready = 0
             data = dev.socket.recv(1024)
-            print("Local Read")
-            print(data)
+            instruction = global_data.instruction_class()
+            instruction.group = "local_tasks"
+            instruction.task = ""
+            instruction.data = data.decode()
+            if(instruction.data[0:3] == "GET"):
+               global_data.main_queue.put(instruction)
+            else:
+               if(instruction.data[0:4] == "POST"):
+                  offset = instruction.data.find("q={")
+                  instruction.data = instruction.data[offset+2:len(instruction.data)]
+                  instruction.data = json.loads(instruction.data)
+                  global_data.main_queue.put(instruction)
+                  dev.active = 0
+                  dev.done = 1
+                  dev.socket.close()
+               else:
+                  pass
 
       for dev in device_socket_list:
          if(dev.ready):
             data = dev.socket.recv(1024)
             dev.ready = 0
             print("Device Read")
+
+      # Remove old unconnected devices
+      for dev in device_socket_list:
+         if(dev.done):
+            dev.done = 0
+            device_socket_list.remove(dev)
+
+      for dev in local_socket_list:
+         if(dev.done):
+            dev.done = 0
+            local_socket_list.remove(dev)
       
       rx_list = [serversocket]
       for local_device in local_socket_list:
@@ -157,8 +183,10 @@ def network_listener(network_thread):
       # go through other rx devices and find read ready signals for sent messages
 
       for tx_sock in tx_ready:
-         pass
-         
+         for dev_sock in device_socket_list:
+               if(ready == dev_sock.socket):
+                  dev_sock.socket.connect(dev_sock.ip_addr, dev_sock.ip_port)
+                  
 
    # check for linked and connected devices that we don't have a socket connected for...
    # if so, create and listen on those sockets
@@ -173,26 +201,30 @@ def load_devices_from_db():
    global device_config
    global device_list
 
-   device_config = devices.server_device_class(**database.get_device_config())
+   device_config = database.get_device_config()
    
    device_list = []
-   db_devices = database.get_linked_db_devices()
+   db_filter = {"connected":1}
+   db_devices = database.get_filtered_db_devices(**db_filter)
    for new_device in db_devices:
       # rebuild new device list with all current devices
       # add device to list
-      device_list.append(new_device)
-      # see if device is already in socket list
-      for index in device_socket_list:
-         if(index.device_id == new_device.device_id):
-            break
-      else:
-         # if not, then add to device socket list
-         new_sock = my_socket_class()
-         new_sock.ip_addr = db_devices[index].ip_addr
-         new_sock.port = db_devices[index].port
-         new_sock.device_id = db_devices[index].device_id
-         new_sock.active = 0
-         device_socket_list.append(new_sock)
+      if(device_config.device_id in new_device.linked_devices):
+         device_list.append(new_device)
+         
+         # see if device is already in socket list
+         for index in device_socket_list:
+            if(index.device_id == new_device.device_id):
+               index = new_device
+               break
+         else:
+            # if not, then add to device socket list
+            new_sock = my_socket_class()
+            new_sock.ip_addr = db_devices[index].ip_addr
+            new_sock.port = db_devices[index].port
+            new_sock.device_id = db_devices[index].device_id
+            new_sock.active = 0
+            device_socket_list.append(new_sock)
    # old devices that need to be "deleted" from device list is handled in the loop
    # that way the socket can be closed if it's somehow still opened...
 

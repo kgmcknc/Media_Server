@@ -45,7 +45,7 @@ def server_main(main_thread):
       if(config_changed):
          print("Main config changed")
          instruction = global_data.instruction_class()
-         instruction.group = "heartbeat_task"
+         instruction.group = "heartbeat_tasks"
          instruction.task = "reload_config"
          global_data.heartbeat_queue.put(instruction)
          config_changed = 0
@@ -62,6 +62,7 @@ def server_main(main_thread):
 
 def process_main_instruction(instruction):
    global config_changed
+   global device_list
    update_config = 0;
 
    if(instruction.group == "system_tasks"):
@@ -76,43 +77,21 @@ def process_main_instruction(instruction):
       if(instruction.task == "new_packet"):
          update_device_list(instruction.data)
    
-   if(instruction.group == "device_tasks"):
-      if(instruction.task == "update_device"):
-         pass
-      #    try:
-      #       new_name = instruction.data["name"]
-      #       if(type(new_name) == "string"):
-      #          device_list[0].name = new_name
-      #          update_config = 1
-      #    except:
-      #       #invalid name... or no name
-      #       pass
-
-      # if(instruction.task == "update_ip"):
-      #    device_list[0].ip_addr = networking.get_my_ip()
-      #    update_config = 1
-
-      # if(instruction.task == "update_port"):
-      #    try:
-      #       new_name = instruction.data["port"]
-      #       if(type(new_name) == "string"):
-      #          device_list[0].name = new_name
-      #          update_config = 1
-      #    except:
-      #       #invalid name... or no name
-      #       pass
-
-      # if(instruction.task == "update_link"):
-      #    device_list[0].ip_addr = networking.get_my_ip()
-      #    update_config = 1
-
-      # if(instruction.task == "update_connected"):
-      #    device_list[0].ip_addr = networking.get_my_ip()
-      #    update_config = 1
-
-      # if(instruction.task == "update_period"):
-      #    device_list[0].ip_addr = networking.get_my_ip()
-      #    update_config = 1
+   if(instruction.group == "local_tasks"):
+      if(instruction.data["command"] == "link_device"):
+         for dev in device_list:
+            if(dev.device_id == instruction.data["device_id"]):
+               database.add_linked_device(instruction.data["device_id"])
+               config_changed = 1
+               break
+      if(instruction.data["command"] == "update_config"):
+         instruction.data.pop("command")
+         for data in instruction.data:
+            if((data == 'device_id') or (data == '_id')):
+               print("not updating id stuff")
+            else:
+               setattr(device_list[0], data, instruction.data[data])
+         update_config = 1
 
    if(update_config):
       database.update_db_device_config(device_list[0])
@@ -138,6 +117,8 @@ def update_device_list(device_data):
          database.update_db_device_in_list(device_data)
 
 def update_device_timeouts():
+   global device_list
+   global device_timeouts
    for index in range(1, len(device_timeouts)):
       if(device_list[index].connected == 1):
          device_timeouts[index] = device_timeouts[index] + device_list[0].hb_period
@@ -155,13 +136,13 @@ def init_system():
    else:
       database.init_server_db()
    
-   device_config = devices.server_device_class(**database.get_device_config())
+   device_config = database.get_device_config()
    device_list = []
    device_list.append(device_config)
    device_timeouts = []
    device_timeouts.append(0)
-   database.remove_unlinked_db_devices()
-   linked_devices = database.get_linked_db_devices()
+   database.remove_unlinked_db_devices(device_config.device_id)
+   linked_devices = database.get_filtered_db_devices()
    for new_device in linked_devices:
       new_device.connected = 0
       device_list.append(new_device)
@@ -186,7 +167,7 @@ def stop_threads():
    network_thread.stop_thread()
 
 def server_shutdown():
-   database.remove_unlinked_db_devices()
+   database.remove_unlinked_db_devices(device_list[0].device_id)
    stop_threads()
    print("done")
 

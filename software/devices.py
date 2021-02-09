@@ -8,7 +8,7 @@ class server_device_class:
    name = "noname"
    ip_addr = 0
    port = 0
-   linked = 0
+   linked_devices = []
    connected = 0
    hb_period = 0
    is_server = 0

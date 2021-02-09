@@ -16,7 +16,7 @@ def heartbeat_keepalive(heartbeat_thread):
 
    print("Starting Heartbeat")
    heartbeat_thread.pause(min_delay) # delay to allow main thread to advance
-   device_config = devices.server_device_class(**database.get_device_config())
+   device_config = database.get_device_config()
    last_ip = device_config.ip_addr
    
    while (heartbeat_thread.is_active()):
@@ -36,7 +36,7 @@ def heartbeat_keepalive(heartbeat_thread):
             try:
                instruction = global_data.heartbeat_queue.get(block=False) # pull instruction from buffer until empty
                if((instruction.group == "heartbeat_tasks") and (instruction.task == "reload_config")):
-                  device_config.update_device_info(**database.get_device_config())
+                  device_config = database.get_device_config()
             except:
                #fifo was empty... move on
                pass

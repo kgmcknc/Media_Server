@@ -46,7 +46,7 @@ def init_config():
    current_date = datetime.datetime.now()
    day_string = str(current_date.day)
    month_string = str(current_date.month)
-   id_string = str(new_num) + day_string.zfill(2) + month_string.zfill(2) + str(current_date.year)
+   id_string = str(current_date.year) + month_string.zfill(2) + day_string.zfill(2) + str(new_num)
    device_id = int(id_string)
    device_init = {
       "_id": device_id,

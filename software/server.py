@@ -48,6 +48,9 @@ def server_main(main_thread):
          instruction.group = "heartbeat_tasks"
          instruction.task = "reload_config"
          global_data.heartbeat_queue.put(instruction)
+         instruction.group = "network_tasks"
+         instruction.task = "reload_config"
+         global_data.network_queue.put(instruction)
          config_changed = 0
       try:
          new_main_instruction = global_data.main_queue.get(timeout=global_data.main_queue_timeout)
@@ -100,11 +103,14 @@ def process_main_instruction(instruction):
 def update_device_list(device_data):
    global device_list
    global device_timeouts
+   device_update = 0
    if(device_data.device_id == device_list[0].device_id):
-      update_device_timeouts()
+      device_update = update_device_timeouts()
    else:
       for index in range(1, len(device_list)):
          if(device_data.device_id == device_list[index].device_id):
+            if(device_list[index].connected == 0):
+               device_update = 1
             device_data.connected = 1
             device_list[index] = device_data
             device_timeouts[index] = 0
@@ -115,10 +121,18 @@ def update_device_list(device_data):
          device_list.append(device_data)
          device_timeouts.append(0)
          database.update_db_device_in_list(device_data)
+         device_update = 1
+
+   if(device_update):
+      instruction = global_data.instruction_class()
+      instruction.group = "network_tasks"
+      instruction.task = "reload_config"
+      global_data.network_queue.put(instruction)
 
 def update_device_timeouts():
    global device_list
    global device_timeouts
+   disconnection = 0
    for index in range(1, len(device_timeouts)):
       if(device_list[index].connected == 1):
          device_timeouts[index] = device_timeouts[index] + device_list[0].hb_period
@@ -127,6 +141,8 @@ def update_device_timeouts():
          device_list[index].connected = 0
          device_timeouts[index] = 0
          database.update_db_device_in_list(device_list[index])
+         disconnection = 1
+   return disconnection
 
 def init_system():
    global device_list

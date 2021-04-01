@@ -1,6 +1,6 @@
 <?php
 	// media server proxy to pass from web page to c code listening on another tcp port
-	$ms_ip = $_SERVER['SERVER_ADDR'];
+	$ms_ip = array_key_exists('SERVER_ADDR',$_SERVER) ? $_SERVER['SERVER_ADDR'] : $_SERVER['LOCAL_ADDR'];
 	$ms_port = "28500";
 	
 	$valid_post = 0;

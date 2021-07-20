@@ -6,7 +6,7 @@
 	$valid_post = 0;
 	$valid_get = 0;
 	
-	if ($_SERVER["REQUEST_METHOD"] == "POST") {
+	if ($_SERVER['REQUEST_METHOD'] == "POST") {
 		// collect value of input field
 		$json_string = $_REQUEST['q'];
 		if (empty($json_string)) {

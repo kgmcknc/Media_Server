@@ -1,0 +1,29 @@
+
+<html>
+   <head>
+     <title>Media Server Test</title>
+   </head>
+   <body>
+   <div class="main_page">
+      <a href="index.html">Home Page</a>
+      <a href="security.html">Security</a>
+      <a href="media.html">Media</a>
+      <input type="text" id="movie_text">
+      <input type="submit" value="Load Movie" onclick="playmovie()">
+      <br>
+      <video id="media_box" width="600" controls playsinline>
+         <source id="mediaplayer" type="video/mp4" src="">
+      </video>
+      <br>
+      <input type="submit" value="Play Naruto" onclick="playnaruto()">
+      <input type="submit" value="Previous" onclick="previous_episode()">
+      <input type="submit" value="Set" onclick="set_episode()">
+      <input type="submit" value="Next" onclick="next_episode()">
+      <input type="number" id="episode_num" name="epNumber" min="1" value="1" max="500">
+      <br>
+   </div>
+    </script>
+    <script src="media_player.js"></script>
+   </body>
+ </html>
+ 

@@ -1,96 +1,18 @@
 
 <html>
-  <head>
-    <title>Media Server Test</title>
-  </head>
-  <body>
-    <div class="main_page">
-	<button type="button" onclick="testgeturl()">Test GET</button>
-	<button type="button" onclick="testposturl()">Test POST</button>
-	<button type="button" onclick="testremurl()">Test REM</button>
-	<button type="button" onclick="testplayurl()">Test Movie</button>
-</div>
-    <script>
-        function testgeturl(){
-			var xmlhttp;
-			var object = {"command":"get_active_devices"};
-			var valuestring = JSON.stringify(object);
-			//alert(valuestring);
-			if (window.XMLHttpRequest) {
-				xmlhttp = new XMLHttpRequest();
-			} else {
-				// code for IE6, IE5
-				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-			}
-		        xmlhttp.open("GET", "msp.php?q="+valuestring, true);
-				xmlhttp.send();
-				xmlhttp.onreadystatechange = function() {
-				if (this.readyState == 4 && this.status == 200) {
-					//document.getElementById(value).innerHTML = this.responseText;
-					alert(this.responseText);
-				}
-			}
-        }
-		function testposturl(){
-			var xmlhttp;
-			var object = {"command":"add_device_to_server","device_id":1963287791,"device_name":"Test Name"};
-			var valuestring = JSON.stringify(object);
-			//alert(valuestring);
-			if (window.XMLHttpRequest) {
-				xmlhttp = new XMLHttpRequest();
-			} else {
-				// code for IE6, IE5
-				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-			}
-		        xmlhttp.open("POST", "msp.php?q="+valuestring, true);
-			xmlhttp.send();
-			xmlhttp.onreadystatechange = function() {
-				if (this.readyState == 4 && this.status == 200) {
-					//document.getElementById(value).innerHTML = this.responseText;
-					//alert(this.responseText);
-				}
-			}
-        }
-		function testremurl(){
-			var xmlhttp;
-			var object = {"command":"rem_device_from_server","device_id":1963287791};
-			var valuestring = JSON.stringify(object);
-			//alert(valuestring);
-			if (window.XMLHttpRequest) {
-				xmlhttp = new XMLHttpRequest();
-			} else {
-				// code for IE6, IE5
-				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-			}
-		        xmlhttp.open("POST", "msp.php?q="+valuestring, true);
-			xmlhttp.send();
-			xmlhttp.onreadystatechange = function() {
-				if (this.readyState == 4 && this.status == 200) {
-					//document.getElementById(value).innerHTML = this.responseText;
-					//alert(this.responseText);
-				}
-			}
-        }
-		function testplayurl(){
-			var xmlhttp;
-			var object = {"command":"play_movie","movie_name":"/home/pi/linux-main-share/MovieHD/The Emperors New Groove.mp4"};
-			var valuestring = JSON.stringify(object);
-			//alert(valuestring);
-			if (window.XMLHttpRequest) {
-				xmlhttp = new XMLHttpRequest();
-			} else {
-				// code for IE6, IE5
-				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-			}
-		        xmlhttp.open("POST", "msp.php?q="+valuestring, true);
-			xmlhttp.send();
-			xmlhttp.onreadystatechange = function() {
-				if (this.readyState == 4 && this.status == 200) {
-					//document.getElementById(value).innerHTML = this.responseText;
-					//alert(this.responseText);
-				}
-			}
-        }
-    </script>
+   <head>
+      <title>Media Server Test</title>
+   </head>
+   <body>
+   <div class="main_page">
+      <a href="index.html">Home Page</a>
+      <a href="security.html">Security</a>
+      <a href="media.html">Media</a>
+      <button type="button" onclick="testgeturl()">Test GET</button>
+      <button type="button" onclick="testposturl()">Test POST</button>
+      <button type="button" onclick="testremurl()">Test REM</button>
+      <button type="button" onclick="testplayurl()">Test Pi Player</button>
+   </div>
+	<script src="test.js"></script>
   </body>
 </html>

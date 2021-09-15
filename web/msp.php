@@ -1,7 +1,7 @@
 <?php
 	// media server proxy to pass from web page to c code listening on another tcp port
 	$ms_ip = array_key_exists('SERVER_ADDR',$_SERVER) ? $_SERVER['SERVER_ADDR'] : $_SERVER['LOCAL_ADDR'];
-	$ms_port = "28500";
+	$ms_port = 50000;
 	
 	$valid_post = 0;
 	$valid_get = 0;
@@ -50,7 +50,7 @@
 
 		curl_close($ch);
 
-		print_r($output);
+		print_r($ms_ip);
 	} else {
 		echo "Empty Request";
 	}

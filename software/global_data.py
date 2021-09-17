@@ -36,7 +36,7 @@ instruction_map = [
       "new_packet"
    ],
    [ # Network Tasks
-      "nothing"
+      "add_media_folder"
    ],
    [ # Media Tasks
       "nothing"

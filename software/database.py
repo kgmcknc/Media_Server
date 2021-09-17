@@ -32,11 +32,8 @@ def init_server_db():
    server_db = db_client["server_db"]
    init_config()
    
-   update_features()
-   
-   media_folder = server_db["media"]
-   media_folder_list = media_folder["media_folder_list"]
-   media_folder_list.insert_one({"name":"none", "path":"none"})
+   init_features()
+   init_media()
 
 def init_config():
    random.seed()
@@ -64,15 +61,28 @@ def init_config():
    config_info = devices.server_device_class(**device_init)
    server_config.insert_one(vars(config_info))
 
-def update_features():
+def init_features():
    server_features = server_db["features"]
    feature_list = {"media_player":"false", "door_sensors":"false", "alarm":"false"}
    server_features.insert_one(feature_list)
 
-def add_media_folder():
-   pass
+def init_media():
+   media_folder = server_db["media"]
+   media_folder_list = media_folder["media_folder_list"]
+   media_folder_list.insert_one({"name":"none", "path":"none"})
+
+def add_media_folder(folder_data):
+   if(folder_data["name"] and folder_data["path"]):
+      media_folder = server_db["media"]
+      media_folder_list = media_folder["media_folder_list"]
+      media_folder_list.insert_one({"name":folder_data["name"], "path":folder_data["path"]})
+   else:
+      pass
 
 def rem_media_folder():
+   pass
+
+def get_media_folders():
    pass
 
 def index_media_folder():

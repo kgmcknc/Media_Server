@@ -270,6 +270,8 @@ def process_instruction(data):
    if(data.group == "network_tasks"):
       if(data.task == "reload_config"):
          reload_devices = 1
+      if(data.task == "add_media_folder"):
+         database.add_media_folder(data.data)
    
 
 

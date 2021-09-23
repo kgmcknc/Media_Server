@@ -11,6 +11,13 @@ from pathlib import Path
 
 server_db = 0
 
+file_type_list = [
+   ".M2V", ".M4V", ".MPEG1", ".MPEG2", ".MTS", ".AAC", ".DIVX", ".DV", ".FLV", ".M1V", ".M2TS",
+   ".MKV", ".MOV", ".MPEG4", ".OMA", ".SPX", ".DAT", ".3G2", ".AVI", ".MPEG", ".MPG", ".FLAC",
+   ".M4A", ".MP1", ".OGG", ".WAV", ".XM", ".3GP", ".WMV", ".AC3", ".ASF", ".MOD", ".MP2",
+   ".MP3", ".MP4", ".WMA", ".MKA", ".M4P"
+]
+
 def exists():
    db_client = pymongo.MongoClient("mongodb://localhost:27017/")
    try:
@@ -71,21 +78,25 @@ def init_features():
 def init_media():
    media_folder = server_db["media"]
    media_folder_list = media_folder["media_folder_list"]
-   media_folder_list.insert_one({"name":"none", "path":"none"})
+   media_folder_list.insert_one({"path":"empty"})
 
 def add_media_folder(folder_data):
-   if(folder_data["name"] and folder_data["path"]):
+   path_obj = Path(folder_data["path"])
+   if(path_obj.exists):
       media_folder = server_db["media"]
       media_folder_list = media_folder["media_folder_list"]
-      media_folder_list.insert_one({"name":folder_data["name"], "path":folder_data["path"]})
+      path_string = str(path_obj)
+      media_folder_list.insert_one({"path":path_string, "data":"empty"})
       return 1
    else:
       return 0
 
 def rem_media_folder(folder_data):
+   path_obj = Path(folder_data["path"])
    media_folder = server_db["media"]
    media_folder_list = media_folder["media_folder_list"]
-   folder_query = {"name":folder_data["name"], "path":folder_data["path"]}
+   path_string = str(path_obj)
+   folder_query = {"path":path_string}
    media_folder_list.delete_one(folder_query)
 
 def get_media_folders():
@@ -103,13 +114,62 @@ def get_media_folders():
       return []
 
 def index_media_folder(folder_data):
-   base_path = folder_data["path"]
-   path_obj = Path(base_path)
-   for child in path_obj.iterdir():
-      if(child.is_dir()):
-         pass
+   path_obj = Path(folder_data["path"])
+   db_media = server_db["media"]
+   db_media_folder_list = db_media["media_folder_list"]
+   path_string = str(path_obj)
+   db_query = {"path": path_string}
+   media_list = []
+   if(path_obj):
+      db_object = {}
+      db_object["path"] = folder_data["path"]
+      media_list = index_all_media(path_obj)
+      media_data = decorate_data(media_list)
+      db_object["data"] = media_data
+      return_data = db_media_folder_list.find_one_and_replace(db_query, db_object)
+      return return_data
+
+def index_all_media(current_path):
+   new_list = []
+   for data in current_path.iterdir():
+      if(data.is_dir()):
+         child_data = index_all_media(data)
+         if(len(child_data) > 0):
+            new_list.append(child_data)
       else:
-         pass
+         if(is_valid_file_type(data)):
+            new_list.append(data)
+   return new_list
+
+def is_valid_file_type(data):
+   valid_type = 0
+   this_type = str(data.suffix)
+   this_type = this_type.upper()
+   for type in file_type_list:
+      if(type == this_type):
+         valid_type = 1
+         break
+   return valid_type
+
+def decorate_data(data_list):
+   data_dict = {}
+   index = 0
+   for item in data_list:
+      if(type(item) == list):
+         new_data = decorate_data(item)
+         data_dict[str(index)] = new_data
+      else:
+         new_data = {}
+         new_data["name"] = item.stem
+         new_data["type"] = item.suffix
+         #path_dict = {}
+         #for path_part in item.parts:
+         #   path_dict[] = path_part
+         #path_dict = item.parts
+         new_data["path"] = str(item)
+         data_dict[str(index)] = new_data
+      index = index + 1
+   return data_dict
 
 def get_device_config():
    device_config = server_db["config"]

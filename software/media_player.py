@@ -2,9 +2,6 @@ import database
 import global_data
 
 def run_media_player(player_thread):
-   test = {}
-   test["path"] = "D:/Movies/"
-   database.index_media_folder(test)
    while (player_thread.is_active()):
       while(not global_data.media_queue.empty()):
          try:

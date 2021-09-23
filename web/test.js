@@ -101,7 +101,7 @@ function testaddfolder(){
   }
 function testremfolder(){
    var xmlhttp;
-   var object = {"command":"rem_media_folder","name":"test_folder_name","path":"/testpath/testing"};
+   var object = {"command":"rem_media_folder","name":"test_folder_name","path":"D:/Movies"};
    var valuestring = JSON.stringify(object);
    //alert(valuestring);
    if (window.XMLHttpRequest) {

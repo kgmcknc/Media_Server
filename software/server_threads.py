@@ -35,4 +35,3 @@ class server_thread_class:
       self.event.wait(delay_val)
 
 
-

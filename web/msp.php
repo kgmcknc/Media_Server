@@ -6,7 +6,7 @@
 	$valid_post = 0;
 	$valid_get = 0;
 	
-	if ($_SERVER['REQUEST_METHOD'] == "POST") {
+	if ($_SERVER["REQUEST_METHOD"] == "POST") {
 		// collect value of input field
 		$json_string = $_REQUEST['q'];
 		if (empty($json_string)) {
@@ -47,10 +47,14 @@
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
 		$output = curl_exec($ch);
+		
+		if(curl_errno($ch)){
+		   echo 'Curl error: ' . curl_error($ch);
+		} else {
+		   print_r($output);
+		}
 
 		curl_close($ch);
-
-		print_r($ms_ip);
 	} else {
 		echo "Empty Request";
 	}

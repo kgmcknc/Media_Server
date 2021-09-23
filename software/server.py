@@ -20,6 +20,7 @@ network_thread = server_threads.server_thread_class("Network Thread")
 config_changed = 0
 skips_till_timeout = 4
 system_running = 1
+media_folder_update = 0
 
 device_list = []
 device_timeouts = []
@@ -66,11 +67,13 @@ def server_main(main_thread):
 def process_main_instruction(instruction):
    global config_changed
    global device_list
-   update_config = 0;
+   global media_folder_update
+   update_config = 0
 
    if(instruction.group == "system_tasks"):
       if(instruction.task == "shutdown_delay"):
-         main_thread.pause(1)
+         while(main_thread.is_active()):
+            pass
    
    if(instruction.group == "heartbeat_tasks"):
       if(instruction.task == "ip_changed"):
@@ -81,24 +84,46 @@ def process_main_instruction(instruction):
          update_device_list(instruction.data)
    
    if(instruction.group == "local_tasks"):
-      if(instruction.data["command"] == "link_device"):
-         for dev in device_list:
-            if(dev.device_id == instruction.data["device_id"]):
-               database.add_linked_device(instruction.data["device_id"])
-               config_changed = 1
-               break
-      if(instruction.data["command"] == "update_config"):
-         instruction.data.pop("command")
-         for data in instruction.data:
-            if((data == 'device_id') or (data == '_id')):
-               print("not updating id stuff")
-            else:
-               setattr(device_list[0], data, instruction.data[data])
-         update_config = 1
+      return_data = process_local_task(instruction)
+      instruction.data = return_data
+      global_data.network_queue.put(instruction, block=False)
 
    if(update_config):
       database.update_db_device_config(device_list[0])
       config_changed = 1
+   
+   if(media_folder_update):
+      media_folder_update = 0
+      global_data.media_queue.put(instruction)
+
+def process_local_task(instruction):
+   global media_folder_update
+   json_object = instruction.data
+   instruction.data = {}
+   
+   if(json_object["command"] == "link_device"):
+      for dev in device_list:
+         if(dev.device_id == json_object["device_id"]):
+            database.add_linked_device(json_object["device_id"])
+            config_changed = 1
+            break
+   if(json_object["command"] == "update_config"):
+      json_object.pop("command")
+      for data in json_object:
+         if((data == 'device_id') or (data == '_id')):
+            print("not updating id stuff")
+         else:
+            setattr(device_list[0], data, json_object[data])
+      update_config = 1
+   if(json_object["command"] == "add_media_folder"):
+      instruction.data = json_object
+      media_folder_update = database.add_media_folder(json_object)
+   if(json_object["command"] == "rem_media_folder"):
+      media_folder_update = database.rem_media_folder(json_object)
+   if(json_object["command"] == "get_media_folders"):
+      instruction.data["media_folders"] = database.get_media_folders()
+      
+   return instruction.data
 
 def update_device_list(device_data):
    global device_list

@@ -9,6 +9,7 @@ import json
 select_timeout = 1
 reload_devices = 0
 device_config = 0
+
 device_list = []
 local_socket_list = []
 device_socket_list = []
@@ -16,12 +17,13 @@ device_socket_list = []
 udp_rx_sock = 0
 
 class my_socket_class:
-   socket = 0,
-   ip_addr = 0,
-   port = 0,
-   device_id = 0,
-   active = 0,
-   ready = 0,
+   socket = 0
+   ip_addr = 0
+   port = 0
+   device_id = 0
+   active = 0
+   is_get = 0
+   ready = 0
    done = 0
 
 def get_my_ip():
@@ -69,6 +71,10 @@ def network_listener(network_thread):
    max_devices = 5 + len(device_list)
 
    print("Starting network thread")
+   
+   header_okay = "HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\n"
+   header_content = "Content-Length: "
+   header_end = "Connection: close\r\nContent-Type: text/html\r\nX-Pad: avoid browser bug\r\n\r\n"
 
    serversocket = 0
    # create an INET, STREAMing socket
@@ -91,7 +97,7 @@ def network_listener(network_thread):
          load_devices_from_db()
          max_devices = len(device_list) + 5
          serversocket.listen(max_devices)
-
+      
       while(not global_data.network_queue.empty()):
          try:
             new_queue_data = global_data.network_queue.get(block=False)
@@ -99,7 +105,18 @@ def network_listener(network_thread):
             #network queue was empty and timed out
             pass
          else:
-            process_instruction(new_queue_data)
+            if(new_queue_data.group == "network_tasks"):
+               process_instruction(new_queue_data)
+            else:
+               for dev in local_socket_list:
+                  if(new_queue_data.socket == dev.socket):
+                     write_data = new_queue_data.data_to_json()
+                     packet_data = header_okay+header_content+str(len(write_data))+header_end+write_data
+                     write_data_encode = packet_data.encode()
+                     dev.socket.send(write_data_encode)
+                     dev.done = 1
+                     dev.socket.shutdown(socket.SHUT_RDWR)
+                     dev.socket.close()
 
       # Process ready devices
       for dev in local_socket_list:
@@ -115,20 +132,26 @@ def network_listener(network_thread):
                end_offset = instruction.data.find("}")+1
                instruction.data = instruction.data[offset+2:end_offset]
                instruction.data = json.loads(instruction.data)
+               instruction.task = "get"
+               instruction.socket = dev.socket
                global_data.main_queue.put(instruction)
                dev.active = 0
-               dev.done = 1
-               dev.socket.shutdown(socket.SHUT_RDWR)
-               dev.socket.close()
+               dev.is_get = 1
             else:
                if(instruction.data[0:4] == "POST"):
                   offset = instruction.data.find("q={")
                   end_offset = instruction.data.find("}")+1
                   instruction.data = instruction.data[offset+2:end_offset]
                   instruction.data = json.loads(instruction.data)
+                  instruction.task = "post"
+                  instruction.socket = dev.socket
                   global_data.main_queue.put(instruction)
+                  packet_data = header_okay+header_end
+                  write_data_encode = packet_data.encode()
+                  dev.socket.send(write_data_encode)
                   dev.active = 0
                   dev.done = 1
+                  dev.is_get = 0
                   dev.socket.shutdown(socket.SHUT_RDWR)
                   dev.socket.close()
                else:
@@ -163,6 +186,8 @@ def network_listener(network_thread):
             rx_list.append(rx_device.socket)
 
       tx_list = []
+      for local_device in local_socket_list:
+         tx_list.append(local_device.socket)
       for tx_device in device_socket_list:
          if(tx_device.active):
             # should probably check to see if we are able to transmit here...
@@ -220,8 +245,6 @@ def network_listener(network_thread):
    if(serversocket):
       serversocket.close()
 
-                  
-
    # check for linked and connected devices that we don't have a socket connected for...
    # if so, create and listen on those sockets
 
@@ -267,11 +290,8 @@ def load_devices_from_db():
 
 def process_instruction(data):
    global reload_devices
-   if(data.group == "network_tasks"):
-      if(data.task == "reload_config"):
-         reload_devices = 1
-      if(data.task == "add_media_folder"):
-         database.add_media_folder(data.data)
+   if(data.task == "reload_config"):
+      reload_devices = 1
    
 
 

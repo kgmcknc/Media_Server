@@ -7,6 +7,8 @@ import datetime
 import devices
 import json
 
+from pathlib import Path
+
 server_db = 0
 
 def exists():
@@ -76,17 +78,38 @@ def add_media_folder(folder_data):
       media_folder = server_db["media"]
       media_folder_list = media_folder["media_folder_list"]
       media_folder_list.insert_one({"name":folder_data["name"], "path":folder_data["path"]})
+      return 1
    else:
-      pass
+      return 0
 
-def rem_media_folder():
-   pass
+def rem_media_folder(folder_data):
+   media_folder = server_db["media"]
+   media_folder_list = media_folder["media_folder_list"]
+   folder_query = {"name":folder_data["name"], "path":folder_data["path"]}
+   media_folder_list.delete_one(folder_query)
 
 def get_media_folders():
-   pass
+   folder_list = []
+   db_media = server_db["media"]
+   db_media_folder_list = db_media["media_folder_list"]
+   db_folder_list = db_media_folder_list.find()
+   db_list = list(db_folder_list)
+   if(db_list):
+      for folder_data in db_list:
+         folder_data["_id"] = str(folder_data["_id"])
+         folder_list.append(folder_data)
+      return folder_list
+   else:
+      return []
 
-def index_media_folder():
-   pass
+def index_media_folder(folder_data):
+   base_path = folder_data["path"]
+   path_obj = Path(base_path)
+   for child in path_obj.iterdir():
+      if(child.is_dir()):
+         pass
+      else:
+         pass
 
 def get_device_config():
    device_config = server_db["config"]

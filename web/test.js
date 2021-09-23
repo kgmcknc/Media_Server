@@ -81,7 +81,7 @@ function testplayurl(){
   }
 function testaddfolder(){
    var xmlhttp;
-   var object = {"command":"add_media_folder","name":"test_folder_name","path":"/testpath/testing"};
+   var object = {"command":"add_media_folder","name":"test_folder_name","path":"D:/Movies"};
    var valuestring = JSON.stringify(object);
    //alert(valuestring);
    if (window.XMLHttpRequest) {
@@ -99,3 +99,45 @@ function testaddfolder(){
       }
    }
   }
+function testremfolder(){
+   var xmlhttp;
+   var object = {"command":"rem_media_folder","name":"test_folder_name","path":"/testpath/testing"};
+   var valuestring = JSON.stringify(object);
+   //alert(valuestring);
+   if (window.XMLHttpRequest) {
+      xmlhttp = new XMLHttpRequest();
+   } else {
+      // code for IE6, IE5
+      xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+   }
+        xmlhttp.open("POST", "msp.php?q="+valuestring, true);
+   xmlhttp.send();
+   xmlhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+         //document.getElementById(value).innerHTML = this.responseText;
+         //alert(this.responseText);
+      }
+   }
+  }
+
+function test_db(){
+   var xmlhttp;
+   var object = {"command":"get_media_folders"};
+   var valuestring = JSON.stringify(object);
+   //alert(valuestring);
+   if (window.XMLHttpRequest) {
+      xmlhttp = new XMLHttpRequest();
+   } else {
+      // code for IE6, IE5
+      xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+   }
+        xmlhttp.open("GET", "msp.php?q="+valuestring, true);
+   xmlhttp.send();
+   xmlhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+         //document.getElementById(value).innerHTML = this.responseText;
+         alert(this.responseText);
+      }
+   }
+  }
+

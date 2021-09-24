@@ -122,7 +122,7 @@ function testremfolder(){
 
 function test_db(){
    var xmlhttp;
-   var object = {"command":"get_media_folders"};
+   var object = {"command":"get_media_data", "path":"D:/Movies"};
    var valuestring = JSON.stringify(object);
    //alert(valuestring);
    if (window.XMLHttpRequest) {

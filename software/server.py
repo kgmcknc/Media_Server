@@ -122,6 +122,8 @@ def process_local_task(instruction):
       media_folder_update = database.rem_media_folder(json_object)
    if(json_object["command"] == "get_media_folders"):
       instruction.data["media_folders"] = database.get_media_folders()
+   if(json_object["command"] == "get_media_data"):
+      instruction.data["media_folders"] = database.get_media_data(json_object)
       
    return instruction.data
 

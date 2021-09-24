@@ -113,16 +113,19 @@ def get_media_folders():
    db_list = list(db_folder_list)
    if(db_list):
       for folder_data in db_list:
-         folder_list.append(folder_data)
+         folder_list.append(folder_data["path"])
       return folder_list
    else:
       return []
 
-def get_media_data():
+def get_media_data(folder_data):
+   path_obj = Path(folder_data["path"])
    folder_list = []
    db_media = server_db["media"]
    db_media_folder_list = db_media["media_folder_list"]
-   db_folder_list = db_media_folder_list.find({},{"_id":0})
+   path_string = path_obj.as_posix()
+   db_query = {"path":path_string}
+   db_folder_list = db_media_folder_list.find(db_query, {"_id":0})
    db_list = list(db_folder_list)
    if(db_list):
       for folder_data in db_list:

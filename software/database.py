@@ -80,6 +80,54 @@ def init_media():
    media_folder_list = media_folder["media_folder_list"]
    media_folder_list.insert_one({"path":"empty"})
 
+def add_user(user_data):
+   if(len(user_data["user_name"]) > 0):
+      media_db = server_db["media"]
+      user_list_db = media_db["user_list"]
+      db_query = {"user_name":user_data["user_name"]}
+      db_entry = {"user_name":user_data["user_name"]}
+      results = user_list_db.find_one(db_query)
+      if(results == None):
+         user_list_db.insert_one(db_entry)
+         return 1
+      else:
+         return 0
+   else:
+      return 0
+
+def rem_user(user_data):
+   media_db = server_db["media"]
+   user_list_db = media_db["user_list"]
+   db_query = {"user_name":user_data["user_name"]}
+   user_list_db.delete_one(db_query)
+
+def get_users():
+   user_list = []
+   media_db = server_db["media"]
+   user_list_db = media_db["user_list"]
+   users_db = user_list_db.find({},{"_id":0})
+   db_list = list(users_db)
+   if(db_list):
+      for user_data in db_list:
+         user_list.append(user_data["user_name"])
+      return user_list
+   else:
+      return []
+
+def get_user_data(user):
+   user_data_list = []
+   media_db = server_db["media"]
+   user_list_db = media_db["user_list"]
+   db_query = {"user_name":user["user_name"]}
+   user_db = user_list_db.find(db_query, {"_id":0})
+   data_list = list(user_db)
+   if(data_list):
+      for user_data in data_list:
+         user_data_list.append(user_data)
+      return user_data_list
+   else:
+      return []
+
 def add_media_folder(folder_data):
    path_obj = Path(folder_data["path"])
    if(path_obj.exists):
@@ -112,8 +160,8 @@ def get_media_folders():
    db_folder_list = db_media_folder_list.find({},{"_id":0})
    db_list = list(db_folder_list)
    if(db_list):
-      for folder_data in db_list:
-         folder_list.append(folder_data["path"])
+      for folders in db_list:
+         folder_list.append(folders["path"])
       return folder_list
    else:
       return []
@@ -128,39 +176,45 @@ def get_media_data(folder_data):
    db_folder_list = db_media_folder_list.find(db_query, {"_id":0})
    db_list = list(db_folder_list)
    if(db_list):
-      for folder_data in db_list:
-         folder_list.append(folder_data)
+      for folders in db_list:
+         folder_list.append(folders)
       return folder_list
    else:
       return []
 
-def index_media_folder(folder_data):
-   path_obj = Path(folder_data["path"])
+# should redo this to read stored media index, then update and add/remove change anything that's needed
+# currently it just does a whole new index and replaces stuff
+def index_media_folder(folder_path):
+   path_obj = Path(folder_path)
    db_media = server_db["media"]
    db_media_folder_list = db_media["media_folder_list"]
    path_string = path_obj.as_posix()
    db_query = {"path": path_string}
-   media_list = []
    if(path_obj):
       db_object = {}
       db_object["path"] = path_obj.as_posix()
-      media_list = index_all_media(path_obj)
-      media_data = decorate_data(media_list)
-      db_object["data"] = media_data
+      db_object["data"] = index_all_media(path_obj)
       return_data = db_media_folder_list.find_one_and_replace(db_query, db_object)
       return return_data
 
 def index_all_media(current_path):
-   new_list = []
+   media_dict = {}
    for data in current_path.iterdir():
       if(data.is_dir()):
          child_data = index_all_media(data)
          if(len(child_data) > 0):
-            new_list.append(child_data)
+            media_dict[data.stem] = child_data
       else:
          if(is_valid_file_type(data)):
-            new_list.append(data)
-   return new_list
+            new_data = {}
+            new_data["name"] = data.stem
+            new_data["type"] = data.suffix
+            pathname = data.as_posix()
+            pathname = pathname[pathname.find(data.parts[1]):]
+            new_data["path"] = pathname
+            fullname = data.stem + data.suffix
+            media_dict[fullname] = new_data
+   return media_dict
 
 def is_valid_file_type(data):
    valid_type = 0
@@ -171,26 +225,6 @@ def is_valid_file_type(data):
          valid_type = 1
          break
    return valid_type
-
-def decorate_data(data_list):
-   data_dict = {}
-   index = 0
-   for item in data_list:
-      if(type(item) == list):
-         new_data = decorate_data(item)
-         data_dict[str(index)] = new_data
-      else:
-         new_data = {}
-         new_data["name"] = item.stem
-         new_data["type"] = item.suffix
-         #path_dict = {}
-         #for path_part in item.parts:
-         #   path_dict[] = path_part
-         #path_dict = item.parts
-         new_data["path"] = item.as_posix()
-         data_dict[str(index)] = new_data
-      index = index + 1
-   return data_dict
 
 def get_device_config():
    device_config = server_db["config"]

@@ -120,7 +120,7 @@ function testremfolder(){
    }
   }
 
-function test_db(){
+function testgetfolderdata(){
    var xmlhttp;
    var object = {"command":"get_media_data", "path":"D:/Movies"};
    var valuestring = JSON.stringify(object);
@@ -141,3 +141,64 @@ function test_db(){
    }
   }
 
+  function testadduser(){
+   var xmlhttp;
+   var object = {"command":"add_user","user_name":"test_user"};
+   var valuestring = JSON.stringify(object);
+   //alert(valuestring);
+   if (window.XMLHttpRequest) {
+      xmlhttp = new XMLHttpRequest();
+   } else {
+      // code for IE6, IE5
+      xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+   }
+        xmlhttp.open("POST", "msp.php?q="+valuestring, true);
+   xmlhttp.send();
+   xmlhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+         //document.getElementById(value).innerHTML = this.responseText;
+         //alert(this.responseText);
+      }
+   }
+  }
+function testremuser(){
+   var xmlhttp;
+   var object = {"command":"rem_user","user_name":"test_user"};
+   var valuestring = JSON.stringify(object);
+   //alert(valuestring);
+   if (window.XMLHttpRequest) {
+      xmlhttp = new XMLHttpRequest();
+   } else {
+      // code for IE6, IE5
+      xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+   }
+        xmlhttp.open("POST", "msp.php?q="+valuestring, true);
+   xmlhttp.send();
+   xmlhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+         //document.getElementById(value).innerHTML = this.responseText;
+         //alert(this.responseText);
+      }
+   }
+  }
+
+function testgetuserdata(){
+   var xmlhttp;
+   var object = {"command":"get_user_data","user_name":"test_user"};
+   var valuestring = JSON.stringify(object);
+   //alert(valuestring);
+   if (window.XMLHttpRequest) {
+      xmlhttp = new XMLHttpRequest();
+   } else {
+      // code for IE6, IE5
+      xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+   }
+        xmlhttp.open("GET", "msp.php?q="+valuestring, true);
+   xmlhttp.send();
+   xmlhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+         //document.getElementById(value).innerHTML = this.responseText;
+         alert(this.responseText);
+      }
+   }
+  }

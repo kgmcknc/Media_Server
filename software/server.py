@@ -20,7 +20,6 @@ network_thread = server_threads.server_thread_class("Network Thread")
 config_changed = 0
 skips_till_timeout = 4
 system_running = 1
-media_folder_update = 0
 
 device_list = []
 device_timeouts = []
@@ -67,7 +66,6 @@ def server_main(main_thread):
 def process_main_instruction(instruction):
    global config_changed
    global device_list
-   global media_folder_update
    update_config = 0
 
    if(instruction.group == "system_tasks"):
@@ -91,15 +89,11 @@ def process_main_instruction(instruction):
    if(update_config):
       database.update_db_device_config(device_list[0])
       config_changed = 1
-   
-   if(media_folder_update):
-      media_folder_update = 0
-      global_data.media_queue.put(instruction)
 
 def process_local_task(instruction):
-   global media_folder_update
+   index_folder = 0
    json_object = instruction.data
-   instruction.data = {}
+   #instruction.data = {}
    
    if(json_object["command"] == "link_device"):
       for dev in device_list:
@@ -116,15 +110,29 @@ def process_local_task(instruction):
             setattr(device_list[0], data, json_object[data])
       update_config = 1
    if(json_object["command"] == "add_media_folder"):
-      instruction.data = json_object
-      media_folder_update = database.add_media_folder(json_object)
+      #instruction.data = json_object
+      index_folder = database.add_media_folder(json_object)
    if(json_object["command"] == "rem_media_folder"):
-      media_folder_update = database.rem_media_folder(json_object)
+      database.rem_media_folder(json_object)
+   if(json_object["command"] == "index_media_folder"):
+      index_folder = 1
    if(json_object["command"] == "get_media_folders"):
-      instruction.data["media_folders"] = database.get_media_folders()
+      instruction.data["result"] = database.get_media_folders()
    if(json_object["command"] == "get_media_data"):
-      instruction.data["media_folders"] = database.get_media_data(json_object)
-      
+      instruction.data["result"] = database.get_media_data(json_object)
+   
+   if(json_object["command"] == "add_user"):
+      database.add_user(json_object)
+   if(json_object["command"] == "rem_user"):
+      database.rem_user(json_object)
+   if(json_object["command"] == "get_users"):
+      instruction.data["result"] = database.get_users()
+   if(json_object["command"] == "get_user_data"):
+      instruction.data["result"] = database.get_user_data(json_object)
+   
+   if(index_folder):
+      global_data.media_queue.put(instruction)
+
    return instruction.data
 
 def update_device_list(device_data):

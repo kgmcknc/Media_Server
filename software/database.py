@@ -85,9 +85,15 @@ def add_media_folder(folder_data):
    if(path_obj.exists):
       media_folder = server_db["media"]
       media_folder_list = media_folder["media_folder_list"]
-      path_string = str(path_obj)
-      media_folder_list.insert_one({"path":path_string, "data":"empty"})
-      return 1
+      path_string = path_obj.as_posix()
+      db_query = {"path":path_string}
+      db_entry = {"path":path_string, "data":"empty"}
+      results = media_folder_list.find_one(db_query)
+      if(results == None):
+         media_folder_list.insert_one(db_entry)
+         return 1
+      else:
+         return 0
    else:
       return 0
 
@@ -95,7 +101,7 @@ def rem_media_folder(folder_data):
    path_obj = Path(folder_data["path"])
    media_folder = server_db["media"]
    media_folder_list = media_folder["media_folder_list"]
-   path_string = str(path_obj)
+   path_string = path_obj.as_posix()
    folder_query = {"path":path_string}
    media_folder_list.delete_one(folder_query)
 
@@ -117,7 +123,7 @@ def index_media_folder(folder_data):
    path_obj = Path(folder_data["path"])
    db_media = server_db["media"]
    db_media_folder_list = db_media["media_folder_list"]
-   path_string = str(path_obj)
+   path_string = path_obj.as_posix()
    db_query = {"path": path_string}
    media_list = []
    if(path_obj):
@@ -166,7 +172,7 @@ def decorate_data(data_list):
          #for path_part in item.parts:
          #   path_dict[] = path_part
          #path_dict = item.parts
-         new_data["path"] = str(item)
+         new_data["path"] = item.as_posix()
          data_dict[str(index)] = new_data
       index = index + 1
    return data_dict

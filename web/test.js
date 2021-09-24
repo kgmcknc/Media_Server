@@ -81,7 +81,7 @@ function testplayurl(){
   }
 function testaddfolder(){
    var xmlhttp;
-   var object = {"command":"add_media_folder","name":"test_folder_name","path":"D:/Movies"};
+   var object = {"command":"add_media_folder","name":"test_folder_name","path":"D:/Movies/"};
    var valuestring = JSON.stringify(object);
    //alert(valuestring);
    if (window.XMLHttpRequest) {

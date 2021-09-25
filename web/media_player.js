@@ -95,12 +95,7 @@ function checkCookie(cname) {
    let cval = getCookie(cname);
    if (cval != "") {
       return cval
-      //alert("Welcome again " + username);
    } else {
       return ""
-      // username = prompt("Please enter your name:", "");
-      // if (username != "" && username != null) {
-      //    setCookie("username", username, 365);
-      // }
    }
 }

@@ -91,15 +91,19 @@ def add_user(user_data):
          user_list_db.insert_one(db_entry)
          return 1
       else:
-         return 0
+         return "DB_ERR"
    else:
-      return 0
+      return "DB_ERR"
 
 def rem_user(user_data):
    media_db = server_db["media"]
    user_list_db = media_db["user_list"]
    db_query = {"user_name":user_data["user_name"]}
-   user_list_db.delete_one(db_query)
+   removed = user_list_db.delete_one(db_query)
+   if(removed):
+      return 1
+   else:
+      return "DB_ERR"
 
 def get_users():
    user_list = []
@@ -112,21 +116,18 @@ def get_users():
          user_list.append(user_data["user_name"])
       return user_list
    else:
-      return []
+      return "DB_ERR"
 
 def get_user_data(user):
    user_data_list = []
    media_db = server_db["media"]
    user_list_db = media_db["user_list"]
    db_query = {"user_name":user["user_name"]}
-   user_db = user_list_db.find(db_query, {"_id":0})
-   data_list = list(user_db)
-   if(data_list):
-      for user_data in data_list:
-         user_data_list.append(user_data)
-      return user_data_list
+   user_data = user_list_db.find_one(db_query, {"_id":0})
+   if(user_data != None):
+      return user_data
    else:
-      return []
+      return "DB_ERR"
 
 def add_media_folder(folder_data):
    path_obj = Path(folder_data["path"])
@@ -141,9 +142,9 @@ def add_media_folder(folder_data):
          media_folder_list.insert_one(db_entry)
          return 1
       else:
-         return 0
+         return "DB_ERR"
    else:
-      return 0
+      return "DB_ERR"
 
 def rem_media_folder(folder_data):
    path_obj = Path(folder_data["path"])
@@ -151,7 +152,11 @@ def rem_media_folder(folder_data):
    media_folder_list = media_folder["media_folder_list"]
    path_string = path_obj.as_posix()
    folder_query = {"path":path_string}
-   media_folder_list.delete_one(folder_query)
+   removed = media_folder_list.delete_one(folder_query)
+   if(removed):
+      return 1
+   else:
+      return "DB_ERR"
 
 def get_media_folders():
    folder_list = []
@@ -164,7 +169,7 @@ def get_media_folders():
          folder_list.append(folders["path"])
       return folder_list
    else:
-      return []
+      return "DB_ERR"
 
 def get_media_data(folder_data):
    path_obj = Path(folder_data["path"])
@@ -173,14 +178,11 @@ def get_media_data(folder_data):
    db_media_folder_list = db_media["media_folder_list"]
    path_string = path_obj.as_posix()
    db_query = {"path":path_string}
-   db_folder_list = db_media_folder_list.find(db_query, {"_id":0})
-   db_list = list(db_folder_list)
-   if(db_list):
-      for folders in db_list:
-         folder_list.append(folders)
-      return folder_list
+   folder_data = db_media_folder_list.find_one(db_query, {"_id":0})
+   if(folder_data != None):
+      return folder_data
    else:
-      return []
+      return "DB_ERR"
 
 # should redo this to read stored media index, then update and add/remove change anything that's needed
 # currently it just does a whole new index and replaces stuff

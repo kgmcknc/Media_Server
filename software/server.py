@@ -93,6 +93,7 @@ def process_main_instruction(instruction):
 def process_local_task(instruction):
    index_folder = 0
    json_object = instruction.data
+   instruction.data["result"] = ""
    #instruction.data = {}
    
    if(json_object["command"] == "link_device"):
@@ -122,9 +123,9 @@ def process_local_task(instruction):
       instruction.data["result"] = database.get_media_data(json_object)
    
    if(json_object["command"] == "add_user"):
-      database.add_user(json_object)
+      instruction.data["result"] = database.add_user(json_object)
    if(json_object["command"] == "rem_user"):
-      database.rem_user(json_object)
+      instruction.data["result"] = database.rem_user(json_object)
    if(json_object["command"] == "get_users"):
       instruction.data["result"] = database.get_users()
    if(json_object["command"] == "get_user_data"):

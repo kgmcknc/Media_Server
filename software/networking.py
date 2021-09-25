@@ -146,14 +146,14 @@ def network_listener(network_thread):
                   instruction.task = "post"
                   instruction.socket = dev.socket
                   global_data.main_queue.put(instruction)
-                  packet_data = header_okay+header_end
-                  write_data_encode = packet_data.encode()
-                  dev.socket.send(write_data_encode)
+                  #packet_data = header_okay+header_end
+                  #write_data_encode = packet_data.encode()
+                  #dev.socket.send(write_data_encode)
                   dev.active = 0
-                  dev.done = 1
+                  #dev.done = 1
                   dev.is_get = 0
-                  dev.socket.shutdown(socket.SHUT_RDWR)
-                  dev.socket.close()
+                  #dev.socket.shutdown(socket.SHUT_RDWR)
+                  #dev.socket.close()
                else:
                   pass
 
@@ -168,16 +168,22 @@ def network_listener(network_thread):
                dev.active = 0
 
       # Remove old unconnected devices
+      new_list = []
       for dev in device_socket_list:
          if(dev.done):
             dev.done = 0
-            device_socket_list.remove(dev)
+         else:
+            new_list.append(dev)
+      device_socket_list = new_list
 
+      new_list = []
       for dev in local_socket_list:
          if(dev.done):
             dev.done = 0
-            local_socket_list.remove(dev)
-      
+         else:
+            new_list.append(dev)
+      local_socket_list = new_list
+
       rx_list = [serversocket]
       for local_device in local_socket_list:
          rx_list.append(local_device.socket)

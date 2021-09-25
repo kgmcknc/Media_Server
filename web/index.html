@@ -3,7 +3,7 @@
    <head>
       <title>Media Server Test</title>
    </head>
-   <body>
+   <body onload="get_init_data()">
    <div class="main_page">
       <a href="index.html">Home Page</a>
       <a href="security.html">Security</a>
@@ -20,7 +20,16 @@
       <button type="button" onclick="testadduser()">Test Add User</button>
       <button type="button" onclick="testremuser()">Test Rem User</button>
       <button type="button" onclick="testgetuserdata()">Test Get User Info</button>
+      <br>
+      <button type="button" onclick="create_new_user('Kyle')">Create User</button>
+      <br>
+      User: <select name="userdropdown" id="userdropdown" onchange="update_user()">
+      </select>
+      <input type="text" id="new_user_name_text">
+      <input type="submit" value="Create New User" onclick="add_new_user()">
+      <input type="submit" value="Remove Current User" onclick="remove_current_user()">
    </div>
 	<script src="test.js"></script>
+   <script src="media.js"></script>
   </body>
 </html>

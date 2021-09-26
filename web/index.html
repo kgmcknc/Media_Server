@@ -2,9 +2,10 @@
 <html>
    <head>
       <title>Media Server Test</title>
+      <link rel="stylesheet" href="media.css">
    </head>
-   <body onload="get_init_data()">
-   <div class="main_page">
+   <body>
+   <div id="main" class="main_page" style="position: absolute; width: 50%; top: 10px; left:0px">
       <a href="index.html">Home Page</a>
       <a href="security.html">Security</a>
       <a href="media.html">Media</a>
@@ -29,6 +30,10 @@
       <input type="text" id="new_user_name_text">
       <input type="submit" value="Create New User" onclick="add_new_user()">
       <input type="submit" value="Remove Current User" onclick="remove_current_user()">
+   </div>
+   <div id="media_data" style="position: absolute; width: 50%; height: 300px; top: 10px; left:50%; overflow-y: scroll">
+      <ul id="media_list">
+      </ul>
    </div>
 	<script src="test.js"></script>
    <script src="media.js"></script>

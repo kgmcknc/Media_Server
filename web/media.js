@@ -2,10 +2,9 @@
 var current_user = "";
 var current_user_data = "";
 
-function get_init_data(){
-   loadcookies();
-   load_user_data();
-}
+loadcookies();
+load_user_data();
+load_media_data();
 
 function add_new_user(){
    new_user_text = document.getElementById("new_user_name_text");
@@ -38,6 +37,12 @@ function update_user(){
    }
 }
 
+function set_media_text(){
+   media = this.id;
+   box = document.getElementById("movie_text");
+   box.value = media;
+}
+
 function set_active_user(new_user){
    get_db_data({"command":"get_user_data","user_name":new_user}, set_current_user);
 }
@@ -63,6 +68,9 @@ function load_user_list(users){
          get_db_data({"command":"get_user_data","user_name":userlist[0].value}, set_current_user);
       }
    } else {
+      if(current_user_data == ""){
+         get_db_data({"command":"get_user_data","user_name":userlist[0].value}, set_current_user);
+      }
       // leave selection on current user
       for(x=0;x<userlist.length;x++){
          if(userlist[x].value == current_user){
@@ -78,11 +86,13 @@ function set_current_user(new_user_data){
       current_user = new_user_data.user_name;
       current_user_data = new_user_data;
       setCookie("current_user", current_user, 365);
+      document.getElementById("movie_text").value = current_user_data.last_played;
    }
 }
 
 function setlastplayed(){
-   set_db_data({"command":"set_user_data","user_name":current_user,"update_field":"last_played", "update_data":"test_last.mp4"});
+   last_item = document.getElementById("movie_text").value;
+   set_db_data({"command":"set_user_data","user_name":current_user,"update_field":"last_played", "update_data":last_item});
 }
 
 function loadcookies(){
@@ -169,4 +179,65 @@ function checkCookie(cname) {
    } else {
       return ""
    }
+}
+
+function add_list_event(item){
+   item.addEventListener("click", function() {
+    this.parentElement.querySelector(".nested").classList.toggle("active");
+    this.classList.toggle("caret-down");
+  });
+}
+
+function load_media_data(){
+   get_db_data({"command":"get_media_data", "path":"D:/Movies"}, update_media_list);
+}
+
+function update_media_list(folder_data){
+   media_data_list = folder_data.data;
+   media_list = document.getElementById("media_list");
+   while(media_list.childElementCount > 0){
+      media_list.removeChild(media_list.children[0]);
+   }
+   iterate_media_list(media_list, media_data_list);
+}
+
+function iterate_media_list(media_list, media_data){
+   for(const data in media_data){
+      if(media_data[data].name != undefined){
+         // item in current list
+         new_element = document.createElement('li');
+         new_element.innerText = media_data[data].name;
+         new_element.id = media_data[data].path;
+         new_element.addEventListener("click", set_media_text);
+         media_list.append(new_element);
+      } else {
+         // folder item
+         new_element = document.createElement('li');
+         //new_element.innerText = data;
+         new_span = document.createElement('span');
+         new_span.className = "caret";
+         new_span.innerText = data;
+         add_list_event(new_span);
+         new_element.append(new_span);
+         //new_element.id = data;
+         media_list.append(new_element);
+         saved_list = document.createElement('ul');
+         saved_list.className = "nested";
+         //saved_list.innerText = data;
+         //saved_list.id = data;
+         new_element.append(saved_list);
+         iterate_media_list(saved_list, media_data[data]);
+      }
+   }
+}
+
+function playmovie(){
+   var object = document.getElementById("movie_text");
+   var valuestring = "media_player.php?media_file=" + object.value;
+   var player_box = document.getElementById("media_box");
+   var player_source = document.getElementById("mediaplayer");
+   player_box.pause();
+   player_source.src = valuestring;
+   player_box.load();
+   setlastplayed();
 }

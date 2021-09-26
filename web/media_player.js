@@ -1,13 +1,13 @@
 
-function playmovie(){
-    var object = document.getElementById("movie_text");
-    var valuestring = "media_player.php?media_file=" + object.value;
-    var player_box = document.getElementById("media_box");
-    var player_source = document.getElementById("mediaplayer");
-    player_box.pause();
-    player_source.src = valuestring;
-    player_box.load();
-}
+// function playmovie(){
+//     var object = document.getElementById("movie_text");
+//     var valuestring = "media_player.php?media_file=" + object.value;
+//     var player_box = document.getElementById("media_box");
+//     var player_source = document.getElementById("mediaplayer");
+//     player_box.pause();
+//     player_source.src = valuestring;
+//     player_box.load();
+// }
 
 var global_episode = 1;
 

@@ -19,7 +19,9 @@ function create_user(new_user_name){
 }
 
 function remove_current_user(){
-   remove_user(current_user);
+   if(current_user != ""){
+      remove_user(current_user);
+   }
 }
 
 function remove_user(user_to_delete){
@@ -58,7 +60,7 @@ function load_user_list(users){
    }
    if(current_user == ""){
       if(userlist.length > 0){
-         get_db_data({"command":"get_user_data","user_name":userlist[0]}, set_current_user);
+         get_db_data({"command":"get_user_data","user_name":userlist[0].value}, set_current_user);
       }
    } else {
       // leave selection on current user

@@ -81,6 +81,10 @@ function set_current_user(new_user_data){
    }
 }
 
+function setlastplayed(){
+   set_db_data({"command":"set_user_data","user_name":current_user,"update_field":"last_played", "update_data":"test_last.mp4"});
+}
+
 function loadcookies(){
    current_user = getCookie("current_user");
 }

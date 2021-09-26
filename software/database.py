@@ -18,6 +18,11 @@ file_type_list = [
    ".MP3", ".MP4", ".WMA", ".MKA", ".M4P"
 ]
 
+user_data_fields = {
+   "user_name":1,
+   "last_played":1
+}
+
 def exists():
    db_client = pymongo.MongoClient("mongodb://localhost:27017/")
    try:
@@ -119,13 +124,25 @@ def get_users():
       return "DB_ERR"
 
 def get_user_data(user):
-   user_data_list = []
    media_db = server_db["media"]
    user_list_db = media_db["user_list"]
    db_query = {"user_name":user["user_name"]}
    user_data = user_list_db.find_one(db_query, {"_id":0})
    if(user_data != None):
       return user_data
+   else:
+      return "DB_ERR"
+
+def set_user_data(user):
+   media_db = server_db["media"]
+   user_list_db = media_db["user_list"]
+   db_query = {"user_name":user["user_name"]}
+   user_data = user_list_db.find_one(db_query, {"_id":0})
+   if(user_data != None):
+      if(user_data_fields[user["update_field"]]):
+         user_data[user["update_field"]] = user["update_data"]
+         user_data = user_list_db.find_one_and_replace(db_query, user_data)
+      return 1
    else:
       return "DB_ERR"
 
@@ -173,7 +190,6 @@ def get_media_folders():
 
 def get_media_data(folder_data):
    path_obj = Path(folder_data["path"])
-   folder_list = []
    db_media = server_db["media"]
    db_media_folder_list = db_media["media_folder_list"]
    path_string = path_obj.as_posix()

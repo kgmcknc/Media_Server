@@ -130,6 +130,8 @@ def process_local_task(instruction):
       instruction.data["result"] = database.get_users()
    if(json_object["command"] == "get_user_data"):
       instruction.data["result"] = database.get_user_data(json_object)
+   if(json_object["command"] == "set_user_data"):
+      instruction.data["result"] = database.set_user_data(json_object)
    
    if(index_folder):
       global_data.media_queue.put(instruction)

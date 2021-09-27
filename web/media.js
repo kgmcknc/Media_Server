@@ -16,7 +16,7 @@ function java_formatting(){
       main.style.width = "50%";
       main.style.height = "100%";
       main.style.top = "20px";
-      main.style.left = "0px";
+      main.style.left = "20px";
       
       media.style.width = "50%";
       media.style.height = "100%";
@@ -26,12 +26,12 @@ function java_formatting(){
       main.style.width = "100%";
       main.style.height = "45%";
       main.style.top = "20px";
-      main.style.left = "0px";
+      main.style.left = "20px";
       
       media.style.width = "100%";
       media.style.height = "50%";
       media.style.top = "50%";
-      media.style.left = "0px";
+      media.style.left = "20px";
    }
 }
 

@@ -17,7 +17,7 @@
       <input type="submit" value="Create New User" onclick="add_new_user()">
       <input type="submit" value="Remove Current User" onclick="remove_current_user()">
       <br>
-      <video id="media_box" width="600" controls playsinline>
+      <video id="media_box" max-height="45%" controls playsinline>
          <source id="mediaplayer" type="video/mp4" src="">
       </video>
       <br>
@@ -25,7 +25,8 @@
       <input type="submit" value="Play/Load" onclick="playmovie()">
       <input type="submit" value="Previous" onclick="previous_episode()">
       <input type="submit" value="Next" onclick="next_episode()">
-      <input type="text" id="movie_text" style="width:60%">
+      <br>
+      <input type="text" id="movie_text" style="width:100%">
       <br>
    </div>
    <div id="media_data" style="position: absolute;overflow-y:scroll; overflow-x:clip; overflow-wrap:anywhere">

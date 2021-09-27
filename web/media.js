@@ -12,7 +12,7 @@ load_media_data();
 function java_formatting(){
    main = document.getElementById("main_page");
    media = document.getElementById("media_data");
-   if(document.width > document.height){
+   if(document.defaultView.innerWidth > document.defaultView.innerHeight){
       main.style.width = "50%";
       main.style.height = "100%";
       main.style.top = "20px";

@@ -5,7 +5,7 @@
      <link rel="stylesheet" href="media.css">
    </head>
    <body>
-   <div class="main_page style="position: absolute; width: 50%; top: 10px; left:0px">
+   <div id="main_page" class="main_page" style="position:absolute; left:0px; overflow-y:scroll; overflow-x:clip;">
       <a href="index.html">Home Page</a>
       <a href="security.html">Security</a>
       <a href="media.html">Media</a>
@@ -22,13 +22,13 @@
       </video>
       <br>
       <br>
-      <input type="text" id="movie_text">
       <input type="submit" value="Play/Load" onclick="playmovie()">
       <input type="submit" value="Previous" onclick="previous_episode()">
       <input type="submit" value="Next" onclick="next_episode()">
+      <input type="text" id="movie_text" style="width:60%">
       <br>
    </div>
-   <div id="media_data" style="position: absolute; width: 50%; height: 300px; top: 10px; left:50%; overflow-y: scroll">
+   <div id="media_data" style="position: absolute;overflow-y:scroll; overflow-x:clip; overflow-wrap:anywhere">
       <ul id="media_list">
       </ul>
    </div>

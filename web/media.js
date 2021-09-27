@@ -1,10 +1,39 @@
 
 var current_user = "";
 var current_user_data = "";
+var media_data_list = "";
+var media_list_array = [];
 
+java_formatting();
 loadcookies();
 load_user_data();
 load_media_data();
+
+function java_formatting(){
+   main = document.getElementById("main_page");
+   media = document.getElementById("media_data");
+   if(document.width > document.height){
+      main.style.width = "50%";
+      main.style.height = "100%";
+      main.style.top = "20px";
+      main.style.left = "0px";
+      
+      media.style.width = "50%";
+      media.style.height = "100%";
+      media.style.top = "20px";
+      media.style.left = "50%";
+   } else {
+      main.style.width = "100%";
+      main.style.height = "45%";
+      main.style.top = "20px";
+      main.style.left = "0px";
+      
+      media.style.width = "100%";
+      media.style.height = "50%";
+      media.style.top = "50%";
+      media.style.left = "0px";
+   }
+}
 
 function add_new_user(){
    new_user_text = document.getElementById("new_user_name_text");
@@ -87,7 +116,33 @@ function set_current_user(new_user_data){
       current_user_data = new_user_data;
       setCookie("current_user", current_user, 365);
       document.getElementById("movie_text").value = current_user_data.last_played;
+      show_list_element(current_user_data.last_played);
    }
+}
+
+function show_list_element(element_to_show){
+   media_list = document.getElementById("media_list");
+   list_element = document.getElementById(element_to_show);
+   // make sure all parent list elements are visible
+   next_parent = list_element.parentElement;
+   while(next_parent != media_list){
+      element = next_parent;
+      next_parent = element.parentElement;
+      class_string = element.classList.toString();
+      if(class_string.indexOf("nested") >= 0){
+         //span element is in sibling
+         element.classList.toggle("active");
+         for(var x=0;x<next_parent.childElementCount;x++){
+            class_string = next_parent.children[x].classList.toString();
+            if(class_string.indexOf("caret") >= 0){
+               next_parent.children[x].classList.toggle("caret-down");
+               break;
+            }
+         }
+      }
+      //next_parent = element.parentElement;
+   }
+   list_element.scrollIntoView(true);
 }
 
 function setlastplayed(){
@@ -183,9 +238,9 @@ function checkCookie(cname) {
 
 function add_list_event(item){
    item.addEventListener("click", function() {
-    this.parentElement.querySelector(".nested").classList.toggle("active");
-    this.classList.toggle("caret-down");
-  });
+   this.parentElement.querySelector(".nested").classList.toggle("active");
+   this.classList.toggle("caret-down");
+   });
 }
 
 function load_media_data(){
@@ -198,6 +253,7 @@ function update_media_list(folder_data){
    while(media_list.childElementCount > 0){
       media_list.removeChild(media_list.children[0]);
    }
+   media_list_array = [];
    iterate_media_list(media_list, media_data_list);
 }
 
@@ -208,12 +264,13 @@ function iterate_media_list(media_list, media_data){
          new_element = document.createElement('li');
          new_element.innerText = media_data[data].name;
          new_element.id = media_data[data].path;
+         media_list_array.push(media_data[data].path);
          new_element.addEventListener("click", set_media_text);
          media_list.append(new_element);
       } else {
          // folder item
          new_element = document.createElement('li');
-         //new_element.innerText = data;
+         new_element.name = "folder";
          new_span = document.createElement('span');
          new_span.className = "caret";
          new_span.innerText = data;
@@ -222,6 +279,7 @@ function iterate_media_list(media_list, media_data){
          //new_element.id = data;
          media_list.append(new_element);
          saved_list = document.createElement('ul');
+         saved_list.name = "subfolder"
          saved_list.className = "nested";
          //saved_list.innerText = data;
          //saved_list.id = data;
@@ -237,7 +295,153 @@ function playmovie(){
    var player_box = document.getElementById("media_box");
    var player_source = document.getElementById("mediaplayer");
    player_box.pause();
-   player_source.src = valuestring;
-   player_box.load();
+   if(player_source.src != valuestring){
+     player_box.currentTime = 0;
+     player_source.src = valuestring;
+     player_box.load();
+   }
+   player_box.play();
    setlastplayed();
+}
+
+function next_episode(){
+   media_list = document.getElementById("media_list");
+   current_item = document.getElementById("movie_text").value;
+   list_element = document.getElementById(current_item);
+   error = 0;
+   
+   // if we are already at end of current folder, move forward until we have a next sibling
+   while(list_element.nextSibling == null){
+      // need to go up 2 levels to find next item we can try
+      // search until we find next item or run out of items (get to top)
+      if(list_element.parentElement == media_list){
+         error = 1;
+         break;
+      } else {
+         // go up two levels (ul/li) to next folder
+         if(list_element.parentElement.name == "subfolder"){
+            list_element = list_element.parentElement;
+         } else {
+            error = 1;
+            break
+         }
+         if(list_element.parentElement.name == "folder"){
+            list_element = list_element.parentElement;
+         } else {
+            error = 1;
+            break;
+         }
+      }
+   }
+
+   if(error == 0){
+      // move to next item
+      list_element = list_element.nextSibling;
+      // move into any subfolders as deep as needed
+      while(list_element.name == "folder"){
+         if(list_element.childElementCount > 0){
+            // move into folder
+            list_element = list_element.children[0];
+         } else {
+            // should be child for sub folder
+            error = 1;
+            break;
+         }
+         // should find subfolder
+         while(list_element.name != "subfolder"){
+            if(list_element.nextSibling == null){
+               // ran out of siblings before finding subfolder
+               error = 1;
+               break;
+            } else {
+               // move to next sibling
+               list_element = list_element.nextSibling;
+            }
+         }
+         // found subfolder. Set item as first child
+         if(list_element.childElementCount > 0){
+            list_element = list_element.children[0];
+         } else {
+            // somehow didn't have item in subfolder
+            error = 1;
+            break;
+         }
+      }
+   }
+   if(error == 0){
+      document.getElementById("movie_text").value = list_element.id;
+      show_list_element(list_element.id);
+      playmovie();
+   }
+}
+
+function previous_episode(){
+   media_list = document.getElementById("media_list");
+   current_item = document.getElementById("movie_text").value;
+   list_element = document.getElementById(current_item);
+   error = 0;
+   
+   // if we are already at beginning of current folder, move back until we have a previous sibling
+   while(list_element.previousSibling == null){
+      // need to go up 2 levels to find next item we can try
+      // search until we find next item or run out of items (get to top)
+      if(list_element.parentElement == media_list){
+         error = 1;
+         break;
+      } else {
+         // go up two levels (ul/li) to next folder
+         if(list_element.parentElement.name == "subfolder"){
+            list_element = list_element.parentElement;
+         } else {
+            error = 1;
+            break
+         }
+         if(list_element.parentElement.name == "folder"){
+            list_element = list_element.parentElement;
+         } else {
+            error = 1;
+            break;
+         }
+      }
+   }
+
+   if(error == 0){
+      // move to previous item
+      list_element = list_element.previousSibling;
+      // move into any subfolders as deep as needed
+      while(list_element.name == "folder"){
+         if(list_element.childElementCount > 0){
+            // move into folder
+            list_element = list_element.children[0];
+         } else {
+            // should be child for sub folder
+            error = 1;
+            break;
+         }
+         // should find subfolder
+         while(list_element.name != "subfolder"){
+            if(list_element.nextSibling == null){
+               // ran out of siblings before finding subfolder
+               error = 1;
+               break;
+            } else {
+               // move to next sibling
+               list_element = list_element.nextSibling;
+            }
+         }
+         // found subfolder. Set item as last child
+         if(list_element.childElementCount > 0){
+            list_element = list_element.children[list_element.childElementCount-1];
+         } else {
+            // somehow didn't have item in subfolder
+            error = 1;
+            break;
+         }
+      }
+   }
+   if(error == 0){
+      document.getElementById("movie_text").value = list_element.id;
+      show_list_element(list_element.id);
+      playmovie();
+   }
 }

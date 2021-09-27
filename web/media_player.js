@@ -39,21 +39,21 @@ function set_episode(){
    setCookie("last_episode", global_episode, 365);
 }
 
-function next_episode(){
-   var object = document.getElementById("episode_num");
-   global_episode = global_episode + 1;
-   object.value = global_episode;
-   setCookie("last_episode", global_episode, 365);
-   playnaruto();
-}
+// function next_episode(){
+//    var object = document.getElementById("episode_num");
+//    global_episode = global_episode + 1;
+//    object.value = global_episode;
+//    setCookie("last_episode", global_episode, 365);
+//    playnaruto();
+// }
 
-function previous_episode(){
-   var object = document.getElementById("episode_num");
-   global_episode = global_episode - 1;
-   object.value = global_episode;
-   setCookie("last_episode", global_episode, 365);
-   playnaruto();
-}
+// function previous_episode(){
+//    var object = document.getElementById("episode_num");
+//    global_episode = global_episode - 1;
+//    object.value = global_episode;
+//    setCookie("last_episode", global_episode, 365);
+//    playnaruto();
+// }
 
 function loadcookies(){
    var ep_num = getCookie("last_episode");

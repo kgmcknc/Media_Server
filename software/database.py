@@ -20,7 +20,9 @@ file_type_list = [
 
 user_data_fields = {
    "user_name":1,
-   "last_played":1
+   "last_played":1,
+   "autoplay_type":1,
+   "autoplay_amount":1
 }
 
 def exists():

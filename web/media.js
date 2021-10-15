@@ -112,10 +112,10 @@ function check_autoplay(){
    }
 
    if(play_next){
-      next_episode = get_next_episode();
-      if(next_episode != -1){
-         document.getElementById("movie_text").value = next_episode;
-         show_list_element(next_episode);
+      episode = get_next_episode();
+      if(episode != -1){
+         document.getElementById("movie_text").value = episode;
+         show_list_element(episode);
          load_movie_data();
          setlastplayed();
       }
@@ -393,10 +393,10 @@ function load_movie_data(){
 }
 
 function next_episode(){
-   next_episode = get_next_episode();
-   if(next_episode != -1){
-      document.getElementById("movie_text").value = next_episode;
-      show_list_element(next_episode);
+   episode = get_next_episode();
+   if(episode != -1){
+      document.getElementById("movie_text").value = episode;
+      show_list_element(episode);
       load_movie_data();
       reset_autoplay_index();
       setlastplayed();
@@ -487,10 +487,10 @@ function check_media_end_of_folder(){
 }
 
 function previous_episode(){
-   previous_episode = get_previous_episode();
-   if(previous_episode != -1){
-      document.getElementById("movie_text").value = previous_episode;
-      show_list_element(previous_episode);
+   episode = get_previous_episode();
+   if(episode != -1){
+      document.getElementById("movie_text").value = episode;
+      show_list_element(episode);
       load_movie_data();
       reset_autoplay_index();
       setlastplayed();

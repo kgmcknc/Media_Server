@@ -1,16 +1,4 @@
 <?php
-   function write_log($log_msg)
-   {
-      $log_folder = "C:/Windows/Temp/php_output";
-      $log_filename = "php_output.txt";
-      if (!file_exists($log_folder))
-      {
-         mkdir($log_folder, 0777, true);
-      }
-      $log_file_data = $log_folder."/".$log_filename;
-      file_put_contents($log_file_data, $log_msg . "\n", FILE_APPEND);  
-   }
-
 	// media server proxy to pass from web page to c code listening on another tcp port
 	$ms_ip = array_key_exists('SERVER_ADDR',$_SERVER) ? $_SERVER['SERVER_ADDR'] : $_SERVER['LOCAL_ADDR'];
    if($ms_ip == "::1"){
@@ -78,4 +66,15 @@
 		echo "Empty Request";
 	}
 	
+   function write_log($log_msg)
+   {
+      $log_folder = "C:/Windows/Temp/php_output";
+      $log_filename = "php_output.txt";
+      if (!file_exists($log_folder))
+      {
+         mkdir($log_folder, 0777, true);
+      }
+      $log_file_data = $log_folder."/".$log_filename;
+      file_put_contents($log_file_data, $log_msg . "\n", FILE_APPEND);  
+   }
 ?>

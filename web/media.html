@@ -26,7 +26,7 @@
       </select>
       Autoplay Number: <input type="number" id="autoplaynumber" name="autoplaynumber" value=0 min="1" max="99" step="1" onchange="update_autoplay_amount()">
       <br>
-      <video id="media_box" style="max-height:45%" controls playsinline onended="check_autoplay()">
+      <video id="media_box" style="max-height:45%" controls playsinline preload="none" onended="check_autoplay()">
          <source id="mediaplayer" type="video/mp4" src="">
       </video>
       <br>

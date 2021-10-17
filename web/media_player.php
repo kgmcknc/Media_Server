@@ -7,7 +7,7 @@
 
    $my_media_basename = $_REQUEST["media_file"];//filter to have a trust filename
 
-   $file = "D:/" . $my_media_basename;
+   $file = $my_media_basename;
    
    if(!file_exists($file)){
      print_r("File Doesn't Exist");

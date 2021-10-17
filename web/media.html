@@ -11,12 +11,18 @@
       <a href="media.html">Media</a>
       <br>
       <br>
+      Folder: <select name="folderdropdown" id="folderdropdown" onchange="update_folder()">
+      </select>
+      <input type="text" id="new_folder_name_text">
+      <input type="submit" value="Create New Folder" onclick="add_new_folder()">
+      <input type="submit" value="Remove Current Folder" onclick="remove_current_folder()">
+      <input type="submit" value="Index Folder" onclick="index_media_folder()">
+      <br>
       User: <select name="userdropdown" id="userdropdown" onchange="update_user()">
       </select>
       <input type="text" id="new_user_name_text">
       <input type="submit" value="Create New User" onclick="add_new_user()">
       <input type="submit" value="Remove Current User" onclick="remove_current_user()">
-      <input type="submit" value="Index Media" onclick="index_media_folder('D:/Movies')">
       <br>
       AutoPlay: <select name="autoplaydropdown" id="autoplaydropdown" onchange="update_autoplay()">
          <option value="autoplay_off">Off</option>

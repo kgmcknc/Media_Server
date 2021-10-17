@@ -1,6 +1,7 @@
 
 var current_user = "";
 var current_user_data = "";
+var current_folder = "";
 var media_data_list = "";
 var media_list_array = [];
 
@@ -11,7 +12,7 @@ var autoplay_remaining = 0;
 java_formatting();
 loadcookies();
 load_user_data();
-load_media_data();
+load_folder_data();
 
 setInterval(second_pulse_update, 1000);
 
@@ -38,6 +39,75 @@ function java_formatting(){
       media.style.height = "50%";
       media.style.top = "50%";
       media.style.left = "20px";
+   }
+}
+
+function add_new_folder(){
+   new_folder_text = document.getElementById("new_folder_name_text");
+   new_folder_name = new_folder_text.value;
+   new_folder_text.value = "";
+   create_folder(new_folder_name);
+}
+
+function create_folder(new_folder_name){
+   set_db_data({"command":"add_media_folder","path":new_folder_name}, load_folder_data);
+}
+
+function remove_current_folder(){
+   if(current_folder != ""){
+      remove_folder(current_folder);
+   }
+}
+
+function remove_folder(folder_to_delete){
+   set_db_data({"command":"rem_media_folder","path":folder_to_delete}, load_folder_data);
+}
+
+function update_folder(){
+   folderlist = document.getElementById("folderdropdown");
+   if(folderlist.selectedIndex >= 0){
+      new_folder = folderlist[folderlist.selectedIndex].value;
+      if(new_folder != ""){
+         set_active_folder(new_folder);
+      }
+   }
+}
+
+function set_active_folder(new_folder){
+   current_folder = new_folder;
+   load_media_data(current_folder);
+}
+
+function load_folder_data(){
+   get_db_data({"command":"get_media_folders"}, load_folder_list);
+}
+
+function load_folder_list(folders){
+   folderlist = document.getElementById("folderdropdown");
+   // empty current list
+   while(folderlist.length > 0){
+      folderlist.remove(0);
+   }
+   // rebuild list from stored folders
+   for(x=0;x<folders.length;x++){
+      new_option = document.createElement("option");
+      new_option.text = folders[x];
+      folderlist.add(new_option);
+   }
+   if(current_folder == ""){
+      if(folderlist.length > 0){
+         set_active_folder(folderlist[0].value);
+      }
+   } else {
+      if(media_data_list == ""){
+         set_active_folder(folderlist[0].value);
+      }
+      // leave selection on current folder
+      for(x=0;x<folderlist.length;x++){
+         if(folderlist[x].value == current_folder){
+            folderlist.selectedIndex = x;
+         }
+      }
    }
 }
 
@@ -122,8 +192,8 @@ function check_autoplay(){
    }
 }
 
-function index_media_folder(folder_path){
-   set_db_data({"command":"index_media_folder","path":folder_path}, update_media_list);
+function index_media_folder(){
+   set_db_data({"command":"index_media_folder","path":current_folder}, update_media_list);
 }
 
 function set_media_text(){
@@ -235,6 +305,7 @@ function setlastplayed(){
 
 function loadcookies(){
    current_user = getCookie("current_user");
+   current_folder = getCookie("current_folder");
 }
 
 function get_db_data(request_data, callback){
@@ -326,13 +397,14 @@ function add_list_event(item){
    });
 }
 
-function load_media_data(){
-   get_db_data({"command":"get_media_data", "path":"D:/Movies"}, update_media_list);
+function load_media_data(folder){
+   get_db_data({"command":"get_media_data", "path":folder}, update_media_list);
 }
 
 function update_media_list(folder_data){
    media_data_list = folder_data.data;
    media_list = document.getElementById("media_list");
+   media_list.name = current_folder;
    while(media_list.childElementCount > 0){
       media_list.removeChild(media_list.children[0]);
    }

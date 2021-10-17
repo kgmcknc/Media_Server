@@ -230,7 +230,8 @@ def index_all_media(current_path):
             new_data["name"] = data.stem
             new_data["type"] = data.suffix
             pathname = data.as_posix()
-            pathname = pathname[pathname.find(data.parts[1]):]
+            # removing part 1 removes the "root"
+            #pathname = pathname[pathname.find(data.parts[1]):]
             new_data["path"] = pathname
             fullname = data.stem + data.suffix
             media_dict[fullname] = new_data

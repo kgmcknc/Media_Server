@@ -117,6 +117,7 @@
 
    function write_log($log_msg)
    {
+      global $enable_output_log;
       if($enable_output_log > 0){
          $log_folder = "C:/Windows/Temp/php_output";
          $log_filename = "php_output.txt";

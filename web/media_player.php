@@ -4,6 +4,7 @@
    //ob_implicit_flush(true);
    ignore_user_abort(true);
    ob_start();
+   $enable_output_log = 0;
 
    $my_media_basename = $_REQUEST["media_file"];//filter to have a trust filename
 
@@ -15,6 +16,7 @@
    }
 
    register_shutdown_function('shutdown');
+   set_exception_handler("my_error_handler");
    //write_log(print_r($_SERVER,1));
 
    write_log("");
@@ -115,14 +117,16 @@
 
    function write_log($log_msg)
    {
-      $log_folder = "C:/Windows/Temp/php_output";
-      $log_filename = "php_output.txt";
-      if (!file_exists($log_folder))
-      {
-         mkdir($log_folder, 0777, true);
+      if($enable_output_log > 0){
+         $log_folder = "C:/Windows/Temp/php_output";
+         $log_filename = "php_output.txt";
+         if (!file_exists($log_folder))
+         {
+            mkdir($log_folder, 0777, true);
+         }
+         $log_file_data = $log_folder."/".$log_filename;
+         file_put_contents($log_file_data, $log_msg . "\n", FILE_APPEND);
       }
-      $log_file_data = $log_folder."/".$log_filename;
-      file_put_contents($log_file_data, $log_msg . "\n", FILE_APPEND);
    }
 
    function shutdown()
@@ -137,11 +141,37 @@
       //ob_end_clean();
       if(connection_aborted() || (connection_status() != CONNECTION_NORMAL)){
          write_log("aborted");
+      } else {
+         ob_flush();
+         flush();
+         while(ob_get_level() > 0){
+            ob_end_flush();
+         }
       }
       write_log("Shutdown Function");
-      ob_flush();
-      flush();
-      while(ob_end_flush());
+      exit;
+   }
+
+   function my_error_handler()
+   {
+      //$a = error_get_last();
+      //fastcgi_finish_request();
+
+      //if ($a == null) {echo "No errors";}
+      //else {print_r($a);}
+      //ob_flush();
+      //flush();
+      //ob_end_clean();
+      if(connection_aborted() || (connection_status() != CONNECTION_NORMAL)){
+         write_log("aborted");
+      } else {
+         ob_flush();
+         flush();
+         while(ob_get_level() > 0){
+            ob_end_flush();
+         }
+      }
+      write_log("Error Function");
       exit;
    }
 

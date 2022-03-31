@@ -71,21 +71,40 @@ def process_main_instruction(instruction:global_data.instruction_class):
       while(main_thread.is_active()):
          pass
    
+   if(instruction_split[1] == "global"):
+      found_device = 0
+      found_ip = 0
+      global_id = int(instruction_split[2])
+      for device in device_list:
+         if(device.device_id == global_id):
+            found_device = 1
+            found_ip = device.ip_addr
+            break
+      if(found_device):
+         if(global_id == device_list[0].device_id):
+            # intended for this device
+            new_command = ""
+            for x in range(3, len(instruction_split)):
+               new_command = new_command + "/" + instruction_split[x]
+            instruction.command = new_command
+            print("Found global command!")
+            # command will be run below
+         else:
+            # intended for another device... send to that device
+            instruction.dst = found_ip
+            instruction.src = device_list[0].ip_addr
+            global_data.network_queue.put(instruction, block=False)
+
    if(instruction.command == "/heartbeat/ip_changed"):
       device_list[0].ip_addr = networking.get_my_ip()
       update_config = 1
 
-   if(instruction.command == "/heartbeat/ip_changed"):
+   if(instruction.command == "/heartbeat/new_packet"):
       update_device_list(instruction.data)
    
    if(instruction_split[1] == "database"):
       return_data = process_local_task(instruction)
       instruction.data = return_data
-      global_data.network_queue.put(instruction, block=False)
-
-   if(instruction_split[1] == "global_task"):
-      new_instruction = process_global_task(instruction)
-      instruction = new_instruction
       global_data.network_queue.put(instruction, block=False)
 
    if(update_config):
@@ -149,10 +168,6 @@ def process_local_task(instruction:global_data.instruction_class):
       global_data.media_queue.put(instruction)
 
    return instruction.data
-
-def process_global_task(instruction):
-   index_folder = 0
-   json_object = instruction.data
 
 def update_device_list(device_data):
    global device_list

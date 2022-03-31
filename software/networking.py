@@ -110,15 +110,26 @@ def network_listener(network_thread):
             if(new_queue_data.command == "/network/reload_config"):
                reload_devices = 1
             else:
-               for dev in local_socket_list:
-                  if(new_queue_data.socket == dev.socket):
-                     write_data = new_queue_data.data_to_json()
-                     packet_data = header_okay+header_content+str(len(write_data))+header_end+write_data
-                     write_data_encode = packet_data.encode()
-                     dev.socket.send(write_data_encode)
-                     dev.done = 1
-                     dev.socket.shutdown(socket.SHUT_RDWR)
-                     dev.socket.close()
+               split_data = new_queue_data.command.split("/")
+               if(split_data[1] == "global"):
+                  new_id = int(split_data[2])
+                  for dev in device_socket_list:
+                     if(new_id == dev.device_id):
+                        new_queue_data.socket = dev.socket
+                        write_data = {new_queue_data.command:new_queue_data.data}
+                        write_json = json.dumps(write_data)
+                        write_data_encode = write_json.encode()
+                        dev.socket.send(write_data_encode)
+               else:
+                  for dev in local_socket_list:
+                     if(new_queue_data.socket == dev.socket):
+                        write_data = new_queue_data.data_to_json()
+                        packet_data = header_okay+header_content+str(len(write_data))+header_end+write_data
+                        write_data_encode = packet_data.encode()
+                        dev.socket.send(write_data_encode)
+                        dev.done = 1
+                        dev.socket.shutdown(socket.SHUT_RDWR)
+                        dev.socket.close()
 
       # Process ready devices
       for dev in local_socket_list:
@@ -138,7 +149,6 @@ def network_listener(network_thread):
                instruction.socket = dev.socket
                global_data.main_queue.put(instruction)
                dev.active = 0
-               dev.is_get = 1
             else:
                if(data_string[0:4] == "POST"):
                   offset = data_string.find("q={")
@@ -155,7 +165,6 @@ def network_listener(network_thread):
                   #dev.socket.send(write_data_encode)
                   dev.active = 0
                   #dev.done = 1
-                  dev.is_get = 0
                   #dev.socket.shutdown(socket.SHUT_RDWR)
                   #dev.socket.close()
                else:
@@ -170,6 +179,15 @@ def network_listener(network_thread):
                dev.socket.close()
                dev.done = 1
                dev.active = 0
+            else:
+               instruction = global_data.instruction_class()
+               data_string = data.decode()
+               offset = data_string.find(":")
+               instruction.command = data_string[2:offset-1]
+               query_data = data_string[offset+1:len(data_string)-1]
+               instruction.data = json.loads(query_data)
+               instruction.socket = dev.socket
+               global_data.main_queue.put(instruction)
 
       # Remove old unconnected devices
       new_list = []
@@ -214,6 +232,11 @@ def network_listener(network_thread):
                   tx_list.append(tx_device.socket)
 
       rx_ready, tx_ready, x_ready = select.select(rx_list, tx_list, [], select_timeout)
+
+      for local_sock in local_socket_list:
+         local_sock.ready = 0
+      for dev_sock in device_socket_list:
+         dev_sock.ready = 0
 
       for ready in rx_ready:
          if(ready == serversocket):

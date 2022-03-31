@@ -42,6 +42,10 @@ function java_formatting(){
    }
 }
 
+function test_global(){
+   set_db_data({"/global/20210209464/test":"test_data"});
+}
+
 function add_new_folder(){
    new_folder_text = document.getElementById("new_folder_name_text");
    new_folder_name = new_folder_text.value;

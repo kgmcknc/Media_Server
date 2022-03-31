@@ -48,12 +48,14 @@ def send_broadcast_packet(packet_port, packet_data, packet_length):
    udp_tx_sock.bind(('',0))
    udp_tx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
    udp_tx_sock.sendto(packet_data, ('<broadcast>', packet_port))
+   udp_tx_sock.close()
 
 def receive_broadcast_packet(packet_port, packet_length):
    global udp_rx_sock
    udp_rx_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
    udp_rx_sock.bind(('',packet_port))
    udp_packet_data = udp_rx_sock.recvfrom(packet_length)
+   udp_rx_sock.close()
    return udp_packet_data
 
 def abort_broadcast_receive():
@@ -105,8 +107,8 @@ def network_listener(network_thread):
             #network queue was empty and timed out
             pass
          else:
-            if(new_queue_data.group == "network_tasks"):
-               process_instruction(new_queue_data)
+            if(new_queue_data.command == "/network/reload_config"):
+               reload_devices = 1
             else:
                for dev in local_socket_list:
                   if(new_queue_data.socket == dev.socket):
@@ -124,15 +126,13 @@ def network_listener(network_thread):
             dev.ready = 0
             data = dev.socket.recv(1024)
             instruction = global_data.instruction_class()
-            instruction.group = "local_tasks"
-            instruction.task = ""
+            instruction.command = "local_tasks"
             instruction.data = data.decode()
             if(instruction.data[0:3] == "GET"):
                offset = instruction.data.find("q={")
                end_offset = instruction.data.find("}")+1
                instruction.data = instruction.data[offset+2:end_offset]
                instruction.data = json.loads(instruction.data)
-               instruction.task = "get"
                instruction.socket = dev.socket
                global_data.main_queue.put(instruction)
                dev.active = 0
@@ -143,7 +143,6 @@ def network_listener(network_thread):
                   end_offset = instruction.data.find("}")+1
                   instruction.data = instruction.data[offset+2:end_offset]
                   instruction.data = json.loads(instruction.data)
-                  instruction.task = "post"
                   instruction.socket = dev.socket
                   global_data.main_queue.put(instruction)
                   #packet_data = header_okay+header_end
@@ -292,14 +291,6 @@ def load_devices_from_db():
             device_socket_list.append(new_sock)
    # old devices that need to be "deleted" from device list is handled in the loop
    # that way the socket can be closed if it's somehow still opened...
-
-
-def process_instruction(data):
-   global reload_devices
-   if(data.task == "reload_config"):
-      reload_devices = 1
-   
-
 
 #get database exists
 #set init database

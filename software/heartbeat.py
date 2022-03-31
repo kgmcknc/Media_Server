@@ -26,8 +26,7 @@ def heartbeat_keepalive(heartbeat_thread):
          last_ip = new_ip
          device_config.ip_addr = new_ip
          instruction = global_data.instruction_class()
-         instruction.group = "heartbeat_tasks"
-         instruction.task = "ip_changed"
+         instruction.command = "/heartbeat/ip_changed"
          global_data.main_queue.put(instruction)
       
       if(not global_data.heartbeat_queue.empty()): # check queue to see if current device config changed
@@ -35,7 +34,7 @@ def heartbeat_keepalive(heartbeat_thread):
          while(not global_data.heartbeat_queue.empty()):
             try:
                instruction = global_data.heartbeat_queue.get(block=False) # pull instruction from buffer until empty
-               if((instruction.group == "heartbeat_tasks") and (instruction.task == "reload_config")):
+               if(instruction.command == "/heartbeat/reload_config"):
                   device_config = database.get_device_config()
             except:
                #fifo was empty... move on
@@ -85,8 +84,7 @@ def receive_heartbeat_packet(heartbeat_data):
    #this_ip = networking.get_my_ip()
    if(1):#this_ip != heartbeat_data[1][0]):
       instruction = global_data.instruction_class()
-      instruction.group = "heartbeat_tasks"
-      instruction.task = "new_packet"
+      instruction.command = "/heartbeat/new_packet"
       packet_data = heartbeat_data[0].decode()
       packet_data = json.loads(packet_data[len(media_server_heartbeat_string):])
       instruction.data = devices.server_device_class(**packet_data)

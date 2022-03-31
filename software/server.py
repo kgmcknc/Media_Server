@@ -45,11 +45,9 @@ def server_main(main_thread):
       if(config_changed):
          print("Main config changed")
          instruction = global_data.instruction_class()
-         instruction.group = "heartbeat_tasks"
-         instruction.task = "reload_config"
+         instruction.command = "/heartbeat/reload_config"
          global_data.heartbeat_queue.put(instruction)
-         instruction.group = "network_tasks"
-         instruction.task = "reload_config"
+         instruction.command = "/network/reload_config"
          global_data.network_queue.put(instruction)
          config_changed = 0
       try:
@@ -63,34 +61,38 @@ def server_main(main_thread):
    server_shutdown()
    return
 
-def process_main_instruction(instruction):
+def process_main_instruction(instruction:global_data.instruction_class):
    global config_changed
    global device_list
    update_config = 0
+   instruction_split = instruction.command.split("/")
 
-   if(instruction.group == "system_tasks"):
-      if(instruction.task == "shutdown_delay"):
-         while(main_thread.is_active()):
-            pass
+   if(instruction.command == "/system/shutdown_delay"):
+      while(main_thread.is_active()):
+         pass
    
-   if(instruction.group == "heartbeat_tasks"):
-      if(instruction.task == "ip_changed"):
-         device_list[0].ip_addr = networking.get_my_ip()
-         update_config = 1
+   if(instruction.command == "/heartbeat/ip_changed"):
+      device_list[0].ip_addr = networking.get_my_ip()
+      update_config = 1
 
-      if(instruction.task == "new_packet"):
-         update_device_list(instruction.data)
+   if(instruction.command == "/heartbeat/ip_changed"):
+      update_device_list(instruction.data)
    
-   if(instruction.group == "local_tasks"):
+   if(instruction_split[0] == "local_tasks"):
       return_data = process_local_task(instruction)
       instruction.data = return_data
+      global_data.network_queue.put(instruction, block=False)
+
+   if(instruction_split[0] == "global_task"):
+      new_instruction = process_global_task(instruction)
+      instruction = new_instruction
       global_data.network_queue.put(instruction, block=False)
 
    if(update_config):
       database.update_db_device_config(device_list[0])
       config_changed = 1
 
-def process_local_task(instruction):
+def process_local_task(instruction:global_data.instruction_class):
    index_folder = 0
    json_object = instruction.data
    instruction.data["result"] = ""
@@ -121,6 +123,16 @@ def process_local_task(instruction):
       instruction.data["result"] = database.get_media_folders()
    if(json_object["command"] == "get_media_data"):
       instruction.data["result"] = database.get_media_data(json_object)
+
+   if(json_object["command"] == "add_media_link"):
+      #instruction.data = json_object
+      index_folder = database.add_media_link(json_object)
+   if(json_object["command"] == "rem_media_link"):
+      database.rem_media_link(json_object)
+   if(json_object["command"] == "get_media_links"):
+      instruction.data["result"] = database.get_media_links()
+   if(json_object["command"] == "get_media_link"):
+      instruction.data["result"] = database.get_media_link(json_object)
    
    if(json_object["command"] == "add_user"):
       instruction.data["result"] = database.add_user(json_object)
@@ -137,6 +149,10 @@ def process_local_task(instruction):
       global_data.media_queue.put(instruction)
 
    return instruction.data
+
+def process_global_task(instruction):
+   index_folder = 0
+   json_object = instruction.data
 
 def update_device_list(device_data):
    global device_list
@@ -163,8 +179,7 @@ def update_device_list(device_data):
 
    if(device_update):
       instruction = global_data.instruction_class()
-      instruction.group = "network_tasks"
-      instruction.task = "reload_config"
+      instruction.command = "/network/reload_config"
       global_data.network_queue.put(instruction)
 
 def update_device_timeouts():
@@ -187,6 +202,7 @@ def init_system():
    global device_timeouts
    if(database.exists()):
       database.open_server_db()
+      database.check_db()
    else:
       database.init_server_db()
    
@@ -208,8 +224,7 @@ def exit_handler(signum, frame):
       system_running = 0
       print("caught exit... shutting down")
       instruction = global_data.instruction_class()
-      instruction.group = "system_tasks"
-      instruction.task = "shutdown_delay"
+      instruction.command = "/system/shutdown_delay"
       global_data.main_queue.put(instruction, block=False)
       main_thread.stop_thread()
 

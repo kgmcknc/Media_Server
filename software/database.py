@@ -50,6 +50,24 @@ def init_server_db():
    
    init_features()
    init_media()
+   init_links()
+
+def check_db():
+   server_config = server_db["config"].find_one()
+   if(server_config == None):
+      init_config()
+   server_features = server_db["features"].find_one()
+   if(server_features == None):
+      init_features()
+   server_media = server_db["media"]
+   if(server_media == None):
+      init_media()
+   server_folders = server_media["media_folder_list"].find_one()
+   if(server_folders == None):
+      init_media()
+   server_links = server_media["media_link_list"].find_one()
+   if(server_links == None):
+      init_links()
 
 def init_config():
    random.seed()
@@ -86,6 +104,11 @@ def init_media():
    media_folder = server_db["media"]
    media_folder_list = media_folder["media_folder_list"]
    media_folder_list.insert_one({"path":"empty"})
+
+def init_links():
+   media_folder = server_db["media"]
+   media_link_list = media_folder["media_link_list"]
+   media_link_list.insert_one({"src_path":"empty", "dst_path":"empty"})
 
 def add_user(user_data):
    if(len(user_data["user_name"]) > 0):
@@ -199,6 +222,63 @@ def get_media_data(folder_data):
    folder_data = db_media_folder_list.find_one(db_query, {"_id":0})
    if(folder_data != None):
       return folder_data
+   else:
+      return "DB_ERR"
+
+def add_media_link(link_data):
+   dst_path_obj = Path(link_data["dst_path"])
+   if(dst_path_obj.exists):
+      media_folder = server_db["media"]
+      media_link_list = media_folder["media_link_list"]
+      src_path_string = link_data["src_path"]
+      dst_path_string = dst_path_obj.as_posix()
+      db_query = {"src_path":src_path_string, "dst_path":dst_path_string}
+      db_entry = {"src_path":src_path_string, "dst_path":dst_path_string}
+      results = media_link_list.find_one(db_query)
+      if(results == None):
+         media_link_list.insert_one(db_entry)
+         return 1
+      else:
+         return "DB_ERR"
+   else:
+      return "DB_ERR"
+
+def rem_media_link(link_data):
+   dst_path_obj = Path(link_data["dst_path"])
+   media_folder = server_db["media"]
+   media_link_list = media_folder["media_link_list"]
+   src_path_string = link_data["src_path"]
+   dst_path_string = dst_path_obj.as_posix()
+   db_query = {"src_path":src_path_string, "dst_path":dst_path_string}
+   removed = media_link_list.delete_one(db_query)
+   if(removed):
+      return 1
+   else:
+      return "DB_ERR"
+
+def get_media_links():
+   link_list = []
+   db_media = server_db["media"]
+   db_media_link_list = db_media["media_link_list"]
+   db_link_list = db_media_link_list.find({},{"_id":0})
+   db_list = list(db_link_list)
+   if(db_list):
+      for links in db_list:
+         link_dict = {"src_path":links["src"],"dst_path":links["dst_path"]}
+         link_list.append(link_dict)
+      return link_list
+   else:
+      return "DB_ERR"
+
+def get_media_link(link_data):
+   db_media = server_db["media"]
+   db_media_link_list = db_media["media_link_list"]
+   db_query = {"src_path":link_data["src_path"]}
+   link_data = db_media_link_list.find_one(db_query, {"_id":0})
+   dst_path_obj = Path(link_data["dst_path"])
+   dst_path_string = dst_path_obj.as_posix()
+   if(link_data != None):
+      return link_data
    else:
       return "DB_ERR"
 

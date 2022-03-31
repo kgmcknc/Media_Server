@@ -50,7 +50,7 @@ function add_new_folder(){
 }
 
 function create_folder(new_folder_name){
-   set_db_data({"command":"add_media_folder","path":new_folder_name}, load_folder_data);
+   set_db_data({"/database/add_media_folder":"new_folder_name"}, load_folder_data);
 }
 
 function remove_current_folder(){
@@ -60,7 +60,7 @@ function remove_current_folder(){
 }
 
 function remove_folder(folder_to_delete){
-   set_db_data({"command":"rem_media_folder","path":folder_to_delete}, load_folder_data);
+   set_db_data({"/database/rem_media_folder":folder_to_delete}, load_folder_data);
 }
 
 function update_folder(){
@@ -79,7 +79,7 @@ function set_active_folder(new_folder){
 }
 
 function load_folder_data(){
-   get_db_data({"command":"get_media_folders"}, load_folder_list);
+   get_db_data({"/database/get_media_folders":""}, load_folder_list);
 }
 
 function load_folder_list(folders){
@@ -119,7 +119,7 @@ function add_new_user(){
 }
 
 function create_user(new_user_name){
-   set_db_data({"command":"add_user","user_name":new_user_name}, load_user_data);
+   set_db_data({"/database/add_user":new_user_name}, load_user_data);
 }
 
 function remove_current_user(){
@@ -129,7 +129,7 @@ function remove_current_user(){
 }
 
 function remove_user(user_to_delete){
-   set_db_data({"command":"rem_user","user_name":user_to_delete}, load_user_data);
+   set_db_data({"/database/rem_user":user_to_delete}, load_user_data);
 }
 
 function update_user(){
@@ -147,14 +147,14 @@ function update_autoplay(){
    if(autoplaylist.selectedIndex >= 0){
       autoplay_type = autoplaylist[autoplaylist.selectedIndex].value;
       if(autoplay_type != ""){
-         set_db_data({"command":"set_user_data","user_name":current_user,"update_field":"autoplay_type", "update_data":autoplay_type}, reset_autoplay_index());
+         set_db_data({"/database/set_user_data":{"user_name":current_user,"update_field":"autoplay_type", "update_data":autoplay_type}}, reset_autoplay_index());
       }
    }
 }
 
 function update_autoplay_amount(){
    autoplay_amount = document.getElementById("autoplaynumber").value;
-   set_db_data({"command":"set_user_data","user_name":current_user,"update_field":"autoplay_amount", "update_data":autoplay_amount}, reset_autoplay_index());
+   set_db_data({"/database/set_user_data":{"user_name":current_user,"update_field":"autoplay_amount", "update_data":autoplay_amount}}, reset_autoplay_index());
 }
 
 function reset_autoplay_index(){
@@ -193,7 +193,7 @@ function check_autoplay(){
 }
 
 function index_media_folder(){
-   set_db_data({"command":"index_media_folder","path":current_folder}, update_media_list);
+   set_db_data({"/database/index_media_folder":current_folder}, update_media_list);
 }
 
 function set_media_text(){
@@ -203,11 +203,11 @@ function set_media_text(){
 }
 
 function set_active_user(new_user){
-   get_db_data({"command":"get_user_data","user_name":new_user}, set_current_user);
+   get_db_data({"/database/get_user_data":new_user}, set_current_user);
 }
 
 function load_user_data(){
-   get_db_data({"command":"get_users"}, load_user_list);
+   get_db_data({"/database/get_users":""}, load_user_list);
 }
 
 function load_user_list(users){
@@ -224,11 +224,11 @@ function load_user_list(users){
    }
    if(current_user == ""){
       if(userlist.length > 0){
-         get_db_data({"command":"get_user_data","user_name":userlist[0].value}, set_current_user);
+         get_db_data({"/database/get_user_data":userlist[0].value}, set_current_user);
       }
    } else {
       if(current_user_data == ""){
-         get_db_data({"command":"get_user_data","user_name":userlist[0].value}, set_current_user);
+         get_db_data({"/database/get_user_data":userlist[0].value}, set_current_user);
       }
       // leave selection on current user
       for(x=0;x<userlist.length;x++){
@@ -265,8 +265,8 @@ function set_current_user(new_user_data){
          }
          autoplayinput.value = autoplay_amount;
       } else {
-         set_db_data({"command":"set_user_data","user_name":current_user,"update_field":"autoplay_type", "update_data":autoplaylist.value});
-         set_db_data({"command":"set_user_data","user_name":current_user,"update_field":"autoplay_amount", "update_data":autoplayinput.value});
+         set_db_data({"/database/set_user_data":{"user_name":current_user,"update_field":"autoplay_type", "update_data":autoplaylist.value}});
+         set_db_data({"/database/set_user_data":{"user_name":current_user,"update_field":"autoplay_amount", "update_data":autoplayinput.value}});
       }
    }
 }
@@ -300,7 +300,7 @@ function show_list_element(element_to_show){
 
 function setlastplayed(){
    last_item = document.getElementById("movie_text").value;
-   set_db_data({"command":"set_user_data","user_name":current_user,"update_field":"last_played", "update_data":last_item});
+   set_db_data({"/database/set_user_data":{"user_name":current_user,"update_field":"last_played", "update_data":last_item}});
 }
 
 function loadcookies(){
@@ -310,7 +310,7 @@ function loadcookies(){
 
 function get_db_data(request_data, callback){
    var xmlhttp;
-   var object = request_data;//{"command":"get_user_data","user_name":"test_user"};
+   var object = request_data;
    var valuestring = JSON.stringify(object);
    
    if (window.XMLHttpRequest) {
@@ -325,8 +325,8 @@ function get_db_data(request_data, callback){
       if (this.readyState == 4 && this.status == 200) {
          if(callback){
             response_json = JSON.parse(this.responseText);
-            if(response_json.result != "DB_ERR"){
-               callback(response_json.result);
+            if(response_json != "DB_ERR"){
+               callback(response_json);
             }
          }
       }
@@ -335,7 +335,7 @@ function get_db_data(request_data, callback){
 
 function set_db_data(request_data, callback){
    var xmlhttp;
-   var object = request_data;//{"command":"get_user_data","user_name":"test_user"};
+   var object = request_data;
    var valuestring = JSON.stringify(object);
    
    if (window.XMLHttpRequest) {
@@ -350,8 +350,8 @@ function set_db_data(request_data, callback){
       if (this.readyState == 4 && this.status == 200) {
          if(callback){
             response_json = JSON.parse(this.responseText);
-            if(response_json.result != "DB_ERR"){
-               callback(response_json.result);
+            if(response_json != "DB_ERR"){
+               callback(response_json);
             }
          }
       }
@@ -398,7 +398,7 @@ function add_list_event(item){
 }
 
 function load_media_data(folder){
-   get_db_data({"command":"get_media_data", "path":folder}, update_media_list);
+   get_db_data({"/database/get_media_data":folder}, update_media_list);
 }
 
 function update_media_list(folder_data){

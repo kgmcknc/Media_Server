@@ -126,23 +126,28 @@ def network_listener(network_thread):
             dev.ready = 0
             data = dev.socket.recv(1024)
             instruction = global_data.instruction_class()
-            instruction.command = "local_tasks"
-            instruction.data = data.decode()
-            if(instruction.data[0:3] == "GET"):
-               offset = instruction.data.find("q={")
-               end_offset = instruction.data.find("}")+1
-               instruction.data = instruction.data[offset+2:end_offset]
-               instruction.data = json.loads(instruction.data)
+            data_string = data.decode()
+            if(data_string[0:3] == "GET"):
+               offset = data_string.find("q={")
+               end_offset = data_string.rfind("}")+1
+               query_string = data_string[offset+2:end_offset]
+               offset = query_string.find(":")
+               instruction.command = query_string[2:offset-1]
+               query_data = query_string[offset+1:len(query_string)-1]
+               instruction.data = json.loads(query_data)
                instruction.socket = dev.socket
                global_data.main_queue.put(instruction)
                dev.active = 0
                dev.is_get = 1
             else:
-               if(instruction.data[0:4] == "POST"):
-                  offset = instruction.data.find("q={")
-                  end_offset = instruction.data.find("}")+1
-                  instruction.data = instruction.data[offset+2:end_offset]
-                  instruction.data = json.loads(instruction.data)
+               if(data_string[0:4] == "POST"):
+                  offset = data_string.find("q={")
+                  end_offset = data_string.rfind("}")+1
+                  query_string = data_string[offset+2:end_offset]
+                  offset = query_string.find(":")
+                  instruction.command = query_string[2:offset-1]
+                  query_data = query_string[offset+1:len(query_string)-1]
+                  instruction.data = json.loads(query_data)
                   instruction.socket = dev.socket
                   global_data.main_queue.put(instruction)
                   #packet_data = header_okay+header_end

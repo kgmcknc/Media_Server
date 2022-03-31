@@ -17,8 +17,8 @@ def run_media_player(player_thread):
    return
 
 
-def process_instruction(instruction):
-   if(instruction.data["command"] == "add_media_folder"):
-      database.index_media_folder(instruction.data["path"])
-   if(instruction.data["command"] == "index_media_folder"):
-      database.index_media_folder(instruction.data["path"])
+def process_instruction(instruction:global_data.instruction_class):
+   if(instruction.command == "add_media_folder"):
+      database.index_media_folder(instruction.data)
+   if(instruction.command == "index_media_folder"):
+      database.index_media_folder(instruction.data)

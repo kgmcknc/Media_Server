@@ -1,9 +1,13 @@
 <?php
-
+   set_time_limit(0);
+   
+   while(ob_get_level() > 0){
+      ob_end_clean();
+   }
    //while(ob_end_clean());
-   //ob_implicit_flush(true);
-   ignore_user_abort(true);
    ob_start();
+   ob_implicit_flush(true);
+   ignore_user_abort(true);
    $enable_output_log = 0;
 
    $my_media_basename = $_REQUEST["media_file"];//filter to have a trust filename
@@ -143,9 +147,9 @@
       if(connection_aborted() || (connection_status() != CONNECTION_NORMAL)){
          write_log("aborted");
       } else {
-         ob_flush();
-         flush();
          while(ob_get_level() > 0){
+            ob_flush();
+            flush();
             ob_end_flush();
          }
       }
@@ -156,7 +160,7 @@
    function my_error_handler()
    {
       //$a = error_get_last();
-      //fastcgi_finish_request();
+      //
 
       //if ($a == null) {echo "No errors";}
       //else {print_r($a);}
@@ -166,9 +170,9 @@
       if(connection_aborted() || (connection_status() != CONNECTION_NORMAL)){
          write_log("aborted");
       } else {
-         ob_flush();
-         flush();
          while(ob_get_level() > 0){
+            ob_flush();
+            flush(); 
             ob_end_flush();
          }
       }

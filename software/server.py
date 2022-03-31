@@ -78,12 +78,12 @@ def process_main_instruction(instruction:global_data.instruction_class):
    if(instruction.command == "/heartbeat/ip_changed"):
       update_device_list(instruction.data)
    
-   if(instruction_split[0] == "local_tasks"):
+   if(instruction_split[1] == "database"):
       return_data = process_local_task(instruction)
       instruction.data = return_data
       global_data.network_queue.put(instruction, block=False)
 
-   if(instruction_split[0] == "global_task"):
+   if(instruction_split[1] == "global_task"):
       new_instruction = process_global_task(instruction)
       instruction = new_instruction
       global_data.network_queue.put(instruction, block=False)
@@ -95,16 +95,16 @@ def process_main_instruction(instruction:global_data.instruction_class):
 def process_local_task(instruction:global_data.instruction_class):
    index_folder = 0
    json_object = instruction.data
-   instruction.data["result"] = ""
+   instruction.data = ""
    #instruction.data = {}
    
-   if(json_object["command"] == "link_device"):
+   if(instruction.command == "/database/link_device"):
       for dev in device_list:
          if(dev.device_id == json_object["device_id"]):
             database.add_linked_device(json_object["device_id"])
             config_changed = 1
             break
-   if(json_object["command"] == "update_config"):
+   if(instruction.command == "/database/update_config"):
       json_object.pop("command")
       for data in json_object:
          if((data == 'device_id') or (data == '_id')):
@@ -112,38 +112,38 @@ def process_local_task(instruction:global_data.instruction_class):
          else:
             setattr(device_list[0], data, json_object[data])
       update_config = 1
-   if(json_object["command"] == "add_media_folder"):
+   if(instruction.command == "/database/add_media_folder"):
       #instruction.data = json_object
       index_folder = database.add_media_folder(json_object)
-   if(json_object["command"] == "rem_media_folder"):
+   if(instruction.command == "/database/rem_media_folder"):
       database.rem_media_folder(json_object)
-   if(json_object["command"] == "index_media_folder"):
+   if(instruction.command == "/database/index_media_folder"):
       index_folder = 1
-   if(json_object["command"] == "get_media_folders"):
-      instruction.data["result"] = database.get_media_folders()
-   if(json_object["command"] == "get_media_data"):
-      instruction.data["result"] = database.get_media_data(json_object)
+   if(instruction.command == "/database/get_media_folders"):
+      instruction.data = database.get_media_folders()
+   if(instruction.command == "/database/get_media_data"):
+      instruction.data = database.get_media_data(json_object)
 
-   if(json_object["command"] == "add_media_link"):
+   if(instruction.command == "/database/add_media_link"):
       #instruction.data = json_object
       index_folder = database.add_media_link(json_object)
-   if(json_object["command"] == "rem_media_link"):
+   if(instruction.command == "/database/rem_media_link"):
       database.rem_media_link(json_object)
-   if(json_object["command"] == "get_media_links"):
-      instruction.data["result"] = database.get_media_links()
-   if(json_object["command"] == "get_media_link"):
-      instruction.data["result"] = database.get_media_link(json_object)
+   if(instruction.command == "/database/get_media_links"):
+      instruction.data = database.get_media_links()
+   if(instruction.command == "/database/get_media_link"):
+      instruction.data = database.get_media_link(json_object)
    
-   if(json_object["command"] == "add_user"):
-      instruction.data["result"] = database.add_user(json_object)
-   if(json_object["command"] == "rem_user"):
-      instruction.data["result"] = database.rem_user(json_object)
-   if(json_object["command"] == "get_users"):
-      instruction.data["result"] = database.get_users()
-   if(json_object["command"] == "get_user_data"):
-      instruction.data["result"] = database.get_user_data(json_object)
-   if(json_object["command"] == "set_user_data"):
-      instruction.data["result"] = database.set_user_data(json_object)
+   if(instruction.command == "/database/add_user"):
+      instruction.data = database.add_user(json_object)
+   if(instruction.command == "/database/rem_user"):
+      instruction.data = database.rem_user(json_object)
+   if(instruction.command == "/database/get_users"):
+      instruction.data = database.get_users()
+   if(instruction.command == "/database/get_user_data"):
+      instruction.data = database.get_user_data(json_object)
+   if(instruction.command == "/database/set_user_data"):
+      instruction.data = database.set_user_data(json_object)
    
    if(index_folder):
       global_data.media_queue.put(instruction)

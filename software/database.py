@@ -110,12 +110,12 @@ def init_links():
    media_link_list = media_folder["media_link_list"]
    media_link_list.insert_one({"src_path":"empty", "dst_path":"empty"})
 
-def add_user(user_data):
-   if(len(user_data["user_name"]) > 0):
+def add_user(user_name):
+   if(len(user_name) > 0):
       media_db = server_db["media"]
       user_list_db = media_db["user_list"]
-      db_query = {"user_name":user_data["user_name"]}
-      db_entry = {"user_name":user_data["user_name"]}
+      db_query = {"user_name":user_name}
+      db_entry = {"user_name":user_name}
       results = user_list_db.find_one(db_query)
       if(results == None):
          user_list_db.insert_one(db_entry)
@@ -125,10 +125,10 @@ def add_user(user_data):
    else:
       return "DB_ERR"
 
-def rem_user(user_data):
+def rem_user(user_name):
    media_db = server_db["media"]
    user_list_db = media_db["user_list"]
-   db_query = {"user_name":user_data["user_name"]}
+   db_query = {"user_name":user_name}
    removed = user_list_db.delete_one(db_query)
    if(removed):
       return 1
@@ -148,10 +148,10 @@ def get_users():
    else:
       return "DB_ERR"
 
-def get_user_data(user):
+def get_user_data(user_name):
    media_db = server_db["media"]
    user_list_db = media_db["user_list"]
-   db_query = {"user_name":user["user_name"]}
+   db_query = {"user_name":user_name}
    user_data = user_list_db.find_one(db_query, {"_id":0})
    if(user_data != None):
       return user_data
@@ -171,8 +171,8 @@ def set_user_data(user):
    else:
       return "DB_ERR"
 
-def add_media_folder(folder_data):
-   path_obj = Path(folder_data["path"])
+def add_media_folder(folder_path):
+   path_obj = Path(folder_path)
    if(path_obj.exists):
       media_folder = server_db["media"]
       media_folder_list = media_folder["media_folder_list"]
@@ -188,8 +188,8 @@ def add_media_folder(folder_data):
    else:
       return "DB_ERR"
 
-def rem_media_folder(folder_data):
-   path_obj = Path(folder_data["path"])
+def rem_media_folder(folder_path):
+   path_obj = Path(folder_path)
    media_folder = server_db["media"]
    media_folder_list = media_folder["media_folder_list"]
    path_string = path_obj.as_posix()
@@ -213,8 +213,8 @@ def get_media_folders():
    else:
       return "DB_ERR"
 
-def get_media_data(folder_data):
-   path_obj = Path(folder_data["path"])
+def get_media_data(folder_path):
+   path_obj = Path(folder_path)
    db_media = server_db["media"]
    db_media_folder_list = db_media["media_folder_list"]
    path_string = path_obj.as_posix()

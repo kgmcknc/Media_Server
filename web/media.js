@@ -11,6 +11,7 @@ var autoplay_remaining = 0;
 
 java_formatting();
 loadcookies();
+get_device_list();
 load_user_data();
 load_folder_data();
 
@@ -208,6 +209,25 @@ function set_media_text(){
 
 function set_active_user(new_user){
    get_db_data({"/database/get_user_data":new_user}, set_current_user);
+}
+
+function get_device_list(){
+   get_db_data({"/database/get_db_devices":""}, load_device_list);
+}
+
+function load_device_list(devices){
+   devicelist = document.getElementById("devicedropdown");
+   device_list_array = devices
+   // empty current list
+   while(devicelist.length > 0){
+      devicelist.remove(0);
+   }
+   // rebuild list from stored devices
+   for(x=0;x<devices.length;x++){
+      new_option = document.createElement("option");
+      new_option.text = devices[x].name;
+      devicelist.add(new_option);
+   }
 }
 
 function load_user_data(){

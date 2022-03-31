@@ -403,5 +403,12 @@ def add_linked_device(device_id):
    config.linked_devices.append(device_id)
    update_db_device_config(config)
 
+def rem_linked_device(device_id):
+   device_config = server_db["config"]
+   config_data = device_config.find_one()
+   config = devices.server_device_class(**config_data)
+   config.linked_devices.remove(device_id)
+   update_db_device_config(config)
+
 def set_db_device_fields(device_id, updates):
    pass

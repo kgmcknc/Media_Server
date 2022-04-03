@@ -21,6 +21,8 @@ config_changed = 0
 skips_till_timeout = 4
 system_running = 1
 
+saved_socket = 0
+
 device_list = []
 device_timeouts = []
 
@@ -44,11 +46,12 @@ def server_main(main_thread):
       # queue is used to return data back to website 
       if(config_changed):
          print("Main config changed")
-         instruction = global_data.instruction_class()
-         instruction.command = "/heartbeat/reload_config"
-         global_data.heartbeat_queue.put(instruction)
-         instruction.command = "/network/reload_config"
-         global_data.network_queue.put(instruction)
+         hb_instruction = global_data.instruction_class()
+         hb_instruction.command = "/heartbeat/reload_config"
+         global_data.heartbeat_queue.put(hb_instruction)
+         nw_instruction = global_data.instruction_class()
+         nw_instruction.command = "/network/reload_config"
+         global_data.network_queue.put(nw_instruction)
          config_changed = 0
       try:
          new_main_instruction = global_data.main_queue.get(timeout=global_data.main_queue_timeout)
@@ -64,54 +67,97 @@ def server_main(main_thread):
 def process_main_instruction(instruction:global_data.instruction_class):
    global config_changed
    global device_list
+   global saved_socket
    update_config = 0
    instruction_split = instruction.command.split("/")
-
-   if(instruction.command == "/system/shutdown_delay"):
-      while(main_thread.is_active()):
-         pass
+   process_instruction = 0
    
-   if(instruction_split[1] == "global"):
+   if(instruction.is_global):
+      process_instruction = 0
       found_device = 0
       found_ip = 0
-      global_id = int(instruction_split[2])
       for device in device_list:
-         if(device.device_id == global_id):
+         if(device.device_id == instruction.global_id):
             found_device = 1
             found_ip = device.ip_addr
             break
       if(found_device):
-         if(global_id == device_list[0].device_id):
-            # intended for this device
-            new_command = ""
-            for x in range(3, len(instruction_split)):
-               new_command = new_command + "/" + instruction_split[x]
-            instruction.command = new_command
-            print("Found global command!")
-            # command will be run below
+         if(instruction.src == device_list[0].ip_addr):
+            # instruction was received from this device
+            # lets see if it's intended for this device or another device
+            if((instruction.dst == device_list[0].ip_addr) and (instruction.global_id == device_list[0].device_id)):
+               print("Global packet src and dst the same... odd... process or drop?")
+               # dropping for now...
+            else:
+               # intended for another device... send to that device
+               #print("Global packet forwarded")
+               instruction.dst = found_ip
+               saved_socket = instruction.socket
+               forward_instruction = instruction.copy()
+               global_data.network_queue.put(forward_instruction, block=False)
+               # add to global message queue here...
          else:
-            # intended for another device... send to that device
-            instruction.dst = found_ip
-            instruction.src = device_list[0].ip_addr
-            global_data.network_queue.put(instruction, block=False)
+            # instrucion was received from another device
+            # lets see if it's intended for processing on this device or if it's a response from other device
+            if((instruction.dst == device_list[0].ip_addr) and (instruction.global_id == device_list[0].device_id)):
+               # intended for this device
+               old_ip = instruction.src
+               instruction.src = instruction.dst
+               instruction.dst = old_ip
+               process_instruction = 1
+               #print("Global packet received")
+               # command will be run below and be returned to src device
+            else:
+               # global packet response to be returned to this device network
+               # find in global message queue at this point...
+               #print("Global packet response")
+               # socket should be pulled from corresponding queue... not the saved global
+               instruction.socket = saved_socket
+               response_instruction = instruction.copy()
+               global_data.network_queue.put(response_instruction, block=False)
 
-   if(instruction.command == "/heartbeat/ip_changed"):
-      device_list[0].ip_addr = networking.get_my_ip()
-      update_config = 1
+            # here we need to put the global command in a queue with the instruction socket it was 
+            # received from and the command
+            # then when we receive the socket again we can check src/dst to see if it's a transmit
+            # or a response and know whether to send to other device or send back up to web
+            # need to check to make sure device is still connected and if not, send response back
+            # up to webpage. Also make sure in network we don't send up to web if that socket dies...
+            # it'll probably just get dropped in networking
+   else:
+      process_instruction = 1
 
-   if(instruction.command == "/heartbeat/new_packet"):
-      update_device_list(instruction.data)
-   
-   if(instruction_split[1] == "database"):
-      return_data = process_local_task(instruction)
-      instruction.data = return_data
-      global_data.network_queue.put(instruction, block=False)
+   if(process_instruction):
+      if(instruction.command == "/system/shutdown_delay"):
+         while(main_thread.is_active()):
+            pass
+
+      if(instruction.command == "/heartbeat/ip_changed"):
+         device_list[0].ip_addr = networking.get_my_ip()
+         update_config = 1
+
+      if(instruction.command == "/heartbeat/new_packet"):
+         update_device_list(instruction.data)
+      
+      if((len(instruction_split) > 1) and (instruction_split[1] == "database")):
+         return_data = process_local_task(instruction)
+         instruction.data = return_data
+         nw_instruction = instruction.copy()
+         global_data.network_queue.put(nw_instruction, block=False)
+
+      if((len(instruction_split) > 1) and (instruction_split[1] == "media")):
+         media_instruction = instruction.copy()
+         global_data.media_queue.put(media_instruction, block=False)
+
+      if(instruction.is_global and instruction.global_done):
+         global_instruction = instruction.copy()
+         global_data.network_queue.put(global_instruction, block=False)
 
    if(update_config):
       database.update_db_device_config(device_list[0])
       config_changed = 1
 
 def process_local_task(instruction:global_data.instruction_class):
+   global config_changed
    index_folder = 0
    json_object = instruction.data
    instruction.data = ""
@@ -130,7 +176,7 @@ def process_local_task(instruction:global_data.instruction_class):
             print("not updating id stuff")
          else:
             setattr(device_list[0], data, json_object[data])
-      update_config = 1
+      config_changed = 1
    if(instruction.command == "/database/add_media_folder"):
       #instruction.data = json_object
       index_folder = database.add_media_folder(json_object)

@@ -4,6 +4,7 @@ var current_user_data = "";
 var current_folder = "";
 var media_data_list = "";
 var media_list_array = [];
+var device_list_array = [];
 
 var autoplay_type = 0;
 var autoplay_amount = 0;
@@ -43,8 +44,16 @@ function java_formatting(){
    }
 }
 
-function test_global(){
-   set_db_data({"/global/20210209464/test":"test_data"});
+function set_display(value){
+   devicelist = document.getElementById("devicedropdown");
+   if(devicelist.selectedIndex >= 0){
+      device = device_list_array[devicelist.selectedIndex];
+      device_id = device.device_id;
+      command = "/media/set_display"
+      command_string = '{"/global/' + device_id + command + '":"' + value + '"}'
+      command_json = JSON.parse(command_string)
+      set_db_data(command_json);
+   }
 }
 
 function add_new_folder(){

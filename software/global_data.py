@@ -13,6 +13,9 @@ media_queue = queue.Queue()
 media_queue_timeout = 4
 
 class instruction_class:
+   is_global = 0
+   global_done = 0
+   global_id = 0
    src = 0
    dst = 0
    socket = 0
@@ -21,10 +24,14 @@ class instruction_class:
 
    def __init__(self, **instruction_info):
       for data_select in instruction_info:
-         setattr(self, data_select, instruction_info[key])
+         setattr(self, data_select, instruction_info[data_select])
    
    def data_to_json(self):
       return json.dumps(self.data)
+
+   def copy(self):
+      current_vars = vars(self)
+      return instruction_class(**current_vars)
 
 instruction_map = [
    "/heartbeat/reload_config",
@@ -35,6 +42,9 @@ instruction_map = [
 
    "/system/shutdown_delay",
 
+   "/media/display_on",
+   "/media/display_off",
+   "/media/display_active",
    "/media/play",
    "/media/pause",
 

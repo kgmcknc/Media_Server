@@ -27,7 +27,8 @@ def heartbeat_keepalive(heartbeat_thread):
          device_config.ip_addr = new_ip
          instruction = global_data.instruction_class()
          instruction.command = "/heartbeat/ip_changed"
-         global_data.main_queue.put(instruction)
+         hb_instruction = instruction.copy()
+         global_data.main_queue.put(hb_instruction)
       
       if(not global_data.heartbeat_queue.empty()): # check queue to see if current device config changed
          print("Updating Heartbeat Device Config From Database")
@@ -88,7 +89,8 @@ def receive_heartbeat_packet(heartbeat_data):
       packet_data = heartbeat_data[0].decode()
       packet_data = json.loads(packet_data[len(media_server_heartbeat_string):])
       instruction.data = devices.server_device_class(**packet_data)
-      global_data.main_queue.put(instruction)
+      hb_instruction = instruction.copy()
+      global_data.main_queue.put(hb_instruction)
    else:
       #heartbeat was from this device... ignore
       pass

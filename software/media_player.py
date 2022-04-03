@@ -32,12 +32,15 @@ def process_instruction(instruction:global_data.instruction_class):
       instruction.global_done = 1
       try:
          if(instruction.data == "on"):
+            instruction.data = "on done"
             command = "echo 'on 0' | cec-client -s"
             subprocess.call(command, shell=True, stdout=subprocess.DEVNULL)
          if(instruction.data == "off"):
+            instruction.data = "off done"
             command = "echo 'standby 0' | cec-client -s"
             subprocess.call(command, shell=True, stdout=subprocess.DEVNULL)
          if(instruction.data == "active"):
+            instruction.data = "active done"
             command = "echo 'as' | cec-client -s"
             subprocess.call(command, shell=True, stdout=subprocess.DEVNULL)
       except:

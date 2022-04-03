@@ -212,8 +212,10 @@ def process_local_task(instruction:global_data.instruction_class):
 
    if(instruction.command == "/database/get_db_devices"):
       dev_list = []
+      first_device = 1
       for dev in device_list:
-         if(dev.connected):
+         if(dev.connected or first_device):
+            first_device = 0
             new_dev = {}
             new_dev["device_id"] = dev.device_id
             new_dev["name"] = dev.name

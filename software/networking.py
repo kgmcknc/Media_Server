@@ -143,6 +143,9 @@ def network_listener(network_thread):
                   data = dev.socket.recv(1024)
                except:
                   print("Local Rcv Error")
+                  dev.done = 1
+                  dev.socket.shutdown(socket.SHUT_RDWR)
+                  dev.socket.close()
                else:
                   instruction = global_data.instruction_class()
                   data_string = data.decode()

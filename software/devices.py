@@ -10,6 +10,7 @@ class server_device_class:
    port = 0
    linked_devices = []
    connected = 0
+   detected = 0
    hb_period = 0
    is_server = 0
 

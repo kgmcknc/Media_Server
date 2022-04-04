@@ -21,8 +21,6 @@ config_changed = 0
 skips_till_timeout = 4
 system_running = 1
 
-saved_socket = 0
-
 device_list = []
 device_timeouts = []
 
@@ -48,13 +46,17 @@ def server_main(main_thread):
          print("Main config changed")
          hb_instruction = global_data.instruction_class()
          hb_instruction.command = "/heartbeat/reload_config"
-         global_data.heartbeat_queue.put(hb_instruction)
+         hb_inst_dict = hb_instruction.dump_dict()
+         global_data.heartbeat_queue.put(hb_inst_dict)
          nw_instruction = global_data.instruction_class()
          nw_instruction.command = "/network/reload_config"
-         global_data.network_queue.put(nw_instruction)
+         nw_inst_dict = nw_instruction.dump_dict()
+         global_data.network_queue.put(nw_inst_dict)
          config_changed = 0
       try:
-         new_main_instruction = global_data.main_queue.get(timeout=global_data.main_queue_timeout)
+         new_inst_dict = global_data.main_queue.get(timeout=global_data.main_queue_timeout)
+         new_main_instruction = global_data.instruction_class()
+         new_main_instruction.load_dict(**new_inst_dict)
       except:
          #main queue was empty and timed out
          pass
@@ -67,7 +69,6 @@ def server_main(main_thread):
 def process_main_instruction(instruction:global_data.instruction_class):
    global config_changed
    global device_list
-   global saved_socket
    update_config = 0
    instruction_split = instruction.command.split("/")
    process_instruction = 0
@@ -92,9 +93,8 @@ def process_main_instruction(instruction:global_data.instruction_class):
                # intended for another device... send to that device
                #print("Global packet forwarded")
                instruction.dst = found_ip
-               saved_socket = instruction.socket
-               forward_instruction = instruction.copy()
-               global_data.network_queue.put(forward_instruction, block=False)
+               fwd_inst_dict = instruction.dump_dict()
+               global_data.network_queue.put(fwd_inst_dict, block=False)
                # add to global message queue here...
          else:
             # instrucion was received from another device
@@ -111,10 +111,8 @@ def process_main_instruction(instruction:global_data.instruction_class):
                # global packet response to be returned to this device network
                # find in global message queue at this point...
                #print("Global packet response")
-               # socket should be pulled from corresponding queue... not the saved global
-               instruction.socket = saved_socket
-               response_instruction = instruction.copy()
-               global_data.network_queue.put(response_instruction, block=False)
+               rsp_inst_dict = instruction.dump_dict()
+               global_data.network_queue.put(rsp_inst_dict, block=False)
 
             # here we need to put the global command in a queue with the instruction socket it was 
             # received from and the command
@@ -141,16 +139,16 @@ def process_main_instruction(instruction:global_data.instruction_class):
       if((len(instruction_split) > 1) and (instruction_split[1] == "database")):
          return_data = process_local_task(instruction)
          instruction.data = return_data
-         nw_instruction = instruction.copy()
-         global_data.network_queue.put(nw_instruction, block=False)
+         nw_inst_dict = instruction.dump_dict()
+         global_data.network_queue.put(nw_inst_dict, block=False)
 
       if((len(instruction_split) > 1) and (instruction_split[1] == "media")):
-         media_instruction = instruction.copy()
-         global_data.media_queue.put(media_instruction, block=False)
+         media_inst_dict = instruction.dump_dict()
+         global_data.media_queue.put(media_inst_dict, block=False)
 
       if(instruction.is_global and instruction.global_done):
-         global_instruction = instruction.copy()
-         global_data.network_queue.put(global_instruction, block=False)
+         global_inst_dict = instruction.dump_dict()
+         global_data.network_queue.put(global_inst_dict, block=False)
 
    if(update_config):
       database.update_db_device_config(device_list[0])
@@ -224,28 +222,31 @@ def process_local_task(instruction:global_data.instruction_class):
       instruction.data = dev_list
    
    if(index_folder):
-      global_data.media_queue.put(instruction)
+      index_inst_dict = instruction.dump_dict()
+      global_data.media_queue.put(index_inst_dict)
 
    return instruction.data
 
 def update_device_list(device_data):
    global device_list
    global device_timeouts
+   found_device = 0
    device_update = 0
    if(device_data.device_id == device_list[0].device_id):
       device_update = update_device_timeouts()
    else:
       for index in range(1, len(device_list)):
          if(device_data.device_id == device_list[index].device_id):
-            if(device_list[index].connected == 0):
+            found_device = 1
+            if(device_list[index].detected == 0):
                device_update = 1
-            device_data.connected = 1
+            device_data.detected = 1
             device_list[index] = device_data
             device_timeouts[index] = 0
             database.update_db_device_in_list(device_list[index])
             break
-      else:
-         device_data.connected = 1
+      if(found_device == 0):
+         device_data.detected = 1
          device_list.append(device_data)
          device_timeouts.append(0)
          database.update_db_device_in_list(device_data)
@@ -254,7 +255,8 @@ def update_device_list(device_data):
    if(device_update):
       instruction = global_data.instruction_class()
       instruction.command = "/network/reload_config"
-      global_data.network_queue.put(instruction)
+      reload_inst_dict = instruction.dump_dict()
+      global_data.network_queue.put(reload_inst_dict)
 
 def update_device_timeouts():
    global device_list
@@ -299,7 +301,8 @@ def exit_handler(signum, frame):
       print("caught exit... shutting down")
       instruction = global_data.instruction_class()
       instruction.command = "/system/shutdown_delay"
-      global_data.main_queue.put(instruction, block=False)
+      sys_inst_dict = instruction.dump_dict()
+      global_data.main_queue.put(sys_inst_dict, block=False)
       main_thread.stop_thread()
 
 def stop_threads():

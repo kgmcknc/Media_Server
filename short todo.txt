@@ -1,0 +1,11 @@
+need to fix how devices are passed between heartbeat/server/network...
+devices disconnect sockets, but the heartbeats are still active, so they don't time out and reconnect...
+use new variables detected and connected
+detected means we are receveing heartbeats and the heartbeats haven't timed out
+connected means we have an active opened socket link between the devices
+
+in network if a device is detected, but not connected we need to establish socket connection between them
+heartbeat can just pass stuff up to server if we want and then server can do timeout stuff, but there should be one place driving detected and one place driving connection
+
+pass port from local device through global commands across devices - that way we know which local port to send the response back on the original board
+

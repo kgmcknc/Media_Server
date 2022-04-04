@@ -27,15 +27,17 @@ def heartbeat_keepalive(heartbeat_thread):
          device_config.ip_addr = new_ip
          instruction = global_data.instruction_class()
          instruction.command = "/heartbeat/ip_changed"
-         hb_instruction = instruction.copy()
-         global_data.main_queue.put(hb_instruction)
+         hb_inst_dict = instruction.dump_dict()
+         global_data.main_queue.put(hb_inst_dict)
       
       if(not global_data.heartbeat_queue.empty()): # check queue to see if current device config changed
          print("Updating Heartbeat Device Config From Database")
          while(not global_data.heartbeat_queue.empty()):
             try:
-               instruction = global_data.heartbeat_queue.get(block=False) # pull instruction from buffer until empty
-               if(instruction.command == "/heartbeat/reload_config"):
+               new_inst_dict = global_data.heartbeat_queue.get(block=False) # pull instruction from buffer until empty
+               hb_instruction = global_data.instruction_class()
+               hb_instruction.load_dict(**new_inst_dict)
+               if(hb_instruction.command == "/heartbeat/reload_config"):
                   device_config = database.get_device_config()
             except:
                #fifo was empty... move on
@@ -89,8 +91,8 @@ def receive_heartbeat_packet(heartbeat_data):
       packet_data = heartbeat_data[0].decode()
       packet_data = json.loads(packet_data[len(media_server_heartbeat_string):])
       instruction.data = devices.server_device_class(**packet_data)
-      hb_instruction = instruction.copy()
-      global_data.main_queue.put(hb_instruction)
+      hb_dict = instruction.dump_dict()
+      global_data.main_queue.put(hb_dict)
    else:
       #heartbeat was from this device... ignore
       pass

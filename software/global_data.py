@@ -18,6 +18,7 @@ class instruction_class:
    global_id = 0
    src = 0
    dst = 0
+   port = 0
    socket = 0
    command = 0
    data = 0
@@ -30,8 +31,32 @@ class instruction_class:
       return json.dumps(self.data)
 
    def copy(self):
-      current_vars = vars(self)
+      current_vars = self.dump_dict(self)
       return instruction_class(**current_vars)
+   
+   def dump_dict(self):
+      data_dict = {}
+      self_dir = dir(self)
+      for item in self_dir:
+         if(item.startswith('_') == False):
+            new_item = getattr(self, item)
+            if(callable(new_item) == False):
+               data_dict[item] = new_item
+      data_dict.pop("socket")
+      return data_dict.copy()
+   
+   def load_dict(self, **input_dict):
+      for data_select in input_dict:
+         setattr(self, data_select, input_dict[data_select])
+
+   def dump_global(self):
+      data_dict = {"global_port":self.port, "global_command":self.command, "global_data":self.data}
+      return data_dict
+
+   def load_global(self, global_dict):
+      self.port = global_dict["global_port"]
+      self.command = global_dict["global_command"]
+      self.data = global_dict["global_data"]
 
 instruction_map = [
    "/heartbeat/reload_config",
@@ -42,9 +67,7 @@ instruction_map = [
 
    "/system/shutdown_delay",
 
-   "/media/display_on",
-   "/media/display_off",
-   "/media/display_active",
+   "/media/set_display",
    "/media/play",
    "/media/pause",
 

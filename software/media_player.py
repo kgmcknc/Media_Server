@@ -7,17 +7,16 @@ def run_media_player(player_thread):
    while (player_thread.is_active()):
       while(not global_data.media_queue.empty()):
          try:
-            new_queue_data = global_data.media_queue.get(block=False)
+            new_inst_dict = global_data.media_queue.get(block=False)
+            new_queue_inst = global_data.instruction_class()
+            new_queue_inst.load_dict(new_inst_dict)
          except:
             #network queue was empty and timed out
             player_thread.pause(1)
             pass
          else:
-            process_instruction(new_queue_data)
+            process_instruction(new_queue_inst)
          
-
-
-
    return
 
 
@@ -48,5 +47,5 @@ def process_instruction(instruction:global_data.instruction_class):
    
    if(instruction.is_global and instruction.global_done):
       instruction.data = return_data
-      return_instruction = instruction.copy()
-      global_data.network_queue.put(return_instruction, block=False)
+      ret_inst_dict = instruction.dump_dict()
+      global_data.network_queue.put(ret_inst_dict, block=False)

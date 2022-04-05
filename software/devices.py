@@ -6,13 +6,16 @@ class server_device_class:
    _id = 0
    device_id = 0
    name = "noname"
+   hb_period = 0
+   is_server = 0
    ip_addr = 0
    port = 0
    linked_devices = []
-   connected = 0
    detected = 0
-   hb_period = 0
-   is_server = 0
+   connected = 0
+   socket = 0
+   ready = 0
+   done = 0
 
    def __init__(self, **device_info):
       for key in device_info:
@@ -26,8 +29,12 @@ class server_device_class:
          else:
             setattr(self, key, device_info[key])
             
-   def update_device_name(self):
-      pass
+   def load_device_from_db(self, **device_info):
+      for key in device_info:
+         if((key == 'device_id') or (key == '_id') or (key == 'socket')):
+            print("Can't modify id or _id number or socket")
+         else:
+            setattr(self, key, device_info[key])
 
    def update_device_ip_addr(self):
       pass

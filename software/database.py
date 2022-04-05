@@ -346,17 +346,21 @@ def update_db_device_config(config_data):
 
 def update_db_device_in_list(device_data):
    devices = server_db["devices"]
-   found = devices.find_one()
+   device_query = {"device_id": device_data.device_id}
+   found = devices.find_one(device_query)
    if(found == None):
-      devices.insert_one(vars(device_data))
+      device_vars = vars(device_data)
+      device_vars_copy = device_vars.copy()
+      devices.insert_one(device_vars_copy)
    else:
-      device_query = {"device_id": device_data.device_id}
       device_vars = vars(device_data)
       device_vars_copy = device_vars.copy()
       device_vars_copy.pop("_id")
       device_vars_copy.pop("device_id")
       device_update = {"$set": device_vars_copy}
       updated = devices.find_one_and_update(device_query, device_update)
+      if(updated == None):
+         print("Error updating db device")
 
 def remove_unlinked_db_devices(this_id):
    devices = server_db["devices"]

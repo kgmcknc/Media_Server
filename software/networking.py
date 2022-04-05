@@ -10,20 +10,10 @@ select_timeout = 1
 reload_devices = 0
 device_config = 0
 
-device_list = []
 local_socket_list = []
 device_socket_list = []
 
 udp_rx_sock = 0
-
-class my_socket_class:
-   socket = 0
-   ip_addr = 0
-   port = 0
-   device_id = 0
-   active = 0
-   ready = 0
-   done = 0
 
 def get_my_ip():
    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -69,7 +59,7 @@ def network_listener(network_thread):
    network_thread.pause(1)
 
    load_devices_from_db()
-   max_devices = 5 + len(device_list)
+   max_devices = 5 + len(device_socket_list)
 
    print("Starting network thread")
    
@@ -96,7 +86,7 @@ def network_listener(network_thread):
       if(reload_devices):
          reload_devices = 0
          load_devices_from_db()
-         max_devices = len(device_list) + 5
+         max_devices = len(device_socket_list) + 5
          serversocket.listen(max_devices)
       
       while(not global_data.network_queue.empty()):
@@ -109,6 +99,7 @@ def network_listener(network_thread):
             pass
          else:
             if(new_queue_data.command == "/network/reload_config"):
+               print("Got Reload " + new_queue_data.data)
                reload_devices = 1
             else:
                if(new_queue_data.dst == device_config.ip_addr):
@@ -127,7 +118,7 @@ def network_listener(network_thread):
                   if(new_queue_data.is_global):
                      for dev in device_socket_list:
                         if(new_queue_data.dst == dev.ip_addr):
-                           if(dev.active):
+                           if(dev.connected):
                               new_queue_data.command = "/global/" + str(new_queue_data.global_id) + new_queue_data.command
                               write_data = new_queue_data.dump_global()
                               write_json = json.dumps(write_data)
@@ -139,12 +130,13 @@ def network_listener(network_thread):
       for dev in local_socket_list:
          if(dev.ready):
             dev.ready = 0
-            if(dev.active):
+            if(dev.connected):
                try:
                   data = dev.socket.recv(1024)
                except:
                   print("Local Rcv Error")
-                  dev.active = 0
+                  dev.connected = 0
+                  dev.detected = 0
                   dev.done = 1
                   dev.socket.close()
                else:
@@ -169,9 +161,10 @@ def network_listener(network_thread):
                         for x in range(3, len(local_instruction_split)):
                            new_command = new_command + "/" + local_instruction_split[x]
                         local_instruction.command = new_command
-                     local_inst_dict = local_instruction.dump_dict()
-                     global_data.main_queue.put(local_inst_dict)
-                     dev.active = 0
+                     local_get_dict = local_instruction.dump_dict()
+                     global_data.main_queue.put(local_get_dict)
+                     dev.connected = 0
+                     dev.detected = 0
                   else:
                      if(data_string[0:4] == "POST"):
                         offset = data_string.find("q={")
@@ -192,12 +185,12 @@ def network_listener(network_thread):
                            for x in range(3, len(local_instruction_split)):
                               new_command = new_command + "/" + local_instruction_split[x]
                            local_instruction.command = new_command
-                        local_inst_dict = local_instruction.dump_dict()
-                        global_data.main_queue.put(local_inst_dict)
+                        local_post_dict = local_instruction.dump_dict()
+                        global_data.main_queue.put(local_post_dict)
                         #packet_data = header_okay+header_end
                         #write_data_encode = packet_data.encode()
                         #dev.socket.send(write_data_encode)
-                        dev.active = 0
+                        dev.connected = 0
                         #dev.done = 1
                         #dev.socket.shutdown(socket.SHUT_RDWR)
                         #dev.socket.close()
@@ -208,7 +201,7 @@ def network_listener(network_thread):
          if(dev.ready):
             dev.ready = 0
             data = b''
-            if(dev.active):
+            if(dev.connected):
                try:
                   data = dev.socket.recv(1024)
                except:
@@ -216,14 +209,20 @@ def network_listener(network_thread):
                   data = b''
                   dev.socket.close()
                   dev.done = 1
-                  dev.active = 0
+                  dev.connected = 0
+                  disconnect_inst = global_data.instruction_class()
+                  disconnect_inst.command = "/heartbeat/device_disconnected"
+                  disconnect_inst.data = dev.device_id
                else:
                   if(data == b''):
-                     #print("Socket Closed Success" + dev.ip_addr)
+                     print("Socket Closed Success" + dev.ip_addr)
                      dev.socket.shutdown(socket.SHUT_RDWR)
                      dev.socket.close()
                      dev.done = 1
-                     dev.active = 0
+                     dev.connected = 0
+                     disconnect_inst = global_data.instruction_class()
+                     disconnect_inst.command = "/heartbeat/device_disconnected"
+                     disconnect_inst.data = dev.device_id
                      #send something to main here for disconnect? clear db?
                   else:
                      dev_instruction = global_data.instruction_class()
@@ -266,27 +265,33 @@ def network_listener(network_thread):
       for local_device in local_socket_list:
          rx_list.append(local_device.socket)
       for rx_device in device_socket_list:
-         if(rx_device.active):
+         if(rx_device.connected):
             rx_list.append(rx_device.socket)
 
       tx_list = []
       for local_device in local_socket_list:
          tx_list.append(local_device.socket)
       for tx_device in device_socket_list:
-         if(tx_device.active):
+         if(tx_device.connected):
             # should probably check to see if we are able to transmit here...
             pass
          else:
             # smaller device number is client... random decision
-            if(tx_device.device_id < device_config.device_id):
+            if((tx_device.detected) and (tx_device.device_id < device_config.device_id)):
                try:
                   tx_device.socket.connect((tx_device.ip_addr, tx_device.port))
-                  #print("Connected New Socket" + tx_device.ip_addr)
+                  print("Connected New Socket" + tx_device.ip_addr)
                except:
-                  #print("Couldn't make connection")
-                  pass
+                  print("Couldn't make connection" + tx_device.ip_addr)
+                  tx_device.connected = 0
                else:
+                  tx_device.connected = 1
                   tx_list.append(tx_device.socket)
+                  device_inst = global_data.instruction_class()
+                  device_inst.command = "/heartbeat/device_connected"
+                  device_inst.data = tx_device.device_id
+                  hb_dict = device_inst.dump_dict()
+                  global_data.main_queue.put(hb_dict)
 
       rx_ready, tx_ready, x_ready = select.select(rx_list, tx_list, [], select_timeout)
       
@@ -295,30 +300,42 @@ def network_listener(network_thread):
       for dev_sock in device_socket_list:
          dev_sock.ready = 0
 
+      # checking connections coming in
       for ready in rx_ready:
          if(ready == serversocket):
+            #found connection to our main socket input
             try:
                new_socket, new_address = serversocket.accept()
-               #print("Accepted New Socket" + new_address[0])
+               print("Accepted New Socket" + new_address[0])
+               # if the address is this devices address, then it came from local web
                if(new_address[0] == device_config.ip_addr):
-                  new_sock = my_socket_class()
+                  new_sock = devices.server_device_class()
                   new_sock.socket = new_socket
-                  new_sock.ready = 1
-                  new_sock.active = 1
+                  new_sock.ready = 0
+                  new_sock.detected = 1
+                  new_sock.connected = 1
                   new_sock.ip_addr = new_address[0]
                   new_sock.port = new_address[1]
                   local_socket_list.append(new_sock)
                else:
+                  # this is a new remote device connecting
                   for device_sock in device_socket_list:
-                     if(new_address[0] == device_sock.ip_addr):
-                        device_sock.socket = new_socket
-                        device_sock.ready = 0
-                        device_sock.active = 1
-                        device_sock.ip_addr = new_address[0]
-                        device_sock.port = new_address[1]
+                     if(device_sock.detected):
+                        if(new_address[0] == device_sock.ip_addr):
+                           device_sock.socket = new_socket
+                           device_sock.ready = 0
+                           device_sock.connected = 1
+                           device_sock.ip_addr = new_address[0]
+                           device_sock.port = new_address[1]
+                           device_inst = global_data.instruction_class()
+                           device_inst.command = "/heartbeat/device_connected"
+                           device_inst.data = tx_device.device_id
+                           hb_dict = device_inst.dump_dict()
+                           global_data.main_queue.put(hb_dict)
             except:
                print("accept exception")
          else:
+            # connection we have already established is ready for packet transmit
             for local_sock in local_socket_list:
                if(ready == local_sock.socket):
                   local_sock.ready = 1
@@ -328,13 +345,13 @@ def network_listener(network_thread):
       
       # go through other rx devices and find read ready signals for sent messages
 
-      for tx_sock in tx_ready:
-         for dev_sock in device_socket_list:
-               if(tx_sock == dev_sock.socket):
-                  dev_sock.active = 1
+      # for tx_sock in tx_ready:
+      #    for dev_sock in device_socket_list:
+      #          if(tx_sock == dev_sock.socket):
+      #             dev_sock.active = 1
    
    for dev in device_socket_list:
-      if(dev.active):
+      if(dev.connected):
          dev.socket.shutdown(socket.SHUT_RDWR)
          dev.socket.close()
    if(serversocket):
@@ -351,34 +368,32 @@ def network_listener(network_thread):
 def load_devices_from_db():
    global device_socket_list
    global device_config
-   global device_list
 
    device_config = database.get_device_config()
    
-   device_list = []
-   db_filter = {"connected":1}
+   db_filter = {"detected":1}
    db_devices = database.get_filtered_db_devices(**db_filter)
    for new_device in db_devices:
       # rebuild new device list with all current devices
-      # add device to list
-      if(1):#device_config.device_id in new_device.linked_devices):
-         device_list.append(new_device)
-         
-         # see if device is already in socket list
-         for index in device_socket_list:
-            if(index.device_id == new_device.device_id):
-               index = new_device
-               break
-         else:
-            # if not, then add to device socket list
-            new_sock = my_socket_class()
-            new_sock.ip_addr = new_device.ip_addr
-            new_sock.port = new_device.port
-            new_sock.device_id = new_device.device_id
-            new_sock.active = 0
-            new_sock.ready = 0
-            new_sock.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            device_socket_list.append(new_sock)
+      
+      # see if device is already in socket list
+      for index in device_socket_list:
+         if(index.device_id == new_device.device_id):
+            # need to make sure this doesn't overwrite the socket of already connected devices...
+            new_vars = vars(new_device)
+            for key in new_vars:
+               if((key != "socket") and (key != "_id")):
+                  setattr(index, key, getattr(new_device, key))
+            break
+      else:
+         # if not, then add to device socket list
+         new_sock = devices.server_device_class()
+         new_sock.ip_addr = new_device.ip_addr
+         new_sock.port = new_device.port
+         new_sock.device_id = new_device.device_id
+         new_sock.detected = new_device.detected
+         new_sock.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+         device_socket_list.append(new_sock)
    # old devices that need to be "deleted" from device list is handled in the loop
    # that way the socket can be closed if it's somehow still opened...
 

@@ -72,7 +72,6 @@ def heartbeat_listener(heartbeat_listener_thread):
       else:
          if(is_heartbeat_packet(heartbeat_data)):
             receive_heartbeat_packet(heartbeat_data)
-
    return
 
 def is_heartbeat_packet(heartbeat_data):
@@ -84,16 +83,12 @@ def is_heartbeat_packet(heartbeat_data):
       return 0
 
 def receive_heartbeat_packet(heartbeat_data):
-   #this_ip = networking.get_my_ip()
-   if(1):#this_ip != heartbeat_data[1][0]):
-      instruction = global_data.instruction_class()
-      instruction.command = "/heartbeat/new_packet"
-      packet_data = heartbeat_data[0].decode()
-      packet_data = json.loads(packet_data[len(media_server_heartbeat_string):])
-      instruction.data = devices.server_device_class(**packet_data)
-      hb_dict = instruction.dump_dict()
-      global_data.main_queue.put(hb_dict)
-   else:
-      #heartbeat was from this device... ignore
-      pass
+   # pass heartbeat packet up to main server to process
+   instruction = global_data.instruction_class()
+   instruction.command = "/heartbeat/new_packet"
+   packet_data = heartbeat_data[0].decode()
+   packet_data = json.loads(packet_data[len(media_server_heartbeat_string):])
+   instruction.data = devices.server_device_class(**packet_data)
+   hb_dict = instruction.dump_dict()
+   global_data.main_queue.put(hb_dict)
    

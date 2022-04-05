@@ -62,6 +62,8 @@ instruction_map = [
    "/heartbeat/reload_config",
    "/heartbeat/ip_changed",
    "/heartbeat/new_packet",
+   "/heartbeat/device_connected",
+   "/heartbeat/device_disconnected",
 
    "/network/reload_config",
 

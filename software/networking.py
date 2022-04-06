@@ -213,6 +213,8 @@ def network_listener(network_thread):
                   disconnect_inst = global_data.instruction_class()
                   disconnect_inst.command = "/heartbeat/device_disconnected"
                   disconnect_inst.data = dev.device_id
+                  disconnect_dict = disconnect_inst.dump_dict()
+                  global_data.main_queue.put(disconnect_dict)
                else:
                   if(data == b''):
                      print("Socket Closed Success" + dev.ip_addr)
@@ -223,6 +225,8 @@ def network_listener(network_thread):
                      disconnect_inst = global_data.instruction_class()
                      disconnect_inst.command = "/heartbeat/device_disconnected"
                      disconnect_inst.data = dev.device_id
+                     disconnect_dict = disconnect_inst.dump_dict()
+                     global_data.main_queue.put(disconnect_dict)
                      #send something to main here for disconnect? clear db?
                   else:
                      dev_instruction = global_data.instruction_class()
@@ -340,7 +344,14 @@ def network_listener(network_thread):
                         else:
                            print("Accept error, device wasn't detected...")
                   if(found_connection == 0):
-                     print("Accept didn't complete... closing")
+                     print("Accept didn't find known device... closing connection")
+                     # send packet indicating unknown device
+                     conn_inst = global_data.instruction_class()
+                     conn_inst.command = "/network/received_unknown_connection"
+                     write_data = conn_inst.dump_global()
+                     write_json = json.dumps(write_data)
+                     write_data_encode = write_json.encode()
+                     new_socket.send(write_data_encode)
                      new_socket.shutdown(socket.SHUT_RDWR)
                      new_socket.close()
             except:

@@ -66,6 +66,7 @@ instruction_map = [
    "/heartbeat/device_disconnected",
 
    "/network/reload_config",
+   "/network/received_unknown_connection"
 
    "/system/shutdown_delay",
 

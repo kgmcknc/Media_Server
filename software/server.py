@@ -140,6 +140,9 @@ def process_main_instruction(instruction:global_data.instruction_class):
          update_device_connection(instruction.data, 1)
       if(instruction.command == "/heartbeat/device_disconnected"):
          update_device_connection(instruction.data, 0)
+
+      if(instruction.command == "/network/received_unknown_connection"):
+         heartbeat.send_heartbeat_packet(device_list[0])
       
       if((len(instruction_split) > 1) and (instruction_split[1] == "database")):
          return_data = process_local_task(instruction)
@@ -290,7 +293,6 @@ def update_device_connection(device_id, connection_status):
    print("Updating Connection Status")
    for index in range(1, len(device_list)):
       if(device_id == device_list[index].device_id):
-         found_device = 1
          device_list[index].connected = connection_status
          database.update_db_device_in_list(device_list[index])
          break

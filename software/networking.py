@@ -279,6 +279,7 @@ def network_listener(network_thread):
             # smaller device number is client... random decision
             if((tx_device.detected) and (tx_device.device_id < device_config.device_id)):
                try:
+                  tx_device.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                   tx_device.socket.connect((tx_device.ip_addr, tx_device.port))
                   print("Connected New Socket" + tx_device.ip_addr)
                except:

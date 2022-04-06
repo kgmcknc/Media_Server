@@ -9,7 +9,7 @@ def run_media_player(player_thread):
          try:
             new_inst_dict = global_data.media_queue.get(block=False)
             new_queue_inst = global_data.instruction_class()
-            new_queue_inst.load_dict(new_inst_dict)
+            new_queue_inst.load_dict(**new_inst_dict)
          except:
             #network queue was empty and timed out
             player_thread.pause(1)

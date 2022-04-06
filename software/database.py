@@ -369,10 +369,12 @@ def remove_unlinked_db_devices(this_id):
    db_device_list = list(db_devices)
    for dev in db_device_list:
       link_list = dev["linked_devices"]
+      found_device = 0
       for index in link_list:
          if(index == this_id):
+            found_device = 1
             break
-      else:
+      if(found_device == 0):
          # remove this device
          device_query = {"device_id": dev["device_id"]}
          devices.delete_one(device_query)

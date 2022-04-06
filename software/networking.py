@@ -243,14 +243,14 @@ def network_listener(network_thread):
                      global_data.main_queue.put(dev_inst_dict)
 
       # Remove old unconnected devices
-      new_list = []
-      for dev in device_socket_list:
-         if(dev.done):
-            dev.ready = 0
-            dev.done = 0
-         else:
-            new_list.append(dev)
-      device_socket_list = new_list
+      # new_list = []
+      # for dev in device_socket_list:
+      #    if(dev.done):
+      #       dev.ready = 0
+      #       dev.done = 0
+      #    else:
+      #       new_list.append(dev)
+      # device_socket_list = new_list
 
       new_list = []
       for dev in local_socket_list:
@@ -306,9 +306,9 @@ def network_listener(network_thread):
             #found connection to our main socket input
             try:
                new_socket, new_address = serversocket.accept()
-               print("Accepted New Socket" + new_address[0])
                # if the address is this devices address, then it came from local web
                if(new_address[0] == device_config.ip_addr):
+                  print("Accepted Local Socket" + new_address[0])
                   new_sock = devices.server_device_class()
                   new_sock.socket = new_socket
                   new_sock.ready = 0
@@ -319,9 +319,12 @@ def network_listener(network_thread):
                   local_socket_list.append(new_sock)
                else:
                   # this is a new remote device connecting
+                  found_connection = 0
                   for device_sock in device_socket_list:
-                     if(device_sock.detected):
-                        if(new_address[0] == device_sock.ip_addr):
+                     if(new_address[0] == device_sock.ip_addr):
+                        if(device_sock.detected):
+                           found_connection = 1
+                           print("Accepted New Socket" + new_address[0])
                            device_sock.socket = new_socket
                            device_sock.ready = 0
                            device_sock.connected = 1
@@ -332,6 +335,13 @@ def network_listener(network_thread):
                            device_inst.data = tx_device.device_id
                            hb_dict = device_inst.dump_dict()
                            global_data.main_queue.put(hb_dict)
+                           print("Put device connection change")
+                        else:
+                           print("Accept error, device wasn't detected...")
+                  if(found_connection == 0):
+                     print("Accept didn't complete... closing")
+                     new_socket.shutdown(socket.SHUT_RDWR)
+                     new_socket.close()
             except:
                print("accept exception")
          else:
@@ -377,15 +387,17 @@ def load_devices_from_db():
       # rebuild new device list with all current devices
       
       # see if device is already in socket list
+      found_device = 0
       for index in device_socket_list:
          if(index.device_id == new_device.device_id):
+            found_device = 1
             # need to make sure this doesn't overwrite the socket of already connected devices...
             new_vars = vars(new_device)
             for key in new_vars:
                if((key != "socket") and (key != "_id")):
                   setattr(index, key, getattr(new_device, key))
             break
-      else:
+      if(found_device == 0):
          # if not, then add to device socket list
          new_sock = devices.server_device_class()
          new_sock.ip_addr = new_device.ip_addr
@@ -394,8 +406,24 @@ def load_devices_from_db():
          new_sock.detected = new_device.detected
          new_sock.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
          device_socket_list.append(new_sock)
-   # old devices that need to be "deleted" from device list is handled in the loop
-   # that way the socket can be closed if it's somehow still opened...
+   
+      # Remove devices here
+      # check all current devices and see if they are still in the database
+      # if they aren't in the database, close the connection if it's not done
+      new_list = []
+      for dev in device_socket_list:
+         for db_dev in db_devices:
+            if(dev.device_id == db_dev.device_id):
+               #found device so keep in list
+               new_list.append(dev)
+               break
+         else:
+            # device wasn't in database...
+            print("Removing Device " + dev.ip_addr)
+            if(dev.done == 0):
+               dev.socket.shutdown(socket.SHUT_RDWR)
+               dev.socket.close()
+      device_socket_list = new_list
 
 #get database exists
 #set init database

@@ -12,11 +12,10 @@ def run_media_player(player_thread):
             new_queue_inst.load_dict(**new_inst_dict)
          except:
             #network queue was empty and timed out
-            player_thread.pause(1)
             pass
          else:
             process_instruction(new_queue_inst)
-         
+      player_thread.pause(1)
    return
 
 

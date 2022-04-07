@@ -142,7 +142,8 @@ def process_main_instruction(instruction:global_data.instruction_class):
          update_device_connection(instruction.data, 0)
 
       if(instruction.command == "/network/received_unknown_connection"):
-         heartbeat.send_heartbeat_packet(device_list[0])
+         #heartbeat.send_heartbeat_packet(device_list[0])
+         remove_unknown_device(instruction.data)
       
       if((len(instruction_split) > 1) and (instruction_split[1] == "database")):
          return_data = process_local_task(instruction)
@@ -295,6 +296,21 @@ def update_device_connection(device_id, connection_status):
       if(device_id == device_list[index].device_id):
          device_list[index].connected = connection_status
          database.update_db_device_in_list(device_list[index])
+         break
+
+def remove_unknown_device(device_data:devices.server_device_class):
+   global device_list
+   
+   for index in range(1, len(device_list)):
+      if(device_data.device_id == device_list[index].device_id):
+         device_list[index].connected = 0
+         device_list[index].detected = 0
+         database.update_db_device_in_list(device_list[index])
+         instruction = global_data.instruction_class()
+         instruction.command = "/network/reload_config"
+         instruction.data = device_data.ip_addr
+         reload_inst_dict = instruction.dump_dict()
+         global_data.network_queue.put(reload_inst_dict)
          break
 
 def update_device_timeouts():

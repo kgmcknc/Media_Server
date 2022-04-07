@@ -348,6 +348,8 @@ def network_listener(network_thread):
                      # send packet indicating unknown device
                      conn_inst = global_data.instruction_class()
                      conn_inst.command = "/network/received_unknown_connection"
+                     conn_inst.ip_addr = new_address[0]
+                     conn_inst.port = new_address[1]
                      write_data = conn_inst.dump_global()
                      write_json = json.dumps(write_data)
                      write_data_encode = write_json.encode()

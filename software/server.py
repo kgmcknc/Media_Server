@@ -143,7 +143,7 @@ def process_main_instruction(instruction:global_data.instruction_class):
 
       if(instruction.command == "/network/received_unknown_connection"):
          #heartbeat.send_heartbeat_packet(device_list[0])
-         remove_unknown_device(instruction.data)
+         remove_unknown_device(instruction)
       
       if((len(instruction_split) > 1) and (instruction_split[1] == "database")):
          return_data = process_local_task(instruction)
@@ -302,7 +302,7 @@ def remove_unknown_device(device_data:devices.server_device_class):
    global device_list
    
    for index in range(1, len(device_list)):
-      if(device_data.device_id == device_list[index].device_id):
+      if(device_data.ip_addr == device_list[index].ip_addr):
          device_list[index].connected = 0
          device_list[index].detected = 0
          database.update_db_device_in_list(device_list[index])

@@ -398,47 +398,54 @@ def load_devices_from_db():
    
    db_filter = {"detected":1}
    db_devices = database.get_filtered_db_devices(**db_filter)
-   for new_device in db_devices:
-      # rebuild new device list with all current devices
-      
-      # see if device is already in socket list
-      found_device = 0
-      for index in device_socket_list:
-         if(index.device_id == new_device.device_id):
-            found_device = 1
-            # need to make sure this doesn't overwrite the socket of already connected devices...
-            new_vars = vars(new_device)
-            for key in new_vars:
-               if((key != "socket") and (key != "_id")):
-                  setattr(index, key, getattr(new_device, key))
-            break
-      if(found_device == 0):
-         # if not, then add to device socket list
-         new_sock = devices.server_device_class()
-         new_sock.ip_addr = new_device.ip_addr
-         new_sock.port = new_device.port
-         new_sock.device_id = new_device.device_id
-         new_sock.detected = new_device.detected
-         new_sock.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-         device_socket_list.append(new_sock)
-   
-      # Remove devices here
-      # check all current devices and see if they are still in the database
-      # if they aren't in the database, close the connection if it's not done
-      new_list = []
+   if(len(db_devices) == 0):
       for dev in device_socket_list:
-         for db_dev in db_devices:
-            if(dev.device_id == db_dev.device_id):
-               #found device so keep in list
-               new_list.append(dev)
-               break
-         else:
-            # device wasn't in database...
-            print("Removing Device " + dev.ip_addr)
-            if(dev.done == 0):
+         if(dev.done == 0):
                dev.socket.shutdown(socket.SHUT_RDWR)
                dev.socket.close()
-      device_socket_list = new_list
+      device_socket_list = []
+   else:
+      for new_device in db_devices:
+         # rebuild new device list with all current devices
+         
+         # see if device is already in socket list
+         found_device = 0
+         for index in device_socket_list:
+            if(index.device_id == new_device.device_id):
+               found_device = 1
+               # need to make sure this doesn't overwrite the socket of already connected devices...
+               new_vars = vars(new_device)
+               for key in new_vars:
+                  if((key != "socket") and (key != "_id")):
+                     setattr(index, key, getattr(new_device, key))
+               break
+         if(found_device == 0):
+            # if not, then add to device socket list
+            new_sock = devices.server_device_class()
+            new_sock.ip_addr = new_device.ip_addr
+            new_sock.port = new_device.port
+            new_sock.device_id = new_device.device_id
+            new_sock.detected = new_device.detected
+            new_sock.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            device_socket_list.append(new_sock)
+      
+         # Remove devices here
+         # check all current devices and see if they are still in the database
+         # if they aren't in the database, close the connection if it's not done
+         new_list = []
+         for dev in device_socket_list:
+            for db_dev in db_devices:
+               if(dev.device_id == db_dev.device_id):
+                  #found device so keep in list
+                  new_list.append(dev)
+                  break
+            else:
+               # device wasn't in database...
+               print("Removing Device " + dev.ip_addr)
+               if(dev.done == 0):
+                  dev.socket.shutdown(socket.SHUT_RDWR)
+                  dev.socket.close()
+         device_socket_list = new_list
 
 #get database exists
 #set init database

@@ -298,7 +298,7 @@ def update_device_connection(device_id, connection_status):
          database.update_db_device_in_list(device_list[index])
          break
 
-def remove_unknown_device(device_data:global.instruction_class):
+def remove_unknown_device(device_data:global_data.instruction_class):
    global device_list
    
    for index in range(1, len(device_list)):

@@ -302,13 +302,13 @@ def remove_unknown_device(device_data:global_data.instruction_class):
    global device_list
    
    for index in range(1, len(device_list)):
-      if(device_data.ip_addr == device_list[index].ip_addr):
+      if(device_data.src == device_list[index].ip_addr):
          device_list[index].connected = 0
          device_list[index].detected = 0
          database.update_db_device_in_list(device_list[index])
          instruction = global_data.instruction_class()
          instruction.command = "/network/reload_config"
-         instruction.data = device_data.ip_addr
+         instruction.data = device_data.src
          reload_inst_dict = instruction.dump_dict()
          global_data.network_queue.put(reload_inst_dict)
          break

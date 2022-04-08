@@ -72,17 +72,21 @@ def process_instruction(instruction:global_data.instruction_class):
          new_file = instruction.data["file_path"]
          link_path = {"src_path":instruction.data["base_path"]}
          link_dst = database.get_media_link(link_path)
-         new_file.replace(new_base, link_dst["dst_path"])
+         file_path = link_dst["dst_path"] + new_file[len(link_dst["src_path"]):]
       else:
          new_base = instruction.data["base_path"]
          new_file = instruction.data["file_path"]
+         file_path = new_file
       
-      media_source = new_file
+      media_source = file_path
       # creating a media
       media = vlc_instance.media_new(media_source)
       # setting media to the player
       player.set_media(media)
       player.play()
+   if(instruction.command == "/media/stop"):
+      player.stop()
+      player.close()
    if(instruction.command == "/media/play"):
       player.play()
    if(instruction.command == "/media/pause"):

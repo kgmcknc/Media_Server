@@ -84,9 +84,9 @@ def process_instruction(instruction:global_data.instruction_class):
       # setting media to the player
       player.set_media(media)
       player.play()
+      player.toggle_fullscreen()
    if(instruction.command == "/media/stop"):
       player.stop()
-      player.close()
    if(instruction.command == "/media/play"):
       player.play()
    if(instruction.command == "/media/pause"):

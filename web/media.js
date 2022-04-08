@@ -77,6 +77,54 @@ function remove_folder(folder_to_delete){
    set_db_data({"/database/rem_media_folder":folder_to_delete}, load_folder_data);
 }
 
+function add_new_link_folder(){
+   new_folder_text = document.getElementById("new_link_folder_name_text");
+   new_folder_name = new_folder_text.value;
+   new_folder_text.value = "";
+   folderlist = document.getElementById("folderdropdown");
+   if(folderlist.selectedIndex >= 0){
+      original_folder = folderlist[folderlist.selectedIndex].value;
+      create_link_folder(original_folder, new_folder_name);
+   }
+}
+
+function create_link_folder(original_folder, new_folder){
+   devicelist = document.getElementById("devicedropdown");
+   if(devicelist.selectedIndex >= 0){
+      device = device_list_array[devicelist.selectedIndex];
+      device_id = device.device_id;
+      command = "/database/add_media_link"
+      value = '{"src_path":"'+original_folder+'", "dst_path":"'+new_folder+'"}'
+      command_string = '{"/global/' + device_id + command + '":' + value + '}'
+      command_json = JSON.parse(command_string)
+      set_db_data(command_json);
+   }
+}
+
+function remove_current_link_folder(){
+   new_folder_text = document.getElementById("new_link_folder_name_text");
+   new_folder_name = new_folder_text.value;
+   new_folder_text.value = "";
+   folderlist = document.getElementById("folderdropdown");
+   if(folderlist.selectedIndex >= 0){
+      original_folder = folderlist[folderlist.selectedIndex].value;
+      remove_link_folder(original_folder, new_folder_name);
+   }
+}
+
+function remove_link_folder(original_folder, new_folder){
+   devicelist = document.getElementById("devicedropdown");
+   if(devicelist.selectedIndex >= 0){
+      device = device_list_array[devicelist.selectedIndex];
+      device_id = device.device_id;
+      command = "/database/rem_media_link"
+      value = '{"src_path":"'+original_folder+'", "dst_path":"'+new_folder+'"}'
+      command_string = '{"/global/' + device_id + command + '":' + value + '}'
+      command_json = JSON.parse(command_string)
+      set_db_data(command_json);
+   }
+}
+
 function update_folder(){
    folderlist = document.getElementById("folderdropdown");
    if(folderlist.selectedIndex >= 0){
@@ -366,6 +414,17 @@ function get_db_data(request_data, callback){
    }
 }
 
+function global_get_db_data(request_data, callback){
+   devicelist = document.getElementById("devicedropdown");
+   if(devicelist.selectedIndex >= 0){
+      device = device_list_array[devicelist.selectedIndex];
+      device_id = device.device_id;
+      new_request = request_data.slice(2)
+      new_request.command = "{/global/" + device_id + new_request
+      get_db_data(new_request, callback);
+   }
+}
+
 function set_db_data(request_data, callback){
    var xmlhttp;
    var object = request_data;
@@ -388,6 +447,17 @@ function set_db_data(request_data, callback){
             }
          }
       }
+   }
+}
+
+function global_set_db_data(request_data, callback){
+   devicelist = document.getElementById("devicedropdown");
+   if(devicelist.selectedIndex >= 0){
+      device = device_list_array[devicelist.selectedIndex];
+      device_id = device.device_id;
+      new_request = request_data.slice(2)
+      new_request = '{"/global/"' + device_id + new_request
+      set_db_data(new_request, callback);
    }
 }
 
@@ -481,6 +551,21 @@ function playmovie(){
    load_movie_data();
    reset_autoplay_index();
    setlastplayed();
+}
+
+function startmedia(){
+   var object = document.getElementById("movie_text");
+   command = {"/media/start":{"base_path":current_folder,"file_path":object.value}}
+
+   global_set_db_data(command)
+}
+
+function playmedia(){
+   global_set_db_data({"/media/play":""})
+}
+
+function pausemedia(){
+   global_set_db_data({"/media/pause":""})
 }
 
 function load_movie_data(){

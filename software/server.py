@@ -291,9 +291,9 @@ def update_device_list(device_data:devices.server_device_class):
 
 def update_device_connection(device_id, connection_status):
    global device_list
-   print("Updating Connection Status")
    for index in range(1, len(device_list)):
       if(device_id == device_list[index].device_id):
+         print("Updating Connection Status "+device_list[index].ip_addr)
          device_list[index].connected = connection_status
          database.update_db_device_in_list(device_list[index])
          break

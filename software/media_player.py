@@ -72,7 +72,7 @@ def process_instruction(instruction:global_data.instruction_class):
          new_file = instruction.data["file_path"]
          link_path = {"src_path":instruction.data["base_path"]}
          link_dst = database.get_media_link(link_path)
-         new_file.replace(new_base, link_dst)
+         new_file.replace(new_base, link_dst["dst_path"])
       else:
          new_base = instruction.data["base_path"]
          new_file = instruction.data["file_path"]

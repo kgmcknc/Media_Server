@@ -414,14 +414,34 @@ function get_db_data(request_data, callback){
    }
 }
 
-function global_get_db_data(request_data, callback){
+function global_set_db_data(request_data, callback){
    devicelist = document.getElementById("devicedropdown");
    if(devicelist.selectedIndex >= 0){
       device = device_list_array[devicelist.selectedIndex];
       device_id = device.device_id;
-      new_request = request_data.slice(2)
-      new_request.command = "{/global/" + device_id + new_request
-      get_db_data(new_request, callback);
+      var xmlhttp;
+      var object = request_data;
+      var new_request = JSON.stringify(object);
+      var valuestring = new_request(0,2) + "/global/" + device_id + new_request(2)
+      
+      if (window.XMLHttpRequest) {
+         xmlhttp = new XMLHttpRequest();
+      } else {
+         // code for IE6, IE5
+         xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+      }
+      xmlhttp.open("POST", "msp.php?q="+valuestring, true);
+      xmlhttp.send();
+      xmlhttp.onreadystatechange = function() {
+         if (this.readyState == 4 && this.status == 200) {
+            if(callback){
+               response_json = JSON.parse(this.responseText);
+               if(response_json != "DB_ERR"){
+                  callback(response_json);
+               }
+            }
+         }
+      }
    }
 }
 
@@ -455,9 +475,29 @@ function global_set_db_data(request_data, callback){
    if(devicelist.selectedIndex >= 0){
       device = device_list_array[devicelist.selectedIndex];
       device_id = device.device_id;
-      new_request = request_data.slice(2)
-      new_request = '{"/global/"' + device_id + new_request
-      set_db_data(new_request, callback);
+      var xmlhttp;
+      var object = request_data;
+      var new_request = JSON.stringify(object);
+      var valuestring = new_request.slice(0,2) + "/global/" + device_id + new_request.slice(2)
+      
+      if (window.XMLHttpRequest) {
+         xmlhttp = new XMLHttpRequest();
+      } else {
+         // code for IE6, IE5
+         xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+      }
+      xmlhttp.open("POST", "msp.php?q="+valuestring, true);
+      xmlhttp.send();
+      xmlhttp.onreadystatechange = function() {
+         if (this.readyState == 4 && this.status == 200) {
+            if(callback){
+               response_json = JSON.parse(this.responseText);
+               if(response_json != "DB_ERR"){
+                  callback(response_json);
+               }
+            }
+         }
+      }
    }
 }
 

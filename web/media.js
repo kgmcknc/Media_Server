@@ -287,6 +287,14 @@ function load_device_list(devices){
    }
 }
 
+function update_device_name(){
+   new_device_name_text = document.getElementById("new_device_name_text");
+   new_device_name = new_device_name_text.value;
+   new_device_name_text.value = "";
+   command = {"/database/update_config":{"name":new_device_name}}
+   global_set_db_data(command);
+}
+
 function load_user_data(){
    get_db_data({"/database/get_users":""}, load_user_list);
 }
@@ -400,7 +408,7 @@ function get_db_data(request_data, callback){
       // code for IE6, IE5
       xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
    }
-   xmlhttp.open("POST", "msp.php?q="+valuestring, true);
+   xmlhttp.open("GET", "msp.php?q="+valuestring, true);
    xmlhttp.send();
    xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
@@ -414,9 +422,9 @@ function get_db_data(request_data, callback){
    }
 }
 
-function global_set_db_data(request_data, callback){
+function global_get_db_data(request_data, callback){
    devicelist = document.getElementById("devicedropdown");
-   if(devicelist.selectedIndex >= 0){
+   if(devicelist.selectedIndex > 0){
       device = device_list_array[devicelist.selectedIndex];
       device_id = device.device_id;
       var xmlhttp;
@@ -430,7 +438,7 @@ function global_set_db_data(request_data, callback){
          // code for IE6, IE5
          xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
       }
-      xmlhttp.open("POST", "msp.php?q="+valuestring, true);
+      xmlhttp.open("GET", "msp.php?q="+valuestring, true);
       xmlhttp.send();
       xmlhttp.onreadystatechange = function() {
          if (this.readyState == 4 && this.status == 200) {
@@ -442,6 +450,8 @@ function global_set_db_data(request_data, callback){
             }
          }
       }
+   } else {
+      set_db_data(request_data, callback);
    }
 }
 

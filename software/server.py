@@ -183,6 +183,7 @@ def process_local_task(instruction:global_data.instruction_class):
             print("not updating id stuff")
          else:
             setattr(device_list[0], data, json_object[data])
+      database.update_db_device_config(device_list[0])
       config_changed = 1
    if(instruction.command == "/database/add_media_folder"):
       #instruction.data = json_object

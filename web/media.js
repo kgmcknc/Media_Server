@@ -600,6 +600,10 @@ function startmedia(){
    global_set_db_data(command)
 }
 
+function stopmedia(){
+   global_set_db_data({"/media/stop":""})
+}
+
 function playmedia(){
    global_set_db_data({"/media/play":""})
 }

@@ -46,10 +46,12 @@ def server_main(main_thread):
          print("Main config changed")
          hb_instruction = global_data.instruction_class()
          hb_instruction.command = "/heartbeat/reload_config"
+         hb_instruction.data = device_list[0].ip_addr
          hb_inst_dict = hb_instruction.dump_dict()
          global_data.heartbeat_queue.put(hb_inst_dict)
          nw_instruction = global_data.instruction_class()
          nw_instruction.command = "/network/reload_config"
+         nw_instruction.data = device_list[0].ip_addr
          nw_inst_dict = nw_instruction.dump_dict()
          global_data.network_queue.put(nw_inst_dict)
          config_changed = 0
@@ -177,7 +179,6 @@ def process_local_task(instruction:global_data.instruction_class):
             config_changed = 1
             break
    if(instruction.command == "/database/update_config"):
-      json_object.pop("command")
       for data in json_object:
          if((data == 'device_id') or (data == '_id')):
             print("not updating id stuff")

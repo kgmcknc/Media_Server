@@ -1,7 +1,9 @@
 for server source code:
-you need python
-you need mongodb
-you need pymongo (python mongo driver)
+you need python (raspberry pi needs python3.5)
+you need mongodb (raspberry pi https://forums.raspberrypi.com/viewtopic.php?p=1936804) (https://pimylifeup.com/rasberry-pi-unifi/)
+you need pymongo (python mongo driver) (python -m pip install pymongo) (raspberry pi needs pymongo==3.4.0)
+you need python-vlc (python -m pip install python-vlc)
+you need cec-utils
 
 for webpage:
 you need a web server with php support (and maybe mongo db ability?)

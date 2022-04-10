@@ -212,6 +212,7 @@ def network_listener(network_thread):
                   dev.connected = 0
                   disconnect_inst = global_data.instruction_class()
                   disconnect_inst.command = "/heartbeat/device_disconnected"
+                  disconnect_inst.is_local = 1
                   disconnect_inst.data = dev.device_id
                   disconnect_dict = disconnect_inst.dump_dict()
                   global_data.main_queue.put(disconnect_dict)
@@ -224,6 +225,7 @@ def network_listener(network_thread):
                      dev.connected = 0
                      disconnect_inst = global_data.instruction_class()
                      disconnect_inst.command = "/heartbeat/device_disconnected"
+                     disconnect_inst.is_local = 1
                      disconnect_inst.data = dev.device_id
                      disconnect_dict = disconnect_inst.dump_dict()
                      global_data.main_queue.put(disconnect_dict)
@@ -294,6 +296,7 @@ def network_listener(network_thread):
                   tx_list.append(tx_device.socket)
                   device_inst = global_data.instruction_class()
                   device_inst.command = "/heartbeat/device_connected"
+                  device_inst.is_local = 1
                   device_inst.data = tx_device.device_id
                   hb_dict = device_inst.dump_dict()
                   global_data.main_queue.put(hb_dict)
@@ -337,6 +340,7 @@ def network_listener(network_thread):
                            device_sock.port = new_address[1]
                            device_inst = global_data.instruction_class()
                            device_inst.command = "/heartbeat/device_connected"
+                           device_inst.is_local = 1
                            device_inst.data = tx_device.device_id
                            hb_dict = device_inst.dump_dict()
                            global_data.main_queue.put(hb_dict)
@@ -348,6 +352,7 @@ def network_listener(network_thread):
                      # send packet indicating unknown device
                      conn_inst = global_data.instruction_class()
                      conn_inst.command = "/network/received_unknown_connection"
+                     conn_inst.is_local = 1
                      conn_inst.src = new_address[0]
                      conn_inst.dst = new_address[0]
                      conn_inst.port = new_address[1]

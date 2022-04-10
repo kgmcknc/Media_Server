@@ -13,6 +13,7 @@ media_queue = queue.Queue()
 media_queue_timeout = 4
 
 class instruction_class:
+   is_local = 0
    is_global = 0
    global_done = 0
    global_id = 0

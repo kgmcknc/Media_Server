@@ -42,14 +42,13 @@ def process_instruction(instruction:global_data.instruction_class):
    global player
    global media_source
 
-   return_data = ""
+   if(instruction.is_global):
+      instruction.global_done = 1
 
    if(instruction.command == "/database/index_media_folder"):
-      instruction.global_done = 1
       database.index_media_folder(instruction.data)
 
    if(instruction.command == "/media/set_display"):
-      instruction.global_done = 1
       try:
          if(instruction.data == "on"):
             instruction.data = "on done"
@@ -64,35 +63,42 @@ def process_instruction(instruction:global_data.instruction_class):
             command = "echo 'as' | cec-client -s"
             subprocess.call(command, shell=True, stdout=subprocess.DEVNULL)
       except:
+         instruction.data = "display_error"
          print("couldn't do system call")
    
-   if(instruction.command == "/media/start"):
-      if(instruction.is_global):
-         new_base = instruction.data["base_path"]
-         new_file = instruction.data["file_path"]
-         link_path = {"src_path":instruction.data["base_path"]}
-         link_dst = database.get_media_link(link_path)
-         file_path = link_dst["dst_path"] + new_file[len(link_dst["src_path"]):]
-      else:
-         new_base = instruction.data["base_path"]
-         new_file = instruction.data["file_path"]
-         file_path = new_file
+   try:
+      if(instruction.command == "/media/start"):
+         if(instruction.is_global):
+            new_base = instruction.data["base_path"]
+            new_file = instruction.data["file_path"]
+            link_path = {"src_path":new_base}
+            link_dst = database.get_media_link(link_path)
+            file_path = link_dst["dst_path"] + new_file[len(link_dst["src_path"]):]
+         else:
+            new_base = instruction.data["base_path"]
+            new_file = instruction.data["file_path"]
+            file_path = new_file
+         
+         media_source = file_path
+         # creating a media
+         media = vlc_instance.media_new(media_source)
+         # setting media to the player
+         player.set_media(media)
+         player.play()
+         player.toggle_fullscreen()
+         instruction.data = "player_started"
+      if(instruction.command == "/media/stop"):
+         player.stop()
+         instruction.data = "player_stopped"
+      if(instruction.command == "/media/play"):
+         player.play()
+         instruction.data = "player_played"
+      if(instruction.command == "/media/pause"):
+         player.pause()
+         instruction.data = "player_paused"
+   except:
+      instruction.data = "media_error"
       
-      media_source = file_path
-      # creating a media
-      media = vlc_instance.media_new(media_source)
-      # setting media to the player
-      player.set_media(media)
-      player.play()
-      player.toggle_fullscreen()
-   if(instruction.command == "/media/stop"):
-      player.stop()
-   if(instruction.command == "/media/play"):
-      player.play()
-   if(instruction.command == "/media/pause"):
-      player.pause()
-      
-   if(instruction.is_global and instruction.global_done):
-      instruction.data = return_data
+   if((instruction.is_local == 0) or (instruction.is_global and instruction.global_done)):
       ret_inst_dict = instruction.dump_dict()
       global_data.network_queue.put(ret_inst_dict, block=False)

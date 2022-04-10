@@ -141,6 +141,7 @@ def network_listener(network_thread):
                   dev.socket.close()
                else:
                   local_instruction = global_data.instruction_class()
+                  local_instruction.is_local = 1
                   data_string = data.decode()
                   if(data_string[0:3] == "GET"):
                      offset = data_string.find("q={")
@@ -212,7 +213,7 @@ def network_listener(network_thread):
                   dev.connected = 0
                   disconnect_inst = global_data.instruction_class()
                   disconnect_inst.command = "/heartbeat/device_disconnected"
-                  disconnect_inst.is_local = 1
+                  disconnect_inst.is_internal = 1
                   disconnect_inst.data = dev.device_id
                   disconnect_dict = disconnect_inst.dump_dict()
                   global_data.main_queue.put(disconnect_dict)
@@ -225,7 +226,7 @@ def network_listener(network_thread):
                      dev.connected = 0
                      disconnect_inst = global_data.instruction_class()
                      disconnect_inst.command = "/heartbeat/device_disconnected"
-                     disconnect_inst.is_local = 1
+                     disconnect_inst.is_internal = 1
                      disconnect_inst.data = dev.device_id
                      disconnect_dict = disconnect_inst.dump_dict()
                      global_data.main_queue.put(disconnect_dict)
@@ -245,6 +246,8 @@ def network_listener(network_thread):
                         for x in range(3, len(dev_instruction_split)):
                            new_command = new_command + "/" + dev_instruction_split[x]
                         dev_instruction.command = new_command
+                     else:
+                        dev_instruction.is_device = 1
                      dev_inst_dict = dev_instruction.dump_dict()
                      global_data.main_queue.put(dev_inst_dict)
 
@@ -296,7 +299,7 @@ def network_listener(network_thread):
                   tx_list.append(tx_device.socket)
                   device_inst = global_data.instruction_class()
                   device_inst.command = "/heartbeat/device_connected"
-                  device_inst.is_local = 1
+                  device_inst.is_internal = 1
                   device_inst.data = tx_device.device_id
                   hb_dict = device_inst.dump_dict()
                   global_data.main_queue.put(hb_dict)
@@ -340,7 +343,7 @@ def network_listener(network_thread):
                            device_sock.port = new_address[1]
                            device_inst = global_data.instruction_class()
                            device_inst.command = "/heartbeat/device_connected"
-                           device_inst.is_local = 1
+                           device_inst.is_internal = 1
                            device_inst.data = tx_device.device_id
                            hb_dict = device_inst.dump_dict()
                            global_data.main_queue.put(hb_dict)
@@ -348,11 +351,11 @@ def network_listener(network_thread):
                         else:
                            print("Accept error, device wasn't detected...")
                   if(found_connection == 0):
-                     print("Accept didn't find known device... closing connection")
+                     print("Accept didn't find known device... closing connection ", new_address[0])
                      # send packet indicating unknown device
                      conn_inst = global_data.instruction_class()
                      conn_inst.command = "/network/received_unknown_connection"
-                     conn_inst.is_local = 1
+                     conn_inst.is_internal = 1 # this just goes to other device, where it will get decoded as device instruction
                      conn_inst.src = new_address[0]
                      conn_inst.dst = new_address[0]
                      conn_inst.port = new_address[1]

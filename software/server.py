@@ -47,12 +47,12 @@ def server_main(main_thread):
          hb_instruction = global_data.instruction_class()
          hb_instruction.command = "/heartbeat/reload_config"
          hb_instruction.data = device_list[0].ip_addr
-         hb_instruction.is_local = 1
+         hb_instruction.is_internal = 1
          hb_inst_dict = hb_instruction.dump_dict()
          global_data.heartbeat_queue.put(hb_inst_dict)
          nw_instruction = global_data.instruction_class()
          nw_instruction.command = "/network/reload_config"
-         nw_instruction.is_local = 1
+         nw_instruction.is_internal = 1
          nw_instruction.data = device_list[0].ip_addr
          nw_inst_dict = nw_instruction.dump_dict()
          global_data.network_queue.put(nw_inst_dict)
@@ -129,48 +129,52 @@ def process_main_instruction(instruction:global_data.instruction_class):
       process_instruction = 1
 
    if(process_instruction):
-      if(instruction.command == "/system/shutdown_delay"):
-         while(main_thread.is_active()):
-            pass
-      
-      if(instruction.is_local):   
-         try:
-            if(instruction.command == "/heartbeat/ip_changed"):
-               device_list[0].ip_addr = networking.get_my_ip()
-               database.update_db_device_config(device_list[0])
-               config_changed = 1
-            if(instruction.command == "/heartbeat/new_packet"):
-               update_device_list(instruction.data)
-            if(instruction.command == "/heartbeat/device_connected"):
-               update_device_connection(instruction.data, 1)
-            if(instruction.command == "/heartbeat/device_disconnected"):
-               update_device_connection(instruction.data, 0)
-            if(instruction.command == "/network/received_unknown_connection"):
-               remove_unknown_device(instruction)
-         except:
-            print("Local Instruction Failed Somehow")
-      else:
-         try:
-            if((len(instruction_split) > 1) and (instruction_split[1] == "database")):
-               return_data = process_db_task(instruction)
-               instruction.data = return_data
-         except:
-            instruction.data = "DB_ERR"
-            if(instruction.is_global):
-               instruction.global_done = 1
-         nw_inst_dict = instruction.dump_dict()
-         global_data.network_queue.put(nw_inst_dict, block=False)
+      try:
+         if(instruction.command == "/system/shutdown_delay"):
+            while(main_thread.is_active()):
+               pass
+            return
+      except:
+         print("Error waiting for shutdown")
+         return
 
-         try:
-            if((len(instruction_split) > 1) and (instruction_split[1] == "media")):
-               media_inst_dict = instruction.dump_dict()
-               global_data.media_queue.put(media_inst_dict, block=False)
-         except:
-            print("Media Instruction Error")
+      try:
+         if((len(instruction_split) > 1) and (instruction_split[1] == "media")):
+            media_inst_dict = instruction.dump_dict()
+            global_data.media_queue.put(media_inst_dict, block=False)
+            return
+      except:
+         print("Error sending media command")
+         return
 
-      if(instruction.is_global and instruction.global_done):
+      try:
+         if(instruction.command == "/heartbeat/ip_changed"):
+            device_list[0].ip_addr = networking.get_my_ip()
+            database.update_db_device_config(device_list[0])
+            config_changed = 1
+         if(instruction.command == "/heartbeat/new_packet"):
+            update_device_list(instruction.data)
+         if(instruction.command == "/heartbeat/device_connected"):
+            update_device_connection(instruction.data, 1)
+         if(instruction.command == "/heartbeat/device_disconnected"):
+            update_device_connection(instruction.data, 0)
+         
+         if(instruction.command == "/network/received_unknown_connection"):
+            heartbeat.send_heartbeat_packet(device_list[0])
+            remove_unknown_device(instruction)
+         
+         if((len(instruction_split) > 1) and (instruction_split[1] == "database")):
+            instruction.data = process_db_task(instruction)
+      except:
+         print("Error processing main instruction")
+         instruction.data = "DB_ERR"
+         if(instruction.is_global):
+            instruction.global_done = 1
+
+      if((instruction.is_global and instruction.global_done) or (instruction.is_local)):
          global_inst_dict = instruction.dump_dict()
          global_data.network_queue.put(global_inst_dict, block=False)
+
 
 def process_db_task(instruction:global_data.instruction_class):
    global config_changed
@@ -292,7 +296,7 @@ def update_device_list(device_data:devices.server_device_class):
    if(device_update):
       instruction = global_data.instruction_class()
       instruction.command = "/network/reload_config"
-      instruction.is_local = 1
+      instruction.is_internal = 1
       instruction.data = device_data.ip_addr
       reload_inst_dict = instruction.dump_dict()
       global_data.network_queue.put(reload_inst_dict)
@@ -316,7 +320,7 @@ def remove_unknown_device(device_data:global_data.instruction_class):
          database.update_db_device_in_list(device_list[index])
          instruction = global_data.instruction_class()
          instruction.command = "/network/reload_config"
-         instruction.is_local = 1
+         instruction.is_internal = 1
          instruction.data = device_data.src
          reload_inst_dict = instruction.dump_dict()
          global_data.network_queue.put(reload_inst_dict)
@@ -369,7 +373,7 @@ def exit_handler(signum, frame):
       print("caught exit... shutting down")
       instruction = global_data.instruction_class()
       instruction.command = "/system/shutdown_delay"
-      instruction.is_local = 1
+      instruction.is_internal = 1
       sys_inst_dict = instruction.dump_dict()
       global_data.main_queue.put(sys_inst_dict, block=False)
       main_thread.stop_thread()

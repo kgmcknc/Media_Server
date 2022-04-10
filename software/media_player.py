@@ -34,6 +34,8 @@ def check_media_player():
    global media_active
    global media_playing
 
+   media_active = player.is_playing()
+   print("media_active ", media_active)
    if(media_active == 0):
       return
 

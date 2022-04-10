@@ -26,7 +26,7 @@ def heartbeat_keepalive(heartbeat_thread):
          last_ip = new_ip
          device_config.ip_addr = new_ip
          instruction = global_data.instruction_class()
-         instruction.is_local = 1
+         instruction.is_internal = 1
          instruction.command = "/heartbeat/ip_changed"
          hb_inst_dict = instruction.dump_dict()
          global_data.main_queue.put(hb_inst_dict)
@@ -86,7 +86,7 @@ def is_heartbeat_packet(heartbeat_data):
 def receive_heartbeat_packet(heartbeat_data):
    # pass heartbeat packet up to main server to process
    instruction = global_data.instruction_class()
-   instruction.is_local = 1
+   instruction.is_internal = 1
    instruction.command = "/heartbeat/new_packet"
    packet_data = heartbeat_data[0].decode()
    packet_data = json.loads(packet_data[len(media_server_heartbeat_string):])

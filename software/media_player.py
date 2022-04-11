@@ -11,10 +11,11 @@ player = vlc_instance.media_player_new()
 media_source = ""
 media_active = 0
 media_playing = 0
+media_time = 0
 
 def run_media_player(player_thread):
    while (player_thread.is_active()):
-      while(not global_data.media_queue.empty()):
+      if(not global_data.media_queue.empty()):
          try:
             new_inst_dict = global_data.media_queue.get(block=False)
             new_queue_inst = global_data.instruction_class()
@@ -24,7 +25,7 @@ def run_media_player(player_thread):
             pass
          else:
             process_instruction(new_queue_inst)
-         check_media_player()
+      check_media_player()
       player_thread.pause(1)
    return
 
@@ -34,15 +35,17 @@ def check_media_player():
    global media_active
    global media_playing
 
-   media_active = player.is_playing()
-   print("media_active ", media_active)
-   if(media_active == 0):
-      return
+   # make a paused timeout of certain amount of time where we just internally stop and clear media if it stays paused for long enough
+   # we can set the media_inactive_timeout period in the config
+   # we can also set a timeout for turning off the display or not with the timeout
+
+   return
 
 def process_instruction(instruction:global_data.instruction_class):
    global vlc_instance
    global player
    global media_source
+   global media_time
 
    if(instruction.is_global):
       instruction.global_done = 1
@@ -50,8 +53,8 @@ def process_instruction(instruction:global_data.instruction_class):
    if(instruction.command == "/database/index_media_folder"):
       database.index_media_folder(instruction.data)
 
-   if(instruction.command == "/media/set_display"):
-      try:
+   try:
+      if(instruction.command == "/media/set_display"):
          if(instruction.data == "on"):
             instruction.data = "on done"
             command = "echo 'on 0' | cec-client -s"
@@ -64,9 +67,9 @@ def process_instruction(instruction:global_data.instruction_class):
             instruction.data = "active done"
             command = "echo 'as' | cec-client -s"
             subprocess.call(command, shell=True, stdout=subprocess.DEVNULL)
-      except:
-         instruction.data = "display_error"
-         print("couldn't do system call")
+   except:
+      instruction.data = "display_error"
+      print("Error Setting Display")
    
    try:
       if(instruction.command == "/media/start"):
@@ -84,6 +87,7 @@ def process_instruction(instruction:global_data.instruction_class):
          media_source = file_path
          # creating a media
          media = vlc_instance.media_new(media_source)
+         media_time = media.get_duration()
          # setting media to the player
          player.set_media(media)
          player.play()
@@ -100,6 +104,16 @@ def process_instruction(instruction:global_data.instruction_class):
          instruction.data = "player_paused"
    except:
       instruction.data = "media_error"
+
+   try:
+      if(instruction.command == "/media/get_time"):
+         time_status = {}
+         time_status.total_time = media_time
+         time_status.current_time = player.get_time()
+         time_status.current_position = player.get_postion()
+         instruction.data = time_status
+   except:
+      instruction.data = "status_error"
       
    if((instruction.is_local == 0) or (instruction.is_global and instruction.global_done)):
       ret_inst_dict = instruction.dump_dict()

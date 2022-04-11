@@ -91,8 +91,9 @@ def process_main_instruction(instruction:global_data.instruction_class):
             # instruction was received from this device
             # lets see if it's intended for this device or another device
             if((instruction.dst == device_list[0].ip_addr) and (instruction.global_id == device_list[0].device_id)):
-               print("Global packet src and dst the same... odd... process or drop?")
-               # dropping for now...
+               # global for this device..? odd but we can process and just send back to web...
+               process_instruction = 1
+               instruction.is_global = 0
             else:
                # intended for another device... send to that device
                #print("Global packet forwarded")

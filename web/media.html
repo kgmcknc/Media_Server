@@ -22,10 +22,6 @@
       <input type="submit" value="Create New Link Folder" onclick="add_new_link_folder()">
       <input type="submit" value="Remove Current Link Folder" onclick="remove_current_link_folder()">
       <br>
-      <input type="submit" value="Display On" onclick="set_display('on')">
-      <input type="submit" value="Display Off" onclick="set_display('off')">
-      <input type="submit" value="Display Active" onclick="set_display('active')">
-      <br>
       User: <select name="userdropdown" id="userdropdown" onchange="update_user()">
       </select>
       <input type="text" id="new_user_name_text">
@@ -54,7 +50,12 @@
       <input type="submit" value="Previous" onclick="previous_episode()">
       <input type="submit" value="Next" onclick="next_episode()">
       <br>
-      <input type="text" id="movie_text" style="width:100%">
+      <input type="text" id="movie_text" style="width:90%">
+      <br>
+      <br>
+      <input type="submit" value="Display On" onclick="set_display('on')">
+      <input type="submit" value="Display Off" onclick="set_display('off')">
+      <input type="submit" value="Display Active" onclick="set_display('active')">
       <br>
       <input type="submit" value="Start" onclick="startmedia()">
       <input type="submit" value="Stop" onclick="stopmedia()">
@@ -65,7 +66,7 @@
       <div id="media_time_div">0:0:0 of 0:0:0</div>
       <br>
       <input type="range" min="1" max="100" value="1" class="slider" id="media_range"
-         onmouseup="mediasliderchange()" ontouchend="mediasliderchange()" onkeyup="mediasliderchange()" width="100%">
+         onmouseup="mediasliderchange()" ontouchend="mediasliderchange()" onkeyup="mediasliderchange()" style="width: 90%">
       <br>
    </div>
    <div id="media_data" style="position: absolute;overflow-y:scroll; overflow-x:clip; overflow-wrap:anywhere">

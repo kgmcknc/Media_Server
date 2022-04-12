@@ -283,6 +283,10 @@ function load_device_list(devices){
    devicelist = document.getElementById("devicedropdown");
    device_list_array = devices
    // empty current list
+   old_id = ""
+   if(devicelist.length > 1){
+      old_id = devicelist[devicelist.selectedIndex].device_id
+   }
    while(devicelist.length > 0){
       devicelist.remove(0);
    }
@@ -291,6 +295,14 @@ function load_device_list(devices){
       new_option = document.createElement("option");
       new_option.text = devices[x].name;
       devicelist.add(new_option);
+   }
+   if(old_id != ""){
+      for(x=0;x<devices.length;x++){
+         if(old_id == devices[x].device_id){
+            devicelist.selectedIndex = x;
+            break;
+         }
+      }
    }
 }
 

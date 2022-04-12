@@ -144,13 +144,21 @@ def network_listener(network_thread):
                   local_instruction.is_local = 1
                   data_string = data.decode()
                   if(data_string[0:3] == "GET"):
-                     offset = data_string.find("q={")
-                     end_offset = data_string.rfind("}")+1
-                     query_string = data_string[offset+2:end_offset]
-                     offset = query_string.find(":")
-                     local_instruction.command = query_string[2:offset-1]
-                     query_data = query_string[offset+1:len(query_string)-1]
-                     local_instruction.data = json.loads(query_data)
+                     start_offset = data_string.find("q={")
+                     if(start_offset > 0):
+                        end_offset = data_string.rfind("}")+1
+                        query_string = data_string[start_offset+2:end_offset]
+                        offset = query_string.find(":")
+                        if(offset < 1):
+                           local_instruction.command = query_string[2:len(query_string)-1]
+                           local_instruction.data = ""
+                        else:
+                           local_instruction.command = query_string[2:offset-1]
+                           query_data = query_string[offset+1:len(query_string)-1]
+                           local_instruction.data = json.loads(query_data)
+                     else:
+                        local_instruction.command = ""
+                        local_instruction.data = ""
                      local_instruction.src = dev.ip_addr
                      local_instruction.dst = dev.ip_addr
                      local_instruction.port = dev.port
@@ -168,13 +176,21 @@ def network_listener(network_thread):
                      dev.detected = 0
                   else:
                      if(data_string[0:4] == "POST"):
-                        offset = data_string.find("q={")
-                        end_offset = data_string.rfind("}")+1
-                        query_string = data_string[offset+2:end_offset]
-                        offset = query_string.find(":")
-                        local_instruction.command = query_string[2:offset-1]
-                        query_data = query_string[offset+1:len(query_string)-1]
-                        local_instruction.data = json.loads(query_data)
+                        start_offset = data_string.find("q={")
+                        if(start_offset > 1):
+                           end_offset = data_string.rfind("}")+1
+                           query_string = data_string[start_offset+2:end_offset]
+                           offset = query_string.find(":")
+                           if(offset < 1):
+                              local_instruction.command = query_string[2:len(query_string)-1]
+                              query_data = ""
+                           else:
+                              local_instruction.command = query_string[2:offset-1]
+                              query_data = query_string[offset+1:len(query_string)-1]
+                              local_instruction.data = json.loads(query_data)
+                        else:
+                           local_instruction.command = ""
+                           local_instruction.data = ""
                         local_instruction.src = dev.ip_addr
                         local_instruction.dst = dev.ip_addr
                         local_instruction.port = dev.port

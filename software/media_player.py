@@ -11,7 +11,6 @@ player = vlc_instance.media_player_new()
 media_source = ""
 media_active = 0
 media_playing = 0
-media_time = 0
 
 def run_media_player(player_thread):
    while (player_thread.is_active()):
@@ -25,8 +24,9 @@ def run_media_player(player_thread):
             pass
          else:
             process_instruction(new_queue_inst)
+      else:
+         player_thread.pause(0.5)
       check_media_player()
-      player_thread.pause(1)
    return
 
 def check_media_player():
@@ -39,13 +39,25 @@ def check_media_player():
    # we can set the media_inactive_timeout period in the config
    # we can also set a timeout for turning off the display or not with the timeout
 
+   try:
+      player_state = str(player.get_state())
+      if((player_state == 'State.NothingSpecial') or
+         (player_state == 'State.Stopped') or
+         (player_state == 'State.Ended') or
+         (player_state == 'State.Error')):
+         media_active = 0
+      else:
+         media_active = 1
+   except:
+      media_active = 0
+
    return
 
 def process_instruction(instruction:global_data.instruction_class):
    global vlc_instance
    global player
    global media_source
-   global media_time
+   global media_active
 
    if(instruction.is_global):
       instruction.global_done = 1
@@ -87,7 +99,6 @@ def process_instruction(instruction:global_data.instruction_class):
          media_source = file_path
          # creating a media
          media = vlc_instance.media_new(media_source)
-         media_time = media.get_duration()
          # setting media to the player
          player.set_media(media)
          player.play()
@@ -106,15 +117,26 @@ def process_instruction(instruction:global_data.instruction_class):
       instruction.data = "media_error"
 
    try:
+      if(instruction.command == "/media/get_status"):
+         status = {}
+         status["active"] = media_active
+         if(media_active):
+            status["source"] = media_source
+            status["total_time"] = player.get_length()
+            status["current_time"] = player.get_time()
+            status["current_position"] = player.get_position()
+         instruction.data = status
       if(instruction.command == "/media/get_time"):
          time_status = {}
-         time_status.total_time = media_time
-         time_status.current_time = player.get_time()
-         time_status.current_position = player.get_postion()
+         time_status["total_time"] = player.get_length()
+         time_status["current_time"] = player.get_time()
+         time_status["current_position"] = player.get_position()
          instruction.data = time_status
+      if(instruction.command == "/media/is_active"):
+         instruction.data = media_active
    except:
       instruction.data = "status_error"
       
-   if((instruction.is_local == 0) or (instruction.is_global and instruction.global_done)):
+   if((instruction.is_internal == 0) or (instruction.is_global and instruction.global_done)):
       ret_inst_dict = instruction.dump_dict()
       global_data.network_queue.put(ret_inst_dict, block=False)

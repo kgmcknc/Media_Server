@@ -16,7 +16,7 @@ get_device_list();
 load_user_data();
 load_folder_data();
 
-setInterval(second_pulse_update, 1000);
+setInterval(periodic_media_update, 3500);
 
 function java_formatting(){
    main = document.getElementById("main_page");
@@ -399,8 +399,17 @@ function loadcookies(){
 
 function get_db_data(request_data, callback){
    var xmlhttp;
-   var object = request_data;
-   var valuestring = JSON.stringify(object);
+   if(typeof(request_data) == "string"){
+      var req_object = {};
+      req_object[request_data] = "";
+   } else {
+      if(typeof(request_data) == "object"){
+         var req_object = request_data;
+      } else {
+         return
+      }
+   }
+   var valuestring = JSON.stringify(req_object);
    
    if (window.XMLHttpRequest) {
       xmlhttp = new XMLHttpRequest();
@@ -413,7 +422,11 @@ function get_db_data(request_data, callback){
    xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
          if(callback){
-            response_json = JSON.parse(this.responseText);
+            try {
+               response_json = JSON.parse(this.responseText);
+            } catch (e) {
+               return
+            }
             if(response_json != "DB_ERR"){
                callback(response_json);
             }
@@ -428,8 +441,17 @@ function global_get_db_data(request_data, callback){
       device = device_list_array[devicelist.selectedIndex];
       device_id = device.device_id;
       var xmlhttp;
-      var object = request_data;
-      var new_request = JSON.stringify(object);
+      if(typeof(request_data) == "string"){
+         var req_object = {};
+         req_object[request_data] = "";
+      } else {
+         if(typeof(request_data) == "object"){
+            var req_object = request_data;
+         } else {
+            return
+         }
+      }
+      var new_request = JSON.stringify(req_object);
       var valuestring = new_request(0,2) + "/global/" + device_id + new_request(2)
       
       if (window.XMLHttpRequest) {
@@ -443,7 +465,11 @@ function global_get_db_data(request_data, callback){
       xmlhttp.onreadystatechange = function() {
          if (this.readyState == 4 && this.status == 200) {
             if(callback){
-               response_json = JSON.parse(this.responseText);
+               try {
+                  response_json = JSON.parse(this.responseText);
+               } catch (e) {
+                  return
+               }
                if(response_json != "DB_ERR"){
                   callback(response_json);
                }
@@ -451,14 +477,23 @@ function global_get_db_data(request_data, callback){
          }
       }
    } else {
-      set_db_data(request_data, callback);
+      get_db_data(request_data, callback);
    }
 }
 
 function set_db_data(request_data, callback){
    var xmlhttp;
-   var object = request_data;
-   var valuestring = JSON.stringify(object);
+   if(typeof(request_data) == "string"){
+      var req_object = {};
+      req_object[request_data] = "";
+   } else {
+      if(typeof(request_data) == "object"){
+         var req_object = request_data;
+      } else {
+         return
+      }
+   }
+   var valuestring = JSON.stringify(req_object);
    
    if (window.XMLHttpRequest) {
       xmlhttp = new XMLHttpRequest();
@@ -471,7 +506,11 @@ function set_db_data(request_data, callback){
    xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
          if(callback){
-            response_json = JSON.parse(this.responseText);
+            try {
+               response_json = JSON.parse(this.responseText);
+            } catch (e) {
+               return
+            }
             if(response_json != "DB_ERR"){
                callback(response_json);
             }
@@ -486,8 +525,17 @@ function global_set_db_data(request_data, callback){
       device = device_list_array[devicelist.selectedIndex];
       device_id = device.device_id;
       var xmlhttp;
-      var object = request_data;
-      var new_request = JSON.stringify(object);
+      if(typeof(request_data) == "string"){
+         var req_object = {};
+         req_object[request_data] = "";
+      } else {
+         if(typeof(request_data) == "object"){
+            var req_object = request_data;
+         } else {
+            return
+         }
+      }
+      var new_request = JSON.stringify(req_object);
       var valuestring = new_request.slice(0,2) + "/global/" + device_id + new_request.slice(2)
       
       if (window.XMLHttpRequest) {
@@ -501,7 +549,11 @@ function global_set_db_data(request_data, callback){
       xmlhttp.onreadystatechange = function() {
          if (this.readyState == 4 && this.status == 200) {
             if(callback){
-               response_json = JSON.parse(this.responseText);
+               try {
+                  response_json = JSON.parse(this.responseText);
+               } catch (e) {
+                  return
+               }
                if(response_json != "DB_ERR"){
                   callback(response_json);
                }
@@ -812,7 +864,38 @@ function get_previous_episode(){
    }
 }
 
-function second_pulse_update(){
+var media_active = 0
+var media_duration = 0
+var media_time = 0
+var media_position = 0
+function periodic_media_update(){
    // check and update position in currently playing / last played (maybe every 10 seconds)
-
+   if(!document.hidden){
+      global_get_db_data("/media/get_status",get_media_status)
+   }
+   //if(media_active){
+      //get_db_data("/media/get_status",get_media_time)
+   //} else {
+      //get_db_data("/media/is_active",get_media_active)
+   //}
 }
+
+function get_media_status(media_status){
+   media_active = media_status.active
+   if(media_active){
+      media_duration = media_status.total_time
+      media_time = media_status.current_time
+      media_position = media_status.current_position
+   }
+}
+
+function get_media_active(media_active_status){
+   media_active = media_active_status
+}
+
+function get_media_time(media_time_status){
+   media_duration = media_time_status.total_time
+   media_time = media_time_status.current_time
+   media_position = media_time_status.current_position
+}
+

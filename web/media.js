@@ -868,6 +868,9 @@ var media_active = 0
 var media_duration = 0
 var media_time = 0
 var media_position = 0
+var media_range_slider = document.getElementById("media_range");
+var media_time_display = document.getElementById("media_time_div")
+
 function periodic_media_update(){
    // check and update position in currently playing / last played (maybe every 10 seconds)
    if(!document.hidden){
@@ -887,6 +890,29 @@ function get_media_status(media_status){
       media_time = media_status.current_time
       media_position = media_status.current_position
    }
+   update_media_time()
+}
+
+function ffmedia(){
+   time_change = 20000
+   if((media_time + time_change) < media_duration){
+      global_set_db_data({"/media/set_time":media_time+time_change},update_media_time)
+   }
+}
+
+function rwmedia(){
+   time_change = 20000
+   if(media_time > time_change){
+      new_time = media_time - time_change
+   } else {
+      new_time = 0
+   }
+   global_set_db_data({"/media/set_time":new_time},update_media_time)
+}
+
+function mediasliderchange(){
+   new_position = media_range_slider.value/100
+   global_set_db_data({"/media/set_position":new_position},update_media_time)
 }
 
 function get_media_active(media_active_status){
@@ -897,5 +923,28 @@ function get_media_time(media_time_status){
    media_duration = media_time_status.total_time
    media_time = media_time_status.current_time
    media_position = media_time_status.current_position
+}
+
+function update_media_time(){
+   if(media_active){
+      slider_value = (media_position*100)
+      media_range_slider.value = slider_value.toFixed(0)
+      total_seconds = (media_duration/1000)%60
+      total_minutes = (media_duration/60000)%60
+      total_hours = (media_duration/3600000)%60
+      media_seconds = (media_time/1000)%60
+      media_minutes = (media_time/60000)%60
+      media_hours = (media_time/3600000)%60
+      total_seconds = total_seconds.toFixed(0)
+      total_minutes = total_minutes.toFixed(0)
+      total_hours = total_hours.toFixed(0)
+      media_seconds = media_seconds.toFixed(0)
+      media_minutes = media_minutes.toFixed(0)
+      media_hours = media_hours.toFixed(0)
+      media_time_display.innerHTML = media_hours+":"+media_minutes+":"+media_seconds+" of "+total_hours+":"+total_minutes+":"+total_seconds
+   } else {
+      media_time_display.innerHTML = "0:0:0 of 0:0:0"
+      media_range_slider.value = 1
+   }
 }
 

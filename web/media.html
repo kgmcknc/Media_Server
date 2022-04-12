@@ -60,6 +60,12 @@
       <input type="submit" value="Stop" onclick="stopmedia()">
       <input type="submit" value="Play" onclick="playmedia()">
       <input type="submit" value="Pause" onclick="pausemedia()">
+      <input type="submit" value="RWND" onclick="rwmedia()">
+      <input type="submit" value="FFWD" onclick="ffmedia()">
+      <div id="media_time_div">0:0:0 of 0:0:0</div>
+      <br>
+      <input type="range" min="1" max="100" value="1" class="slider" id="media_range"
+         onmouseup="mediasliderchange()" ontouchend="mediasliderchange()" onkeyup="mediasliderchange()" width="100%">
       <br>
    </div>
    <div id="media_data" style="position: absolute;overflow-y:scroll; overflow-x:clip; overflow-wrap:anywhere">

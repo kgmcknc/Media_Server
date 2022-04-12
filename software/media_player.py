@@ -136,6 +136,16 @@ def process_instruction(instruction:global_data.instruction_class):
          instruction.data = media_active
    except:
       instruction.data = "status_error"
+
+   try:
+      if(instruction.command == "/media/set_time"):
+         new_time = instruction.data
+         player.set_time(new_time)
+      if(instruction.command == "/media/set_position"):
+         new_position = instruction.data
+         player.set_position(new_position)
+   except:
+      instruction.data = "set_time_failed"
       
    if((instruction.is_internal == 0) or (instruction.is_global and instruction.global_done)):
       ret_inst_dict = instruction.dump_dict()

@@ -280,13 +280,14 @@ function periodic_get_devices(){
 }
 
 function load_device_list(devices){
+   old_id = ""
+   if(device_list_array.length > 1){
+      old_device = device_list_array[devicelist.selectedIndex]
+      old_id = old_device.device_id
+   }
    devicelist = document.getElementById("devicedropdown");
    device_list_array = devices
    // empty current list
-   old_id = ""
-   if(devicelist.length > 1){
-      old_id = devicelist[devicelist.selectedIndex].device_id
-   }
    while(devicelist.length > 0){
       devicelist.remove(0);
    }
@@ -295,12 +296,9 @@ function load_device_list(devices){
       new_option = document.createElement("option");
       new_option.text = devices[x].name;
       devicelist.add(new_option);
-   }
-   if(old_id != ""){
-      for(x=0;x<devices.length;x++){
-         if(old_id == devices[x].device_id){
+      if(old_id != ""){
+         if(devices[x].device_id == old_id){
             devicelist.selectedIndex = x;
-            break;
          }
       }
    }

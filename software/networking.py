@@ -360,10 +360,10 @@ def network_listener(network_thread):
                            device_inst = global_data.instruction_class()
                            device_inst.command = "/heartbeat/device_connected"
                            device_inst.is_internal = 1
-                           device_inst.data = tx_device.device_id
+                           device_inst.data = device_sock.device_id
                            hb_dict = device_inst.dump_dict()
                            global_data.main_queue.put(hb_dict)
-                           print("Put device connection change")
+                           print("Put device connection change ", new_address[0])
                         else:
                            print("Accept error, device wasn't detected...")
                   if(found_connection == 0):

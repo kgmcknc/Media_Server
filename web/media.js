@@ -17,6 +17,7 @@ load_user_data();
 load_folder_data();
 
 setInterval(periodic_media_update, 3500);
+setInterval(periodic_get_devices, 30000);
 
 function java_formatting(){
    main = document.getElementById("main_page");
@@ -272,6 +273,12 @@ function get_device_list(){
    get_db_data({"/database/get_db_devices":""}, load_device_list);
 }
 
+function periodic_get_devices(){
+   if(!document.hidden){
+      get_device_list();
+   }
+}
+
 function load_device_list(devices){
    devicelist = document.getElementById("devicedropdown");
    device_list_array = devices
@@ -452,7 +459,7 @@ function global_get_db_data(request_data, callback){
          }
       }
       var new_request = JSON.stringify(req_object);
-      var valuestring = new_request(0,2) + "/global/" + device_id + new_request(2)
+      var valuestring = new_request.slice(0,2) + "/global/" + device_id + new_request.slice(2)
       
       if (window.XMLHttpRequest) {
          xmlhttp = new XMLHttpRequest();

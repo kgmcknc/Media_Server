@@ -144,6 +144,12 @@ def process_instruction(instruction:global_data.instruction_class):
       if(instruction.command == "/media/set_position"):
          new_position = instruction.data
          player.set_position(new_position)
+      if(instruction.command == "/media/toggle_fullscreen"):
+         player.toggle_fullscreen()
+         if(player.is_fullscreen()):
+            instruction.data = "1"
+         else:
+            instruction.data = "0"
    except:
       instruction.data = "set_time_failed"
       

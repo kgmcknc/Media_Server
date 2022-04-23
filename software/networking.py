@@ -13,6 +13,8 @@ device_config = 0
 local_socket_list = []
 device_socket_list = []
 
+max_timeout_iteration = 60
+
 udp_rx_sock = 0
 
 def get_my_ip():
@@ -143,47 +145,16 @@ def network_listener(network_thread):
                   local_instruction = global_data.instruction_class()
                   local_instruction.is_local = 1
                   data_string = data.decode()
-                  if(data_string[0:3] == "GET"):
-                     start_offset = data_string.find("q={")
-                     if(start_offset > 0):
-                        end_offset = data_string.rfind("}")+1
-                        query_string = data_string[start_offset+2:end_offset]
-                        offset = query_string.find(":")
-                        if(offset < 1):
-                           local_instruction.command = query_string[2:len(query_string)-1]
-                           local_instruction.data = ""
-                        else:
-                           local_instruction.command = query_string[2:offset-1]
-                           query_data = query_string[offset+1:len(query_string)-1]
-                           local_instruction.data = json.loads(query_data)
-                     else:
-                        local_instruction.command = ""
-                        local_instruction.data = ""
-                     local_instruction.src = dev.ip_addr
-                     local_instruction.dst = dev.ip_addr
-                     local_instruction.port = dev.port
-                     local_instruction_split = local_instruction.command.split("/")
-                     if((len(local_instruction_split) > 1) and (local_instruction_split[1] == "global")):
-                        local_instruction.is_global = 1
-                        local_instruction.global_id = int(local_instruction_split[2])
-                        new_command = ""
-                        for x in range(3, len(local_instruction_split)):
-                           new_command = new_command + "/" + local_instruction_split[x]
-                        local_instruction.command = new_command
-                     local_get_dict = local_instruction.dump_dict()
-                     global_data.main_queue.put(local_get_dict)
-                     dev.connected = 0
-                     dev.detected = 0
-                  else:
-                     if(data_string[0:4] == "POST"):
+                  try:
+                     if(data_string[0:3] == "GET"):
                         start_offset = data_string.find("q={")
-                        if(start_offset > 1):
+                        if(start_offset > 0):
                            end_offset = data_string.rfind("}")+1
                            query_string = data_string[start_offset+2:end_offset]
                            offset = query_string.find(":")
                            if(offset < 1):
                               local_instruction.command = query_string[2:len(query_string)-1]
-                              query_data = ""
+                              local_instruction.data = ""
                            else:
                               local_instruction.command = query_string[2:offset-1]
                               query_data = query_string[offset+1:len(query_string)-1]
@@ -191,6 +162,7 @@ def network_listener(network_thread):
                         else:
                            local_instruction.command = ""
                            local_instruction.data = ""
+                        dev.timeout_count = max_timeout_iteration
                         local_instruction.src = dev.ip_addr
                         local_instruction.dst = dev.ip_addr
                         local_instruction.port = dev.port
@@ -202,17 +174,60 @@ def network_listener(network_thread):
                            for x in range(3, len(local_instruction_split)):
                               new_command = new_command + "/" + local_instruction_split[x]
                            local_instruction.command = new_command
-                        local_post_dict = local_instruction.dump_dict()
-                        global_data.main_queue.put(local_post_dict)
-                        #packet_data = header_okay+header_end
-                        #write_data_encode = packet_data.encode()
-                        #dev.socket.send(write_data_encode)
+                        local_get_dict = local_instruction.dump_dict()
+                        global_data.main_queue.put(local_get_dict)
                         dev.connected = 0
-                        #dev.done = 1
-                        #dev.socket.shutdown(socket.SHUT_RDWR)
-                        #dev.socket.close()
+                        dev.detected = 0
                      else:
-                        pass
+                        if(data_string[0:4] == "POST"):
+                           start_offset = data_string.find("q={")
+                           if(start_offset > 1):
+                              end_offset = data_string.rfind("}")+1
+                              query_string = data_string[start_offset+2:end_offset]
+                              offset = query_string.find(":")
+                              if(offset < 1):
+                                 local_instruction.command = query_string[2:len(query_string)-1]
+                                 query_data = ""
+                              else:
+                                 local_instruction.command = query_string[2:offset-1]
+                                 query_data = query_string[offset+1:len(query_string)-1]
+                                 local_instruction.data = json.loads(query_data)
+                           else:
+                              local_instruction.command = ""
+                              local_instruction.data = ""
+                           local_instruction.src = dev.ip_addr
+                           local_instruction.dst = dev.ip_addr
+                           local_instruction.port = dev.port
+                           dev.timeout_count = max_timeout_iteration
+                           local_instruction_split = local_instruction.command.split("/")
+                           if((len(local_instruction_split) > 1) and (local_instruction_split[1] == "global")):
+                              local_instruction.is_global = 1
+                              local_instruction.global_id = int(local_instruction_split[2])
+                              new_command = ""
+                              for x in range(3, len(local_instruction_split)):
+                                 new_command = new_command + "/" + local_instruction_split[x]
+                              local_instruction.command = new_command
+                           local_post_dict = local_instruction.dump_dict()
+                           global_data.main_queue.put(local_post_dict)
+                           #packet_data = header_okay+header_end
+                           #write_data_encode = packet_data.encode()
+                           #dev.socket.send(write_data_encode)
+                           dev.connected = 0
+                           #dev.done = 1
+                           #dev.socket.shutdown(socket.SHUT_RDWR)
+                           #dev.socket.close()
+                        else:
+                           print("Error Unknown Local Packet")
+                           dev.connected = 0
+                           dev.detected = 0
+                           dev.done = 1
+                           dev.socket.close()
+                  except:
+                     print("Caught Local Packet Error")
+                     dev.connected = 0
+                     dev.detected = 0
+                     dev.done = 1
+                     dev.socket.close()
 
       for dev in device_socket_list:
          if(dev.ready):
@@ -248,24 +263,41 @@ def network_listener(network_thread):
                      global_data.main_queue.put(disconnect_dict)
                      #send something to main here for disconnect? clear db?
                   else:
-                     dev_instruction = global_data.instruction_class()
-                     data_string = data.decode()
-                     global_dict = json.loads(data_string)
-                     dev_instruction.load_global(global_dict)
-                     dev_instruction.src = dev.ip_addr
-                     dev_instruction.dst = device_config.ip_addr
-                     dev_instruction_split = dev_instruction.command.split("/")
-                     if((len(dev_instruction_split) > 1) and (dev_instruction_split[1] == "global")):
-                        dev_instruction.is_global = 1
-                        dev_instruction.global_id = int(dev_instruction_split[2])
-                        new_command = ""
-                        for x in range(3, len(dev_instruction_split)):
-                           new_command = new_command + "/" + dev_instruction_split[x]
-                        dev_instruction.command = new_command
-                     else:
-                        dev_instruction.is_device = 1
-                     dev_inst_dict = dev_instruction.dump_dict()
-                     global_data.main_queue.put(dev_inst_dict)
+                     try:
+                        dev_instruction = global_data.instruction_class()
+                        data_string = data.decode()
+                        global_dict = json.loads(data_string)
+                        dev_instruction.load_global(global_dict)
+                        dev_instruction.src = dev.ip_addr
+                        dev_instruction.dst = device_config.ip_addr
+                        dev_instruction_split = dev_instruction.command.split("/")
+                        if((len(dev_instruction_split) > 1) and (dev_instruction_split[1] == "global")):
+                           dev_instruction.is_global = 1
+                           dev_instruction.global_id = int(dev_instruction_split[2])
+                           new_command = ""
+                           for x in range(3, len(dev_instruction_split)):
+                              new_command = new_command + "/" + dev_instruction_split[x]
+                           dev_instruction.command = new_command
+                        else:
+                           dev_instruction.is_device = 1
+                        dev_inst_dict = dev_instruction.dump_dict()
+                        global_data.main_queue.put(dev_inst_dict)
+                     except:
+                        print("Error Processing Device Data")
+                        dev.socket.shutdown(socket.SHUT_RDWR)
+                        dev.socket.close()
+                        dev.done = 1
+
+      # check timed out requests
+      for dev in local_socket_list:
+         if(dev.connected and (dev.done == 0)):
+            if(dev.timeout_count > 0):
+               dev.timeout_count = dev.timeout_count - 1
+               if(dev.timeout_count <= 0):
+                  print("Clearing Timed Out Global")
+                  dev.done = 1
+                  dev.socket.shutdown(socket.SHUT_RDWR)
+                  dev.socket.close()
 
       # Remove old unconnected devices
       # new_list = []

@@ -25,6 +25,7 @@ class instruction_class:
    socket = 0
    command = 0
    data = 0
+   timeout_count = 0
 
    def __init__(self, **instruction_info):
       for data_select in instruction_info:

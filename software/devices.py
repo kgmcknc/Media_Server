@@ -16,6 +16,7 @@ class server_device_class:
    socket = 0
    ready = 0
    done = 0
+   timeout_count = 0
 
    def __init__(self, **device_info):
       for key in device_info:

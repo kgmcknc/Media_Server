@@ -691,6 +691,10 @@ function pausemedia(){
    global_set_db_data({"/media/pause":""})
 }
 
+function toggle_fullscreen(){
+   global_set_db_data({"/media/toggle_fullscreen":""})
+}
+
 function load_movie_data(){
    var object = document.getElementById("movie_text");
    var valuestring = "media_player.php?media_file=" + object.value;

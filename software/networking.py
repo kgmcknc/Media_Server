@@ -457,7 +457,10 @@ def load_devices_from_db():
    if(len(db_devices) == 0):
       for dev in device_socket_list:
          if(dev.done == 0):
-               dev.socket.shutdown(socket.SHUT_RDWR)
+               try:
+                  dev.socket.shutdown(socket.SHUT_RDWR)
+               except:
+                  pass
                dev.socket.close()
       device_socket_list = []
    else:

@@ -34,7 +34,7 @@ def get_my_ip():
       s.close()
    return ip_address
    
-def send_broadcast_packet(packet_port, packet_data, packet_length):
+def send_broadcast_packet(packet_port, packet_data):
    udp_tx_sock = socket.socket (socket.AF_INET, socket.SOCK_DGRAM)
    udp_tx_sock.bind(('',0))
    udp_tx_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)

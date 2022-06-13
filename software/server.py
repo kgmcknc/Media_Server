@@ -393,7 +393,7 @@ def stop_threads():
 
 def server_shutdown():
    database.remove_unlinked_db_devices(device_list[0].device_id)
-   stop_threads()
+   #stop_threads()
    print("done")
 
 print("Setting Up Interrupt Handler")

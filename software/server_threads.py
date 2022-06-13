@@ -12,6 +12,7 @@ class server_thread_class:
          self.var = threading.Thread(target=function, args=(self,arg_list))
       else:
          self.var = threading.Thread(target=function, args=(self,))
+      self.var.daemon = True
       self.var.start()
 
    def is_active(self):

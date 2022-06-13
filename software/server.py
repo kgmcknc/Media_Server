@@ -130,14 +130,14 @@ def process_main_instruction(instruction:global_data.instruction_class):
       process_instruction = 1
 
    if(process_instruction):
-      try:
-         if(instruction.command == "/system/shutdown_delay"):
-            while(main_thread.is_active()):
-               pass
-            return
-      except:
-         print("Error waiting for shutdown")
-         return
+      # try:
+      #    if(instruction.command == "/system/shutdown_delay"):
+      #       while(main_thread.is_active()):
+      #          pass
+      #       return
+      # except:
+      #    print("Error waiting for shutdown")
+      #    return
 
       try:
          if((len(instruction_split) > 1) and (instruction_split[1] == "media")):
@@ -372,11 +372,11 @@ def exit_handler(signum, frame):
    if(system_running):
       system_running = 0
       print("caught exit... shutting down")
-      instruction = global_data.instruction_class()
-      instruction.command = "/system/shutdown_delay"
-      instruction.is_internal = 1
-      sys_inst_dict = instruction.dump_dict()
-      global_data.main_queue.put(sys_inst_dict, block=False)
+      # instruction = global_data.instruction_class()
+      # instruction.command = "/system/shutdown_delay"
+      # instruction.is_internal = 1
+      # sys_inst_dict = instruction.dump_dict()
+      # global_data.main_queue.put(sys_inst_dict, block=False)
       main_thread.stop_thread()
 
 def stop_threads():
@@ -410,5 +410,5 @@ except:
    print("Couldn't lock SIGQUIT")
 main_thread.start(server_main)
 while(main_thread.is_active()):
-   main_thread.pause(2)
+   main_thread.pause(1)
 

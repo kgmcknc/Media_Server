@@ -32,13 +32,18 @@ def server_main(main_thread):
    
    init_system()
 
-   heartbeat_listener_thread.start(heartbeat.heartbeat_listener)
-   heartbeat_thread.start(heartbeat.heartbeat_keepalive)
-   media_player_thread.start(media_player.run_media_player)
-   network_thread.start(networking.network_listener)
-
    print("main while")
    while (main_thread.is_active()):
+      if(heartbeat_listener_thread.is_active() == 0):
+         heartbeat_listener_thread.start(heartbeat.heartbeat_listener)
+      if(heartbeat_thread.is_active() == 0):
+         heartbeat_thread.start(heartbeat.heartbeat_keepalive)
+      if(media_player_thread.is_active() == 0):
+         media_player_thread.start(media_player.run_media_player)
+      if(network_thread.is_active() == 0):
+         network_thread.start(networking.network_listener)
+
+
       #TODO main will wait for queue to have something (or timeout)
       # if timeout happens we just run through loop to do whatever periodic task is needed... (check ip is only one now)
       # queue is used to return data back to website 

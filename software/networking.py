@@ -503,7 +503,10 @@ def load_devices_from_db():
                print("Removing Device " + dev.ip_addr)
                if(dev.done == 0):
                   if(dev.connected):
-                     dev.socket.shutdown(socket.SHUT_RDWR)
+                     try:
+                        dev.socket.shutdown(socket.SHUT_RDWR)
+                     except:
+                        pass
                   dev.socket.close()
          device_socket_list = new_list
 

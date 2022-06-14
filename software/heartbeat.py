@@ -61,7 +61,7 @@ def check_new_ip_addr(old_ip):
 
 def send_heartbeat_packet(device_config):
    heartbeat_data = media_server_heartbeat_string + device_config.to_json()
-   networking.send_broadcast_packet(heartbeat_port, heartbeat_data.encode(), max_heartbeat_length)
+   networking.send_broadcast_packet(heartbeat_port, heartbeat_data.encode())
 
 def heartbeat_listener(heartbeat_listener_thread):
    heartbeat_listener_thread.pause(1)

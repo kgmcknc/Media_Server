@@ -26,6 +26,7 @@ device_timeouts = []
 
 def server_main(main_thread):
    global config_changed
+   global device_list
    print("Starting Main")
 
    #TODO need to make more advanced device list/struct/array for keeping track of stuff like whether current media is linked between other devices

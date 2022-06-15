@@ -379,6 +379,11 @@ def remove_unlinked_db_devices(this_id):
          device_query = {"device_id": dev["device_id"]}
          devices.delete_one(device_query)
 
+def remove_db_device(this_id):
+   devices = server_db["devices"]
+   device_query = {"device_id": this_id}
+   devices.delete_one(device_query)
+
 def get_db_devices():
    db_devices = server_db["devices"]
    db_device_list = db_devices.find()

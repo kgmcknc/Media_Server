@@ -286,6 +286,7 @@ def network_listener(network_thread):
                         print("Error Processing Device Data")
                         dev.socket.shutdown(socket.SHUT_RDWR)
                         dev.socket.close()
+                        dev.connected = 0
                         dev.done = 1
 
       # check timed out requests
@@ -299,15 +300,12 @@ def network_listener(network_thread):
                   dev.socket.shutdown(socket.SHUT_RDWR)
                   dev.socket.close()
 
-      # Remove old unconnected devices
-      # new_list = []
-      # for dev in device_socket_list:
-      #    if(dev.done):
-      #       dev.ready = 0
-      #       dev.done = 0
-      #    else:
-      #       new_list.append(dev)
-      # device_socket_list = new_list
+      # Disconnect old unconnected devices
+      for dev in device_socket_list:
+         if(dev.done):
+            dev.connected = 0
+            dev.ready = 0
+            dev.done = 0
 
       new_list = []
       for dev in local_socket_list:
@@ -323,7 +321,13 @@ def network_listener(network_thread):
          rx_list.append(local_device.socket)
       for rx_device in device_socket_list:
          if(rx_device.connected):
-            rx_list.append(rx_device.socket)
+            if(rx_device.socket._closed == False):
+               rx_list.append(rx_device.socket)
+            else:
+               print("Prevented closed socket in select")
+               rx_device.connected = 0
+               rx_device.done = 1
+               rx_device.ready = 0
 
       tx_list = []
       for local_device in local_socket_list:
@@ -352,7 +356,13 @@ def network_listener(network_thread):
                   hb_dict = device_inst.dump_dict()
                   global_data.main_queue.put(hb_dict)
 
-      rx_ready, tx_ready, x_ready = select.select(rx_list, tx_list, [], select_timeout)
+      try:
+         rx_ready, tx_ready, x_ready = select.select(rx_list, tx_list, [], select_timeout)
+      except:
+         print("Socket Select Error")
+         rx_ready = []
+         tx_ready = []
+         x_ready = []
       
       for local_sock in local_socket_list:
          local_sock.ready = 0

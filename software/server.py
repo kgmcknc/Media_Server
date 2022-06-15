@@ -291,8 +291,18 @@ def update_device_list(device_data:devices.server_device_class):
             device_timeouts[index] = 0
             database.update_db_device_in_list(device_list[index])
             break
+      
       # if new device, create and add to database and send to network
       if(found_device == 0):
+         # check for old ip conflicts
+         for device in device_list:
+            if(device.device_id != device_list[0].device_id): # don't operate on local device id
+               if(device.ip_addr == device_data.ip_addr):
+                  if(device.connected == 0):
+                     print("Remove un-connected device with conflicting ip of new device")
+                     device_list.remove(device)
+                     database.remove_db_device(device.device_id)
+         
          print("New Heartbeat: " + device_data.ip_addr)
          device_data.detected = 1
          device_list.append(device_data)

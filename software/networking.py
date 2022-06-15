@@ -53,6 +53,26 @@ def abort_broadcast_receive():
    global udp_rx_sock
    udp_rx_sock.close()
 
+def create_listening_socket(max_devices):
+   serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+   serversocket.setblocking(False)
+   serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+   serversocket.bind((device_config.ip_addr, device_config.port))
+   # become a server socket
+   serversocket.listen(max_devices)
+
+def cleanup_sockets(serversocket, local_socket_list, device_socket_list):
+   for dev in device_socket_list:
+      if(dev.connected):
+         dev.socket.shutdown(socket.SHUT_RDWR)
+         dev.socket.close()
+   for dev in local_socket_list:
+      if(dev.connected):
+         dev.socket.shutdown(socket.SHUT_RDWR)
+         dev.socket.close()
+   if(serversocket):
+      serversocket.close()
+
 def network_listener(network_thread):
    global reload_devices
    global device_socket_list
@@ -72,13 +92,10 @@ def network_listener(network_thread):
    serversocket = 0
    # create an INET, STREAMing socket
    while network_thread.is_active() and serversocket == 0:
+      old_ip = device_config.ip_addr
+      old_port = device_config.port
       try:
-         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-         serversocket.setblocking(False)
-         serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-         serversocket.bind((device_config.ip_addr, device_config.port))
-         # become a server socket
-         serversocket.listen(max_devices)
+         serversocket = create_listening_socket(max_devices)
       except:
          print("Couldn't connect network listener")
          serversocket = 0
@@ -90,6 +107,20 @@ def network_listener(network_thread):
          load_devices_from_db()
          max_devices = len(device_socket_list) + 5
          serversocket.listen(max_devices)
+         if(old_ip != device_config.ip_addr or old_port != device_config.port):
+            print("Hub Ip Changed, Need to Re-establish Main Socket")
+            cleanup_sockets(serversocket, local_socket_list, device_socket_list)
+            serversocket = 0
+            while network_thread.is_active() and serversocket == 0:
+               old_ip = device_config.ip_addr
+               old_port = device_config.port
+               try:
+                  serversocket = create_listening_socket(max_devices)
+               except:
+                  print("Couldn't connect network listener")
+                  serversocket = 0
+                  network_thread.pause(2)
+            print("New Listening Socket Connected")
       
       while(not global_data.network_queue.empty()):
          try:
@@ -109,7 +140,7 @@ def network_listener(network_thread):
                   for dev in local_socket_list:
                      if(new_queue_data.port == dev.port):
                         write_data = new_queue_data.data_to_json()
-                        packet_data = header_okay+header_content+str(len(write_data))+header_end+write_data
+                        packet_data = header_okay+header_content+str(len(write_data))+"\r\n"+header_end+write_data
                         write_data_encode = packet_data.encode()
                         dev.socket.send(write_data_encode)
                         dev.done = 1
@@ -441,12 +472,7 @@ def network_listener(network_thread):
       #          if(tx_sock == dev_sock.socket):
       #             dev_sock.active = 1
    
-   for dev in device_socket_list:
-      if(dev.connected):
-         dev.socket.shutdown(socket.SHUT_RDWR)
-         dev.socket.close()
-   if(serversocket):
-      serversocket.close()
+   cleanup_sockets(serversocket, local_socket_list, device_socket_list)
 
    # check for linked and connected devices that we don't have a socket connected for...
    # if so, create and listen on those sockets

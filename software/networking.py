@@ -60,6 +60,7 @@ def create_listening_socket(max_devices):
    serversocket.bind((device_config.ip_addr, device_config.port))
    # become a server socket
    serversocket.listen(max_devices)
+   return serversocket
 
 def cleanup_sockets(serversocket, local_socket_list, device_socket_list):
    for dev in device_socket_list:

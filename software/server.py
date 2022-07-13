@@ -268,7 +268,9 @@ def update_device_list(device_data:devices.server_device_class):
          if(device_data.device_id == device_list[index].device_id):
             found_device = 1
             # if known device that has timed out, resend to network queue
-            if(device_list[index].detected == 0):
+            if(device_list[index].detected == 0 or
+               (device_list[index].ip_addr != device_data.ip_addr) or
+               (device_list[index].port != device_data.port)):
                device_update = 1
             device_list[index].detected = 1
             data_dict = {}

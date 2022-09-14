@@ -3,6 +3,7 @@
    <head>
      <title>Media Server Test</title>
      <link rel="stylesheet" href="media.css">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
    </head>
    <body onresize="java_formatting()" style="overflow-y:clip; overflow-x:clip;">
       <div id="main_page" class="main_page" style="height:25%; position:absolute; left:0px; overflow-y:clip; overflow-x:clip;">
@@ -78,8 +79,8 @@
             <ul id="media_list">
             </ul>
          </div>
-         <div id="video_div" style="height: 25%; display: none">
-            <video id="media_box" style="height: 100%" controls playsinline preload="none" onended="check_autoplay()">
+         <div id="video_div" style="width:95%; height: 25%; display: none">
+            <video id="media_box" style="width:100%; height: 100%" controls playsinline preload="none" onended="check_autoplay()">
                <source id="mediaplayer" type="video/mp4" src="">
             </video>
          </div>

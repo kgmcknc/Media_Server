@@ -9,6 +9,11 @@ var device_list_array = [];
 var autoplay_type = 0;
 var autoplay_amount = 0;
 var autoplay_remaining = 0;
+var show_device_controls = 0;
+var show_web_player = 0;
+var web_player_loaded = 0;
+
+document.addEventListener('click', mouse_dropdown_hide);
 
 java_formatting();
 loadcookies();
@@ -21,34 +26,34 @@ setInterval(periodic_get_devices, 30000);
 
 function java_formatting(){
    main = document.getElementById("main_page");
-   media = document.getElementById("media_data");
-   if(document.defaultView.innerWidth > document.defaultView.innerHeight){
-      main.style.width = "50%";
-      main.style.height = "100%";
+   //media = document.getElementById("media_data");
+   //if(document.defaultView.innerWidth > document.defaultView.innerHeight){
+      main.style.width = "95%";
+      main.style.height = "95%";
       main.style.top = "20px";
       main.style.left = "20px";
       
-      media.style.width = "50%";
-      media.style.height = "100%";
-      media.style.top = "20px";
-      media.style.left = "50%";
-   } else {
-      main.style.width = "100%";
-      main.style.height = "45%";
-      main.style.top = "20px";
-      main.style.left = "20px";
+      //media.style.width = "95%";
+      //media.style.height = "95%";
+      //media.style.top = "20px";
+      //media.style.left = "50%";
+   //} else {
+      //main.style.width = "100%";
+      //main.style.height = "45%";
+      //main.style.top = "20px";
+      //main.style.left = "20px";
       
-      media.style.width = "100%";
-      media.style.height = "50%";
-      media.style.top = "50%";
-      media.style.left = "20px";
-   }
+      //media.style.width = "100%";
+      //media.style.height = "50%";
+      //media.style.top = "50%";
+      //media.style.left = "20px";
+   //}
 }
 
 function set_display(value){
    devicelist = document.getElementById("devicedropdown");
-   if(devicelist.selectedIndex >= 0){
-      device = device_list_array[devicelist.selectedIndex];
+   if(devicelist.selectedIndex > 0){
+      device = device_list_array[devicelist.selectedIndex-1];
       device_id = device.device_id;
       command = "/media/set_display"
       command_string = '{"/global/' + device_id + command + '":"' + value + '"}'
@@ -91,8 +96,8 @@ function add_new_link_folder(){
 
 function create_link_folder(original_folder, new_folder){
    devicelist = document.getElementById("devicedropdown");
-   if(devicelist.selectedIndex >= 0){
-      device = device_list_array[devicelist.selectedIndex];
+   if(devicelist.selectedIndex > 1){
+      device = device_list_array[devicelist.selectedIndex-1];
       device_id = device.device_id;
       command = "/database/add_media_link"
       value = '{"src_path":"'+original_folder+'", "dst_path":"'+new_folder+'"}'
@@ -115,8 +120,8 @@ function remove_current_link_folder(){
 
 function remove_link_folder(original_folder, new_folder){
    devicelist = document.getElementById("devicedropdown");
-   if(devicelist.selectedIndex >= 0){
-      device = device_list_array[devicelist.selectedIndex];
+   if(devicelist.selectedIndex > 0){
+      device = device_list_array[devicelist.selectedIndex-1];
       device_id = device.device_id;
       command = "/database/rem_media_link"
       value = '{"src_path":"'+original_folder+'", "dst_path":"'+new_folder+'"}'
@@ -243,7 +248,7 @@ function check_autoplay(){
          play_next = 1;
       }
    }
-
+   web_player_loaded = play_next;
    if(play_next){
       episode = get_next_episode();
       if(episode != -1){
@@ -291,6 +296,11 @@ function load_device_list(devices){
    while(devicelist.length > 0){
       devicelist.remove(0);
    }
+
+   new_option = document.createElement("option");
+   new_option.text = "Web Player";
+   devicelist.add(new_option);
+
    // rebuild list from stored devices
    for(x=0;x<devices.length;x++){
       new_option = document.createElement("option");
@@ -302,6 +312,12 @@ function load_device_list(devices){
          }
       }
    }
+   if(devicelist.selectedIndex > 0){
+      show_device_controls = 1;
+   } else {
+      show_device_controls = 0;
+   }
+   update_visibility();
 }
 
 function update_device_name(){
@@ -455,7 +471,7 @@ function get_db_data(request_data, callback){
 function global_get_db_data(request_data, callback){
    devicelist = document.getElementById("devicedropdown");
    if(devicelist.selectedIndex > 0){
-      device = device_list_array[devicelist.selectedIndex];
+      device = device_list_array[devicelist.selectedIndex-1];
       device_id = device.device_id;
       var xmlhttp;
       if(typeof(request_data) == "string"){
@@ -539,7 +555,7 @@ function set_db_data(request_data, callback){
 function global_set_db_data(request_data, callback){
    devicelist = document.getElementById("devicedropdown");
    if(devicelist.selectedIndex >= 0){
-      device = device_list_array[devicelist.selectedIndex];
+      device = device_list_array[devicelist.selectedIndex-1];
       device_id = device.device_id;
       var xmlhttp;
       if(typeof(request_data) == "string"){
@@ -667,27 +683,83 @@ function iterate_media_list(media_list, media_data){
 }
 
 function playmovie(){
-   load_movie_data();
-   reset_autoplay_index();
-   setlastplayed();
+   devicelist = document.getElementById("devicedropdown");
+   show_web_player = devicelist.selectedIndex == 0;
+   if(show_web_player){
+      web_player_loaded = 1;
+      load_movie_data();
+      reset_autoplay_index();
+      setlastplayed();
+   } else {
+      var object = document.getElementById("movie_text");
+      command = {"/media/start":{"base_path":current_folder,"file_path":object.value}}
+   
+      global_set_db_data(command)
+   }
+   update_visibility();
 }
 
-function startmedia(){
-   var object = document.getElementById("movie_text");
-   command = {"/media/start":{"base_path":current_folder,"file_path":object.value}}
+// function startmedia(){
+//    var object = document.getElementById("movie_text");
+//    command = {"/media/start":{"base_path":current_folder,"file_path":object.value}}
 
-   global_set_db_data(command)
-}
+//    global_set_db_data(command)
+// }
 
 function stopmedia(){
+   devicelist = document.getElementById("devicedropdown");
+   show_web_player = devicelist.selectedIndex == 0;
+   if(show_web_player){
+      web_player_loaded = 0;
+      show_web_player = 0;
+      web_player_stop();
+   } else {
+      device_stop();
+   }
+   update_visibility();
+}
+function web_player_stop(){
+   var player_box = document.getElementById("media_box");
+   player_box.pause();
+   player_box.currentTime = 0;
+}
+function device_stop(){
    global_set_db_data({"/media/stop":""})
 }
 
 function playmedia(){
+   devicelist = document.getElementById("devicedropdown");
+   show_web_player = devicelist.selectedIndex == 0;
+   if(show_web_player){
+      web_player_play();
+   } else {
+      device_play();
+   }
+   update_visibility();
+}
+function web_player_play(){
+   var player_box = document.getElementById("media_box");
+   player_box.play();
+}
+function device_play(){
    global_set_db_data({"/media/play":""})
 }
 
 function pausemedia(){
+   devicelist = document.getElementById("devicedropdown");
+   show_web_player = devicelist.selectedIndex == 0;
+   if(show_web_player){
+      web_player_pause();
+   } else {
+      device_pause();
+   }
+   update_visibility();
+}
+function web_player_pause(){
+   var player_box = document.getElementById("media_box");
+   player_box.pause();
+}
+function device_pause(){
    global_set_db_data({"/media/pause":""})
 }
 
@@ -969,3 +1041,186 @@ function update_media_time(){
    }
 }
 
+// Make the DIV element draggable:
+//dragElement(document.getElementById("video_div"));
+
+function dragElement(elmnt) {
+  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  if (document.getElementById(elmnt.id + "header")) {
+    // if present, the header is where you move the DIV from:
+    document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+  } else {
+    // otherwise, move the DIV from anywhere inside the DIV:
+    elmnt.onmousedown = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // calculate the new cursor position:
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    // set the element's new position:
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  }
+
+  function closeDragElement() {
+    // stop moving when mouse button is released:
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}
+var settings_visible = 0;
+var settings_clicked = 0;
+function settings_button(){
+   hide_users();
+   hide_devices();
+   if(settings_visible){
+      hide_settings();
+   } else {
+      show_settings();
+   }
+   settings_clicked = 1;
+}
+function show_settings(){
+   settings_div = document.getElementById("settings_div");
+   settings_div.style.visibility = "visible";
+   settings_visible = 1;
+}
+function hide_settings(){
+   settings_div = document.getElementById("settings_div");
+   settings_div.style.visibility = "";
+   settings_visible = 0;
+}
+var users_visible = 0;
+var users_clicked = 0;
+function users_button(){
+   hide_settings();
+   hide_devices();
+   if(users_visible){
+      hide_users();
+   } else {
+      show_users();
+   }
+   users_clicked = 1;
+}
+function show_users(){
+   username_div = document.getElementById("username_div");
+   username_div.style.visibility = "visible";
+   users_visible = 1;
+}
+function hide_users(){
+   username_div = document.getElementById("username_div");
+   username_div.style.visibility = "";
+   users_visible = 0;
+}
+var devices_visible = 0;
+var devices_clicked = 0;
+function devices_button(){
+   hide_settings();
+   hide_users();
+   if(devices_visible){
+      hide_devices();
+   } else {
+      show_devices();
+   }
+   devices_clicked = 1;
+}
+function show_devices(){
+   devices_div = document.getElementById("devices_div");
+   devices_div.style.visibility = "visible";
+   devices_visible = 1;
+}
+function hide_devices(){
+   devices_div = document.getElementById("devices_div");
+   devices_div.style.visibility = "";
+   devices_visible = 0;
+}
+
+function mouse_dropdown_hide(event){
+   settings_div = document.getElementById("settings_div");
+   username_div = document.getElementById("username_div");
+   devices_div = document.getElementById("devices_div");
+
+   if(settings_div.contains(event.target)){
+      settings_clicked = 1;
+   }
+   if(username_div.contains(event.target)){
+      users_clicked = 1;
+   }
+   if(devices_div.contains(event.target)){
+      devices_clicked = 1;
+   }
+   clear_visible();
+}
+
+function clear_visible(){
+   if(settings_clicked == 0){
+      if(settings_visible){
+         settings_button(0);
+      }
+   }
+   if(users_clicked == 0){
+      if(users_visible){
+         users_button(0);
+      }
+   }
+   if(devices_clicked == 0){
+      if(devices_visible){
+         devices_button(0);
+      }
+   }
+   settings_clicked = 0;
+   users_clicked = 0;
+   devices_clicked = 0;
+}
+
+function update_active_device(){
+   devicelist = document.getElementById("devicedropdown");
+   if(devicelist.selectedIndex > 0){
+      show_device_controls = 1;
+      if(web_player_loaded){
+         web_player_pause();
+      }
+      show_web_player = 0;
+   } else {
+      show_device_controls = 0;
+      if(web_player_loaded){
+         show_web_player = 1;
+         playmedia();
+      }
+   }
+   update_visibility();
+}
+
+function update_visibility(){
+   video_player = document.getElementById("video_div");
+   media_control = document.getElementById("media_data");
+   if(show_web_player == 0){
+      video_player.style.display = "none";
+      media_control.style.height = "65%";
+   } else {
+      video_player.style.display = "inline";
+      media_control.style.height = "45%";
+   }
+   controls = document.getElementById("device_control");
+   if(show_device_controls == 0){
+      controls.style.display = "none";
+   } else {
+      controls.style.display = "inline";
+   }
+}

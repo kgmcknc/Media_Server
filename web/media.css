@@ -37,3 +37,31 @@ ul, #media_list {
  .active {
    display: block;
  }
+
+ #video_div {
+  position: absolute;
+  z-index: 9;
+  background-color: #f1f1f1;
+  border: 1px solid #d3d3d3;
+  text-align: center;
+ }
+
+ #media_box {
+  padding: 10px;
+  cursor: move;
+  z-index: 10;
+  color: #fff;
+}
+
+.settings_hidden {
+  position: absolute;
+  visibility: hidden;
+  background-color: #2196F3;
+  color: #fff;
+  z-index: 9;
+  padding: 10px;
+  width: 100%;
+  float: right;
+  text-align: right;
+  right: 0px;
+}

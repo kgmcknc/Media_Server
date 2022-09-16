@@ -14,9 +14,10 @@
                <a href="media.html">Media</a>
             </span>
             <span style="float:right">
-               <input id="submit_button" type="submit" value="Settings" onmousedown="settings_button()">
+               <input type="submit" value="Sleep" onmousedown="sleep_button()">
                <input type="submit" value="Devices" onmousedown="devices_button()">
                <input type="submit" value="Users" onmousedown="users_button()">
+               <input type="submit" value="Settings" onmousedown="settings_button()">
             </span>
             <br>
             <div id="settings_div" class="settings_hidden">
@@ -46,6 +47,16 @@
             </div>
             <div id="devices_div" class="settings_hidden">
                Device: <select name="devicedropdown" id="devicedropdown" onchange="update_active_device()"></select>
+            </div>
+            <div id="sleep_div" class="settings_hidden">
+               Sleep Settings: <span id="sleep_status">0 hr, 0 min</span>
+               <br>
+               Turn off Display: <input type="checkbox" id="screen_sleep_check" checked="true">
+               Hours: <input type="number" id="hr_timer" min="0" max="24" value="0">
+               <br>
+               Mins: <input type="number" id="min_timer" min="0" max="59" value="0">
+               <br>
+               <input type="submit" id="sleep_timer_button" value="Start Sleep Timer" onclick="sleep_timer_button()">
             </div>
             Folder: <select name="folderdropdown" id="folderdropdown" onchange="update_folder()"></select>
             <br>

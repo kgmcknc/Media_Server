@@ -208,6 +208,7 @@ function update_user(){
          set_active_user(new_user);
       }
    }
+   hide_users();
 }
 
 function update_autoplay(){
@@ -713,6 +714,7 @@ function stopmedia(){
       web_player_loaded = 0;
       show_web_player = 0;
       web_player_stop();
+      closeFullscreen();
    } else {
       device_stop();
    }
@@ -1089,6 +1091,7 @@ var settings_clicked = 0;
 function settings_button(){
    hide_users();
    hide_devices();
+   hide_sleep();
    if(settings_visible){
       hide_settings();
    } else {
@@ -1111,6 +1114,7 @@ var users_clicked = 0;
 function users_button(){
    hide_settings();
    hide_devices();
+   hide_sleep();
    if(users_visible){
       hide_users();
    } else {
@@ -1133,6 +1137,7 @@ var devices_clicked = 0;
 function devices_button(){
    hide_settings();
    hide_users();
+   hide_sleep();
    if(devices_visible){
       hide_devices();
    } else {
@@ -1151,10 +1156,35 @@ function hide_devices(){
    devices_visible = 0;
 }
 
+var sleep_visible = 0;
+var sleep_clicked = 0;
+function sleep_button(){
+   hide_settings();
+   hide_users();
+   hide_devices();
+   if(sleep_visible){
+      hide_sleep();
+   } else {
+      show_sleep();
+   }
+   sleep_clicked = 1;
+}
+function show_sleep(){
+   sleep_div = document.getElementById("sleep_div");
+   sleep_div.style.visibility = "visible";
+   sleep_visible = 1;
+}
+function hide_sleep(){
+   sleep_div = document.getElementById("sleep_div");
+   sleep_div.style.visibility = "";
+   sleep_visible = 0;
+}
+
 function mouse_dropdown_hide(event){
    settings_div = document.getElementById("settings_div");
    username_div = document.getElementById("username_div");
    devices_div = document.getElementById("devices_div");
+   sleep_div = document.getElementById("sleep_div");
 
    if(settings_div.contains(event.target)){
       settings_clicked = 1;
@@ -1164,6 +1194,9 @@ function mouse_dropdown_hide(event){
    }
    if(devices_div.contains(event.target)){
       devices_clicked = 1;
+   }
+   if(sleep_div.contains(event.target)){
+      sleep_clicked = 1;
    }
    clear_visible();
 }
@@ -1205,6 +1238,7 @@ function update_active_device(){
       }
    }
    update_visibility();
+   hide_devices();
 }
 
 function update_visibility(){
@@ -1224,3 +1258,78 @@ function update_visibility(){
       controls.style.display = "inline";
    }
 }
+
+let sleep_timer_interval;
+let sleep_timer_hours;
+let sleep_timer_minutes;
+let sleep_timer_active = 0;
+
+function sleep_timer_button(){
+   if(sleep_timer_active){
+      stop_sleep_timer();
+   } else {
+      start_sleep_timer();
+   }
+}
+
+function start_sleep_timer(){
+   button = document.getElementById("sleep_timer_button");
+   sleep_timer_interval = setInterval(sleep_minute_interrupt,60000);
+   sleep_timer_active = 1;
+   button.value = "Stop Sleep Timer";
+   sleep_timer_hours = document.getElementById("hr_timer").value;
+   sleep_timer_minutes = document.getElementById("min_timer").value;
+   sleep_status = document.getElementById("sleep_status");
+   sleep_status.innerText = sleep_timer_hours+" hr, "+sleep_timer_minutes+" mins";
+   // we should cache each users sleep timer settings
+}
+
+function stop_sleep_timer(){
+   button = document.getElementById("sleep_timer_button");
+   clearInterval(sleep_timer_interval);
+   sleep_timer_interval = null;
+   sleep_timer_active = 0;
+   button.value = "Start Sleep Timer";
+   sleep_status = document.getElementById("sleep_status");
+   sleep_timer_hours = 0;
+   sleep_timer_minutes = 0;
+   sleep_status.innerText = sleep_timer_hours+" hr, "+sleep_timer_minutes+" mins";
+}
+
+function sleep_minute_interrupt(){
+   if(sleep_timer_minutes > 0){
+      sleep_timer_minutes = sleep_timer_minutes - 1;
+   }
+   if(sleep_timer_minutes == 0){
+      if(sleep_timer_hours == 0){
+         sleep_timer_done();
+      } else {
+         sleep_timer_hours = sleep_timer_hours - 1;
+         sleep_timer_minutes = 59;
+      }
+   }
+   sleep_status = document.getElementById("sleep_status");
+   sleep_status.innerText = sleep_timer_hours+" hr, "+sleep_timer_minutes+" mins";
+}
+
+function sleep_timer_done(){
+   stop_sleep_timer();
+   stopmedia();
+   sleep_display = document.getElementById("screen_sleep_check");
+   if(sleep_display.value == "on"){
+      devicelist = document.getElementById("devicedropdown");
+      if(devicelist.selectedIndex > 0){
+         set_display('off');
+      }
+   }
+}
+
+function closeFullscreen() {
+   if (document.exitFullscreen) {
+     document.exitFullscreen();
+   } else if (document.webkitExitFullscreen) { /* Safari */
+     document.webkitExitFullscreen();
+   } else if (document.msExitFullscreen) { /* IE11 */
+     document.msExitFullscreen();
+   }
+ }

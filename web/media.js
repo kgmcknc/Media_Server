@@ -1217,9 +1217,15 @@ function clear_visible(){
          devices_button(0);
       }
    }
+   if(sleep_clicked == 0){
+      if(sleep_visible){
+         sleep_button(0);
+      }
+   }
    settings_clicked = 0;
    users_clicked = 0;
    devices_clicked = 0;
+   sleep_clicked = 0;
 }
 
 function update_active_device(){

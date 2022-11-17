@@ -250,6 +250,7 @@ def process_db_task(instruction:global_data.instruction_class):
    
    if(index_folder):
       index_inst_dict = instruction.dump_dict()
+      index_inst_dict["data"] = json_object
       global_data.media_queue.put(index_inst_dict)
 
    return instruction.data

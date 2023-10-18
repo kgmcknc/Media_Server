@@ -692,6 +692,11 @@ function playmovie(){
       reset_autoplay_index();
       setlastplayed();
    } else {
+      if(current_user != ""){
+         command = {"/media/set_user":{"user_name":current_user}};
+         global_set_db_data(command);
+      }
+      
       var object = document.getElementById("movie_text");
       command = {"/media/start":{"base_path":current_folder,"file_path":object.value}}
    
@@ -771,7 +776,7 @@ function toggle_fullscreen(){
 
 function load_movie_data(){
    var object = document.getElementById("movie_text");
-   var valuestring = "media_player.php?media_file=" + object.value;
+   var valuestring = "media_player.php?media_file=" + encodeURIComponent(object.value);
    var player_box = document.getElementById("media_box");
    var player_source = document.getElementById("mediaplayer");
    player_box.pause();

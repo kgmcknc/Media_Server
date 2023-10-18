@@ -11,6 +11,9 @@ player = vlc_instance.media_player_new()
 media_source = ""
 media_active = 0
 media_playing = 0
+media_done = 0
+current_user = ""
+play_count = 0
 
 def run_media_player(player_thread):
    while (player_thread.is_active()):
@@ -34,6 +37,9 @@ def check_media_player():
    global media_source
    global media_active
    global media_playing
+   global media_done
+   global current_user
+   global play_count
 
    # make a paused timeout of certain amount of time where we just internally stop and clear media if it stays paused for long enough
    # we can set the media_inactive_timeout period in the config
@@ -41,6 +47,9 @@ def check_media_player():
 
    try:
       player_state = str(player.get_state())
+      if(media_active):
+         if(player_state == 'State.Ended'):
+            media_done = 1
       if((player_state == 'State.NothingSpecial') or
          (player_state == 'State.Stopped') or
          (player_state == 'State.Ended') or
@@ -51,6 +60,11 @@ def check_media_player():
    except:
       media_active = 0
 
+   if(media_done):
+      print("finished media")
+      if(current_user != None):
+         print("doing next")
+
    return
 
 def process_instruction(instruction:global_data.instruction_class):
@@ -58,6 +72,8 @@ def process_instruction(instruction:global_data.instruction_class):
    global player
    global media_source
    global media_active
+   global play_count
+   global current_user
 
    if(instruction.is_global):
       instruction.global_done = 1
@@ -85,6 +101,7 @@ def process_instruction(instruction:global_data.instruction_class):
    
    try:
       if(instruction.command == "/media/start"):
+         play_count = 0
          if(instruction.is_global):
             new_base = instruction.data["base_path"]
             new_file = instruction.data["file_path"]
@@ -152,7 +169,18 @@ def process_instruction(instruction:global_data.instruction_class):
             instruction.data = "0"
    except:
       instruction.data = "set_time_failed"
+
+   try:
+      if(instruction.command == "/media/set_user"):
+         new_user = database.get_user_data(instruction.data)
+         if(new_user != None):
+            current_user = new_user
+      if(instruction.command == "/media/get_user"):
+         instruction.data = current_user
       
+   except:
+      print("User Failed")
+
    if((instruction.is_internal == 0) or (instruction.is_global and instruction.global_done)):
       ret_inst_dict = instruction.dump_dict()
       global_data.network_queue.put(ret_inst_dict, block=False)

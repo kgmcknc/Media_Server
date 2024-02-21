@@ -24,7 +24,7 @@
                <input type="text" id="new_folder_name_text">
                <input type="submit" value="Create New Folder" onclick="add_new_folder()">
                <input type="submit" value="Remove Current Folder" onclick="remove_current_folder()">
-               <input type="submit" value="Index Folder" onclick="index_media_folder()">
+               <input type="submit" value="Index Current Folder" onclick="index_media_folder()">
                <br>
                <input type="text" id="new_link_folder_name_text">
                <input type="submit" value="Create New Link Folder" onclick="add_new_link_folder()">
@@ -47,6 +47,9 @@
             </div>
             <div id="devices_div" class="settings_hidden">
                Device: <select name="devicedropdown" id="devicedropdown" onchange="update_active_device()"></select>
+               <br>
+               <input type="text" id="device_name_text">
+               <input type="submit" value="Set Device Name" onclick="update_device_name()">
             </div>
             <div id="sleep_div" class="settings_hidden">
                Sleep Settings: <span id="sleep_status">0 hr, 0 min</span>

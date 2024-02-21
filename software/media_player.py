@@ -172,7 +172,8 @@ def process_instruction(instruction:global_data.instruction_class):
 
    try:
       if(instruction.command == "/media/set_user"):
-         new_user = database.get_user_data(instruction.data)
+         name = instruction.data["user_name"]
+         new_user = database.get_user_data(name)
          if(new_user != None):
             current_user = new_user
       if(instruction.command == "/media/get_user"):

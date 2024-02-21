@@ -322,7 +322,7 @@ function load_device_list(devices){
 }
 
 function update_device_name(){
-   new_device_name_text = document.getElementById("new_device_name_text");
+   new_device_name_text = document.getElementById("device_name_text");
    new_device_name = new_device_name_text.value;
    new_device_name_text.value = "";
    command = {"/database/update_config":{"name":new_device_name}}
@@ -776,7 +776,7 @@ function toggle_fullscreen(){
 
 function load_movie_data(){
    var object = document.getElementById("movie_text");
-   var valuestring = "media_player.php?media_file=" + encodeURIComponent(object.value);
+   var valuestring = "media_player.php?media_file=" + object.value;
    var player_box = document.getElementById("media_box");
    var player_source = document.getElementById("mediaplayer");
    player_box.pause();

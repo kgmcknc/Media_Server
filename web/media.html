@@ -34,6 +34,9 @@
                <input type="submit" value="Create New User" onclick="add_new_user()">
                <input type="submit" value="Remove Current User" onclick="remove_current_user()">
                <br>
+               <input type="text" id="device_name_text">
+               <input type="submit" value="Set Device Name" onclick="update_device_name()">
+               <br>
                AutoPlay: <select name="autoplaydropdown" id="autoplaydropdown" onchange="update_autoplay()">
                   <option value="autoplay_off">Off</option>
                   <option value="autoplay_forever">Forever</option>
@@ -47,9 +50,6 @@
             </div>
             <div id="devices_div" class="settings_hidden">
                Device: <select name="devicedropdown" id="devicedropdown" onchange="update_active_device()"></select>
-               <br>
-               <input type="text" id="device_name_text">
-               <input type="submit" value="Set Device Name" onclick="update_device_name()">
             </div>
             <div id="sleep_div" class="settings_hidden">
                Sleep Settings: <span id="sleep_status">0 hr, 0 min</span>

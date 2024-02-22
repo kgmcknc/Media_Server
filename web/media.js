@@ -885,9 +885,7 @@ function previous_episode(){
    if(episode != -1){
       document.getElementById("movie_text").value = episode;
       show_list_element(episode);
-      load_movie_data();
-      reset_autoplay_index();
-      setlastplayed();
+      playmovie();
    }
 }
 

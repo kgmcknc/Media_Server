@@ -245,6 +245,7 @@ def process_db_task(instruction:global_data.instruction_class):
             new_dev["device_id"] = dev.device_id
             new_dev["name"] = dev.name
             new_dev["linked_devices"] = dev.linked_devices
+            new_dev["ip_addr"] = dev.ip_addr
             dev_list.append(new_dev)
       instruction.data = dev_list
    

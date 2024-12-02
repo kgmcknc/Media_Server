@@ -313,6 +313,8 @@ function load_device_list(devices){
          }
       }
    }
+   ip_info = document.getElementById("device_ip");
+   ip_info.innerText = device_list_array[devicelist.selectedIndex-1].ip_addr;
    if(devicelist.selectedIndex > 0){
       show_device_controls = 1;
    } else {
@@ -1244,6 +1246,8 @@ function update_active_device(){
          playmedia();
       }
    }
+   ip_info = document.getElementById("device_ip");
+   ip_info.innerText = device_list_array[devicelist.selectedIndex-1].ip_addr;
    update_visibility();
    hide_devices();
 }

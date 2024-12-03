@@ -313,12 +313,15 @@ function load_device_list(devices){
          }
       }
    }
-   ip_info = document.getElementById("device_ip");
-   ip_info.innerText = device_list_array[devicelist.selectedIndex-1].ip_addr;
+   
    if(devicelist.selectedIndex > 0){
       show_device_controls = 1;
+      ip_info = document.getElementById("device_ip");
+      ip_info.innerText = device_list_array[devicelist.selectedIndex-1].ip_addr;
    } else {
       show_device_controls = 0;
+      ip_info = document.getElementById("device_ip");
+      ip_info.innerText = "";
    }
    update_visibility();
 }
@@ -778,7 +781,7 @@ function toggle_fullscreen(){
 
 function load_movie_data(){
    var object = document.getElementById("movie_text");
-   var valuestring = "media_player.php?media_file=" + object.value;
+   var valuestring = "media_player.php?media_file=" + encodeURIComponent(object.value);
    var player_box = document.getElementById("media_box");
    var player_source = document.getElementById("mediaplayer");
    player_box.pause();
@@ -1235,19 +1238,22 @@ function update_active_device(){
    devicelist = document.getElementById("devicedropdown");
    if(devicelist.selectedIndex > 0){
       show_device_controls = 1;
+      ip_info = document.getElementById("device_ip");
+      ip_info.innerText = device_list_array[devicelist.selectedIndex-1].ip_addr;
       if(web_player_loaded){
          web_player_pause();
       }
       show_web_player = 0;
    } else {
       show_device_controls = 0;
+      ip_info = document.getElementById("device_ip");
+      ip_info.innerText = "";
       if(web_player_loaded){
          show_web_player = 1;
          playmedia();
       }
    }
-   ip_info = document.getElementById("device_ip");
-   ip_info.innerText = device_list_array[devicelist.selectedIndex-1].ip_addr;
+   
    update_visibility();
    hide_devices();
 }
